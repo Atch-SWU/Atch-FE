@@ -1,0 +1,168 @@
+/**
+ * 디자인 토큰
+ * ------------------------------------------------------------------
+ * ⚠️ 색상/텍스트 스타일은 아직 팀 확정 전입니다.
+ * 컴포넌트·화면 코드에서는 절대 hex 값을 직접 쓰지 말고
+ * 이 파일의 토큰(COLORS / TYPOGRAPHY / CATEGORY_COLORS / COMPLETED_COLORS
+ * / COMPLETION_COLORS / SPACING)만 참조하세요.
+ * hex 원본값은 오직 아래 PALETTE 에만 존재합니다.
+ * (디자인상 ExtraBold(800) 자리는 Pretendard-ExtraBold.otf 가 아직 없어
+ *  Pretendard-Bold 로 매핑해 두었습니다. 폰트 추가 시 fonts.ts + 해당 토큰만 교체)
+ * ------------------------------------------------------------------
+ */
+
+export const TYPOGRAPHY = {
+  mainTitle: { fontFamily: 'Pretendard-Bold', fontSize: 28, lineHeight: 40 },
+  titleImportantTop: { fontFamily: 'Pretendard-SemiBold', fontSize: 26, lineHeight: 36, letterSpacing: -1.5 },
+  titleCore: { fontFamily: 'Pretendard-SemiBold', fontSize: 20, lineHeight: 28 },
+  titleSmall: { fontFamily: 'Pretendard-SemiBold', fontSize: 18, lineHeight: 26 },
+  bodyImportant: { fontFamily: 'Pretendard-Regular', fontSize: 18, lineHeight: 26 },
+  bodyTask: { fontFamily: 'Pretendard-SemiBold', fontSize: 16, lineHeight: 24 },
+  bodySmall: { fontFamily: 'Pretendard-Medium', fontSize: 14, lineHeight: 20, letterSpacing: -2 },
+
+  // 홈/투두
+  homeDate: { fontFamily: 'Pretendard-SemiBold', fontSize: 18, lineHeight: 22, letterSpacing: -0.27 },
+  homeHeadline: { fontFamily: 'Pretendard-Bold', fontSize: 26, lineHeight: 31, letterSpacing: -0.39 },
+  countBadge: { fontFamily: 'Pretendard-SemiBold', fontSize: 22, lineHeight: 26, letterSpacing: -0.33 },
+  cardTitle: { fontFamily: 'Pretendard-SemiBold', fontSize: 16, lineHeight: 20, letterSpacing: -0.24 },
+  cardMeta: { fontFamily: 'Pretendard-SemiBold', fontSize: 12, lineHeight: 15, letterSpacing: -0.18 },
+  badgeLabel: { fontFamily: 'Pretendard-SemiBold', fontSize: 10, lineHeight: 12 },
+  sectionLabel: { fontFamily: 'Pretendard-Bold', fontSize: 14, lineHeight: 17 },
+  completedDate: { fontFamily: 'Pretendard-Medium', fontSize: 10, lineHeight: 12, letterSpacing: -0.15 },
+  completedTitle: { fontFamily: 'Pretendard-SemiBold', fontSize: 14, lineHeight: 17, letterSpacing: -0.21 },
+
+  // 타이머
+  timerTime: { fontFamily: 'Pretendard-Bold', fontSize: 50, lineHeight: 60, letterSpacing: -0.75 },
+  primaryBtn: { fontFamily: 'Pretendard-Bold', fontSize: 20, lineHeight: 24, letterSpacing: -0.3 },
+  subtleBtn: { fontFamily: 'Pretendard-SemiBold', fontSize: 16, lineHeight: 19, letterSpacing: -0.24 },
+  estLabel: { fontFamily: 'Pretendard-SemiBold', fontSize: 14, lineHeight: 17, letterSpacing: -0.42 },
+  estLabelNum: { fontFamily: 'Pretendard-Bold', fontSize: 14, lineHeight: 17, letterSpacing: -0.21 },
+  estPercent: { fontFamily: 'Pretendard-SemiBold', fontSize: 16, lineHeight: 19, letterSpacing: -0.48 },
+  estSoft: { fontFamily: 'Pretendard-Medium', fontSize: 14, lineHeight: 17, letterSpacing: -0.42 },
+
+  // 세션 완료
+  completionTime: { fontFamily: 'Pretendard-Bold', fontSize: 36, lineHeight: 43, letterSpacing: -0.54 },
+  completionSub: { fontFamily: 'Pretendard-SemiBold', fontSize: 16, lineHeight: 19, letterSpacing: -0.24 },
+  statValueBold: { fontFamily: 'Pretendard-Bold', fontSize: 24, lineHeight: 29, letterSpacing: -0.36 },
+  statValueSemi: { fontFamily: 'Pretendard-SemiBold', fontSize: 24, lineHeight: 29, letterSpacing: -0.36 },
+  statCaption: { fontFamily: 'Pretendard-Medium', fontSize: 12, lineHeight: 14, letterSpacing: -0.18 },
+  nextTaskLabel: { fontFamily: 'Pretendard-Bold', fontSize: 16, lineHeight: 19 },
+  doneTaskDate: { fontFamily: 'Pretendard-Medium', fontSize: 12, lineHeight: 14, letterSpacing: -0.18 },
+  doneTaskTitle: { fontFamily: 'Pretendard-Bold', fontSize: 16, lineHeight: 19, letterSpacing: -0.24 },
+
+  // 다이얼로그
+  dialogTitle: { fontFamily: 'Pretendard-Bold', fontSize: 20, lineHeight: 24, letterSpacing: -0.3 },
+  dialogBody: { fontFamily: 'Pretendard-Medium', fontSize: 14, lineHeight: 20 },
+} as const;
+
+export type TypographyToken = keyof typeof TYPOGRAPHY;
+
+const PALETTE = {
+  main100: '#2FCCDC', main80: '#68DCE8', main60: '#8EEAF3', main40: '#B3EBF3', main20: '#DEF6FB',
+  white: '#FFFFFF', black: '#000000',
+  grey50: '#F5F5F5', grey100: '#F7F9F9', grey200: '#ECEEEE', grey300: '#DBDCDC', grey400: '#B4B7B7',
+  grey500: '#919494', grey575: '#575757', grey600: '#6B6C6C', grey700: '#4F5151', grey800: '#303030', grey900: '#131414',
+  greyDate: '#7C7C7C',
+
+  accent100: '#5F5FFF',
+
+  // 업무(pink) 카테고리
+  pink10: '#FFC7FD', pink20: '#FFAEFC', pink100: '#F962F4', pink120: '#EC3DE6',
+  // 학습(violet) 카테고리
+  violet10: '#C7BEFF', violet20: '#B6ABFF', violet100: '#7A63FF', violet120: '#654AFF',
+
+  // 완료 카드(중립)
+  completedBg: '#EBEBEB', completedBorder: '#E0E0E0', completedBadgeBg: '#8E8E8E',
+  cardTitleText: '#2A2A2A', sectionLabelText: '#323232',
+
+  // 타이머 링
+  ringTrack: '#ECEAF2', purpleRing: '#6B5CE7', purpleDeep: '#5252E7',
+  // 라일락(다이얼로그/버튼/통계)
+  lilac10: '#E7E6FF', lilac20: '#D9D7FF', lilac40: '#C2B7FF', lilac50: '#B4A7FF',
+  infoBorder: '#E3E1EC',
+  // 예상시간 카드(업무 timer pink)
+  estPink10: '#FFCEFD', estPink20: '#FFA4FC', estPink100: '#FF55FA', estPink80: '#FF8AFB', estPink90: '#FF81FB',
+  pinkDot: '#EE56E9',
+} as const;
+
+export const COLORS = {
+  ...PALETTE,
+  primary: PALETTE.main100,
+  background: PALETTE.white,
+  surface: PALETTE.grey100,
+  textMain: PALETTE.grey900,
+  textSub: PALETTE.grey600,
+  border: PALETTE.grey300,
+
+  accent: PALETTE.accent100,
+  onAccent: PALETTE.white,
+  cardTitle: PALETTE.cardTitleText,
+  sectionLabel: PALETTE.sectionLabelText,
+
+  navBarBg: PALETTE.white,
+  navActiveBg: PALETTE.accent100,
+  navIconActive: PALETTE.white,
+  navIconInactive: PALETTE.grey900,
+  shadow: PALETTE.black,
+
+  // 타이머/공통 버튼/다이얼로그/완료
+  ringTrack: PALETTE.ringTrack,
+  ringProgress: PALETTE.purpleRing,
+  closeIcon: PALETTE.grey300,
+  primaryBtnBg: PALETTE.accent100,
+  primaryBtnText: PALETTE.white,
+  secondaryBtnBg: PALETTE.lilac10,
+  secondaryBtnText: PALETTE.accent100,
+  outlineBtnBorder: PALETTE.infoBorder,
+  outlineBtnText: PALETTE.grey575,
+  scrim: PALETTE.black,
+  dialogCardBg: PALETTE.white,
+  dialogIconBg: PALETTE.lilac10,
+  dialogIconMark: PALETTE.accent100,
+  completionSubtitle: PALETTE.accent100,
+  nextDot: PALETTE.pinkDot,
+} as const;
+
+export const CATEGORY_COLORS = {
+  work: {
+    label: '업무',
+    cardBg: PALETTE.pink10, cardBorder: PALETTE.pink20, badgeBg: PALETTE.pink100,
+    badgeText: PALETTE.white, metaText: PALETTE.pink120, actionColor: PALETTE.pink100,
+    estimate: {
+      cardBg: PALETTE.estPink10, cardBorder: PALETTE.estPink20,
+      strong: PALETTE.estPink100, soft: PALETTE.estPink80,
+      barTrack: PALETTE.white, barFill: PALETTE.estPink90,
+    },
+  },
+  study: {
+    label: '학습',
+    cardBg: PALETTE.violet10, cardBorder: PALETTE.violet20, badgeBg: PALETTE.violet100,
+    badgeText: PALETTE.white, metaText: PALETTE.violet120, actionColor: PALETTE.violet100,
+    estimate: {
+      cardBg: PALETTE.violet10, cardBorder: PALETTE.violet20,
+      strong: PALETTE.violet120, soft: PALETTE.violet100,
+      barTrack: PALETTE.white, barFill: PALETTE.violet100,
+    },
+  },
+} as const;
+
+export type CategoryKey = keyof typeof CATEGORY_COLORS;
+
+export const COMPLETED_COLORS = {
+  cardBg: PALETTE.completedBg, cardBorder: PALETTE.completedBorder, dateText: PALETTE.greyDate,
+  titleText: PALETTE.grey900, badgeBg: PALETTE.completedBadgeBg, badgeText: PALETTE.white,
+} as const;
+
+// 세션 완료 화면 전용
+export const COMPLETION_COLORS = {
+  doneCardBg: PALETTE.grey50, doneCardBorder: PALETTE.completedBorder,
+  doneDate: PALETTE.greyDate, doneTitle: PALETTE.grey900,
+  statPauseBg: PALETTE.lilac10, statPauseBorder: PALETTE.lilac20,
+  statPauseValue: PALETTE.purpleDeep, statPauseCaption: PALETTE.greyDate,
+  statOverBg: PALETTE.lilac40, statOverBorder: PALETTE.lilac50,
+  statOverValue: PALETTE.violet100, statOverCaption: PALETTE.grey575,
+} as const;
+
+export const SPACING = {
+  screenH: 16, cardGap: 12, cardRadius: 20, cardPaddingH: 22, cardPaddingV: 18,
+} as const;

@@ -1,0 +1,59 @@
+import { Modal, View, StyleSheet } from 'react-native';
+import AppText from './AppText';
+import AppButton from './AppButton';
+import { COLORS } from '../constants/token';
+
+interface PauseDialogProps {
+  visible: boolean;
+  onCancel: () => void;
+  onConfirm: () => void;
+}
+
+/** 일시정지 확인 다이얼로그 */
+export default function PauseDialog({ visible, onCancel, onConfirm }: PauseDialogProps) {
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
+      <View style={styles.overlay}>
+        <View style={styles.scrim} />
+        <View style={styles.card}>
+          <View style={styles.icon}>
+            <AppText variant="statValueBold" color={COLORS.dialogIconMark}>!</AppText>
+          </View>
+          <AppText variant="dialogTitle" color={COLORS.textMain} style={styles.title}>
+            잠시 일시 정지 하시겠습니까?
+          </AppText>
+          <AppText variant="dialogBody" color={COLORS.dialogIconMark === COLORS.dialogIconMark ? COLORS.textSub : COLORS.textSub} style={styles.body}>
+            이후 다시 작업 재개할 수 있습니다
+          </AppText>
+          <View style={styles.row}>
+            <AppButton label="취소" variant="secondary" textVariant="subtleBtn" style={styles.btn} onPress={onCancel} />
+            <AppButton label="정지" variant="primary" textVariant="subtleBtn" style={styles.btn} onPress={onConfirm} />
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+const styles = StyleSheet.create({
+  overlay: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  scrim: { ...StyleSheet.absoluteFillObject, backgroundColor: COLORS.scrim, opacity: 0.6 },
+  card: {
+    width: 320,
+    borderRadius: 30,
+    backgroundColor: COLORS.dialogCardBg,
+    alignItems: 'center',
+    paddingHorizontal: 29,
+    paddingTop: 26,
+    paddingBottom: 26,
+  },
+  icon: {
+    width: 57, height: 57, borderRadius: 28.5,
+    backgroundColor: COLORS.dialogIconBg,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  title: { marginTop: 19, textAlign: 'center' },
+  body: { marginTop: 8, textAlign: 'center' },
+  row: { flexDirection: 'row', gap: 16, marginTop: 19, alignSelf: 'stretch' },
+  btn: { flex: 1, height: 50, borderRadius: 16 },
+});

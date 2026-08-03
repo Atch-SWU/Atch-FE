@@ -1,0 +1,64 @@
+import { Pressable, StyleSheet, StyleProp, ViewStyle } from 'react-native';
+import AppText from './AppText';
+import { COLORS, SPACING, TypographyToken } from '../constants/token';
+
+type Variant = 'primary' | 'secondary' | 'outline';
+
+interface AppButtonProps {
+  label: string;
+  variant?: Variant;
+  /** 텍스트 타이포 토큰 (미지정 시 variant 기본값) */
+  textVariant?: TypographyToken;
+  onPress?: () => void;
+  style?: StyleProp<ViewStyle>;
+}
+
+const VARIANT = {
+  primary: { bg: COLORS.primaryBtnBg, text: COLORS.primaryBtnText, border: 'transparent' as string },
+  secondary: { bg: COLORS.secondaryBtnBg, text: COLORS.secondaryBtnText, border: 'transparent' as string },
+  outline: { bg: COLORS.background, text: COLORS.outlineBtnText, border: COLORS.outlineBtnBorder },
+};
+
+/** 공통 버튼 (색상/타이포 전부 토큰) */
+export default function AppButton({
+  label,
+  variant = 'primary',
+  textVariant,
+  onPress,
+  style,
+}: AppButtonProps) {
+  const v = VARIANT[variant];
+  const defaultText: TypographyToken = variant === 'outline' ? 'subtleBtn' : 'primaryBtn';
+
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.base,
+        variant === 'outline' && styles.outline,
+        { backgroundColor: v.bg, borderColor: v.border },
+        pressed && styles.pressed,
+        style,
+      ]}
+    >
+      <AppText variant={textVariant ?? defaultText} color={v.text}>
+        {label}
+      </AppText>
+    </Pressable>
+  );
+}
+
+const styles = StyleSheet.create({
+  base: {
+    height: 66,
+    borderRadius: SPACING.cardRadius,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  outline: {
+    height: 55,
+    borderRadius: 15,
+    borderWidth: 1,
+  },
+  pressed: { opacity: 0.85 },
+});

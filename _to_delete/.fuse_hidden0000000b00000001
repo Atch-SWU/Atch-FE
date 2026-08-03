@@ -1,0 +1,220 @@
+/**
+ * 디자인 토큰
+ * ------------------------------------------------------------------
+ * ⚠️ 색상/텍스트 스타일은 아직 팀 확정 전입니다.
+ * 컴포넌트·화면 코드에서는 절대 hex 값을 직접 쓰지 말고
+ * 이 파일의 COLORS / TYPOGRAPHY / CATEGORY_COLORS / COMPLETED_COLORS
+ * 토큰만 참조하세요. 색이 바뀌면 이 파일만 수정하면 전체에 반영됩니다.
+ * hex 원본값은 오직 아래 PALETTE 에만 존재합니다.
+ * ------------------------------------------------------------------
+ */
+
+export const TYPOGRAPHY = {
+  mainTitle: {
+    fontFamily: 'Pretendard-Bold',
+    fontSize: 28,
+    lineHeight: 40,
+  },
+  titleImportantTop: {
+    fontFamily: 'Pretendard-SemiBold',
+    fontSize: 26,
+    lineHeight: 36,
+    letterSpacing: -1.5,
+  },
+  titleCore: {
+    fontFamily: 'Pretendard-SemiBold',
+    fontSize: 20,
+    lineHeight: 28,
+  },
+  titleSmall: {
+    fontFamily: 'Pretendard-SemiBold',
+    fontSize: 18,
+    lineHeight: 26,
+  },
+  bodyImportant: {
+    fontFamily: 'Pretendard-Regular',
+    fontSize: 18,
+    lineHeight: 26,
+  },
+  bodyTask: {
+    fontFamily: 'Pretendard-SemiBold',
+    fontSize: 16,
+    lineHeight: 24,
+  },
+  bodySmall: {
+    fontFamily: 'Pretendard-Medium',
+    fontSize: 14,
+    lineHeight: 20,
+    letterSpacing: -2,
+  },
+
+  // --- 홈/투두 화면용 (미확정, 임시) ---
+  homeDate: {
+    fontFamily: 'Pretendard-SemiBold',
+    fontSize: 18,
+    lineHeight: 22,
+    letterSpacing: -0.27,
+  },
+  homeHeadline: {
+    fontFamily: 'Pretendard-Bold',
+    fontSize: 26,
+    lineHeight: 31,
+    letterSpacing: -0.39,
+  },
+  countBadge: {
+    fontFamily: 'Pretendard-SemiBold',
+    fontSize: 22,
+    lineHeight: 26,
+    letterSpacing: -0.33,
+  },
+  cardTitle: {
+    fontFamily: 'Pretendard-SemiBold',
+    fontSize: 16,
+    lineHeight: 20,
+    letterSpacing: -0.24,
+  },
+  cardMeta: {
+    fontFamily: 'Pretendard-SemiBold',
+    fontSize: 12,
+    lineHeight: 15,
+    letterSpacing: -0.18,
+  },
+  badgeLabel: {
+    fontFamily: 'Pretendard-SemiBold',
+    fontSize: 10,
+    lineHeight: 12,
+  },
+  sectionLabel: {
+    fontFamily: 'Pretendard-Bold',
+    fontSize: 14,
+    lineHeight: 17,
+  },
+  completedDate: {
+    fontFamily: 'Pretendard-Medium',
+    fontSize: 10,
+    lineHeight: 12,
+    letterSpacing: -0.15,
+  },
+  completedTitle: {
+    fontFamily: 'Pretendard-SemiBold',
+    fontSize: 14,
+    lineHeight: 17,
+    letterSpacing: -0.21,
+  },
+} as const;
+
+export type TypographyToken = keyof typeof TYPOGRAPHY;
+
+/**
+ * 원본 색상값(hex)은 오직 여기에만 존재합니다.
+ * 확정되면 이 값들만 수정하세요.
+ */
+const PALETTE = {
+  main100: '#2FCCDC',
+  main80: '#68DCE8',
+  main60: '#8EEAF3',
+  main40: '#B3EBF3',
+  main20: '#DEF6FB',
+  white: '#FFFFFF',
+  grey100: '#F7F9F9',
+  grey200: '#ECEEEE',
+  grey300: '#DBDCDC',
+  grey400: '#B4B7B7',
+  grey500: '#919494',
+  grey600: '#6B6C6C',
+  grey700: '#4F5151',
+  grey800: '#303030',
+  grey900: '#131414',
+
+  // 임시 액센트(홈 날짜/카운트/네비 활성) — 미확정
+  accent100: '#5F5FFF',
+
+  // 카테고리: 업무(pink 계열) — 미확정
+  pink10: '#FFC7FD',
+  pink20: '#FFAEFC',
+  pink100: '#F962F4',
+  pink120: '#EC3DE6',
+
+  // 카테고리: 학습(violet 계열) — 미확정
+  violet10: '#C7BEFF',
+  violet20: '#B6ABFF',
+  violet100: '#7A63FF',
+  violet120: '#654AFF',
+
+  // 완료 카드(중립) — 미확정
+  completedBg: '#EBEBEB',
+  completedBorder: '#E0E0E0',
+  completedDateText: '#7C7C7C',
+  completedBadgeBg: '#8E8E8E',
+
+  // 컬러 카드 위 제목 텍스트 — 미확정
+  cardTitleText: '#2A2A2A',
+  sectionLabelText: '#323232',
+} as const;
+
+/** 의미 기반 공통 색상 토큰 */
+export const COLORS = {
+  ...PALETTE,
+
+  primary: PALETTE.main100,
+  background: PALETTE.white,
+  surface: PALETTE.grey100,
+  textMain: PALETTE.grey900,
+  textSub: PALETTE.grey600,
+  border: PALETTE.grey300,
+
+  // 홈/투두 (미확정, 임시)
+  accent: PALETTE.accent100,        // 날짜, 카운트 뱃지, 네비 활성 배경
+  onAccent: PALETTE.white,          // accent 배경 위 텍스트/아이콘
+  cardTitle: PALETTE.cardTitleText, // 컬러 카드 위 할 일 제목
+  sectionLabel: PALETTE.sectionLabelText,
+
+  // 하단 네비게이션
+  navBarBg: PALETTE.white,
+  navActiveBg: PALETTE.accent100,
+  navIconActive: PALETTE.white,
+  navIconInactive: PALETTE.grey900,
+} as const;
+
+/** 카테고리별 카드 색상 세트 (업무/학습) — 미확정 */
+export const CATEGORY_COLORS = {
+  work: {
+    label: '업무',
+    cardBg: PALETTE.pink10,
+    cardBorder: PALETTE.pink20,
+    badgeBg: PALETTE.pink100,
+    badgeText: PALETTE.white,
+    metaText: PALETTE.pink120,
+    actionColor: PALETTE.pink100,
+  },
+  study: {
+    label: '학습',
+    cardBg: PALETTE.violet10,
+    cardBorder: PALETTE.violet20,
+    badgeBg: PALETTE.violet100,
+    badgeText: PALETTE.white,
+    metaText: PALETTE.violet120,
+    actionColor: PALETTE.violet100,
+  },
+} as const;
+
+export type CategoryKey = keyof typeof CATEGORY_COLORS;
+
+/** 완료 작업 카드 색상 세트 — 미확정 */
+export const COMPLETED_COLORS = {
+  cardBg: PALETTE.completedBg,
+  cardBorder: PALETTE.completedBorder,
+  dateText: PALETTE.completedDateText,
+  titleText: PALETTE.grey900,
+  badgeBg: PALETTE.completedBadgeBg,
+  badgeText: PALETTE.white,
+} as const;
+
+/** 레이아웃 간격/반경 토큰 */
+export const SPACING = {
+  screenH: 16,
+  cardGap: 12,
+  cardRadius: 20,
+  cardPaddingH: 22,
+  cardPaddingV: 18,
+} as const;
