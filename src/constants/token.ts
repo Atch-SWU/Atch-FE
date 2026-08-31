@@ -69,6 +69,20 @@ export const TYPOGRAPHY = {
   todoTitle: { fontFamily: 'Pretendard-Bold', fontSize: 16, lineHeight: 19 },
   todoTime: { fontFamily: 'Pretendard-SemiBold', fontSize: 12, lineHeight: 14 },
   doneRowText: { fontFamily: 'Pretendard-SemiBold', fontSize: 16, lineHeight: 19 },
+
+  // 리포트
+  reportTitle: { fontFamily: 'OkDanDan-Bold', fontSize: 26, lineHeight: 31, letterSpacing: -0.39, },
+  reportDate: { fontFamily: 'Pretendard-SemiBold', fontSize: 18, lineHeight: 22 },
+  reportGridLabel: { fontFamily: 'Pretendard-Regular', fontSize: 14, lineHeight: 17 },
+  reportGoalPercent: { fontFamily: 'Pretendard-Bold', fontSize: 20, lineHeight: 24 },
+  reportGoalAchieved: { fontFamily: 'Pretendard-Medium', fontSize: 16, lineHeight: 20 },
+  reportStatLabel: { fontFamily: 'Pretendard-Medium', fontSize: 14, lineHeight: 17 },
+  reportStatValue: { fontFamily: 'Pretendard-SemiBold', fontSize: 22, lineHeight: 27 },
+  reportSessionTime: { fontFamily: 'Pretendard-Bold', fontSize: 13, lineHeight: 16 },
+  reportSessionTitle: { fontFamily: 'Pretendard-SemiBold', fontSize: 16, lineHeight: 19 },
+  reportSessionDuration: { fontFamily: 'Pretendard-Bold', fontSize: 14, lineHeight: 17 }, // ExtraBold 지정값 — 폰트 파일 부재로 Bold 매핑
+  reportTagText: { fontFamily: 'Pretendard-SemiBold', fontSize: 10, lineHeight: 12 },
+
 } as const;
 
 export type TypographyToken = keyof typeof TYPOGRAPHY;
@@ -109,7 +123,7 @@ export const COLORS = {
 
   // 하단 네비
   navBarBg: PALETTE.white,
-  navActiveBg: PALETTE.grey900,     // 활성 탭(검정)
+  navActiveBg: PALETTE.main100,     // 활성 탭(민트)
   navIconActive: PALETTE.white,
   navIconInactive: PALETTE.grey900,
   shadow: PALETTE.black,

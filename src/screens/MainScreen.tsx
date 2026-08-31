@@ -6,6 +6,7 @@ import BottomNavBar, { TabKey } from '../components/BottomNavBar';
 import HomeScreen from './HomeScreen';
 import ToDoListScreen from './ToDoListScreen';
 import PlaceholderScreen from './PlaceholderScreen';
+import ReportScreen from './ReportScreen';
 
 /** 하단 탭(홈/투두/통계/프로필)을 즉시 전환하는 컨테이너 + 플로팅 네비 */
 export default function MainScreen() {
@@ -17,7 +18,7 @@ export default function MainScreen() {
       <View style={styles.scene}>
         {tab === 'home' && <HomeScreen />}
         {tab === 'todo' && <ToDoListScreen />}
-        {tab === 'stats' && <PlaceholderScreen label="통계" />}
+        {tab === 'stats' && <ReportScreen />}
         {tab === 'profile' && <PlaceholderScreen label="프로필" />}
       </View>
       <View style={[styles.navWrap, { bottom: insets.bottom + 8 }]}>
