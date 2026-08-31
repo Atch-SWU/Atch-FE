@@ -83,6 +83,10 @@ export const TYPOGRAPHY = {
   reportSessionDuration: { fontFamily: 'Pretendard-Bold', fontSize: 14, lineHeight: 17 }, // ExtraBold 지정값 — 폰트 파일 부재로 Bold 매핑
   reportTagText: { fontFamily: 'Pretendard-SemiBold', fontSize: 10, lineHeight: 12 },
 
+  // 온보딩
+  onboardingTitle: { fontFamily: 'Pretendard-Bold', fontSize: 24, lineHeight: 32 },
+  onboardingSubtitle: { fontFamily: 'Pretendard-Medium', fontSize: 18, lineHeight: 26 },
+
 } as const;
 
 export type TypographyToken = keyof typeof TYPOGRAPHY;
