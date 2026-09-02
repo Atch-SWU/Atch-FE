@@ -119,7 +119,7 @@ export default function OnboardingScreen({ navigation }: Props) {
 
     const goNext = () => {
         if (isLastPage) {
-            navigation.replace('Main');
+            navigation.replace('Login');
             return;
         }
 

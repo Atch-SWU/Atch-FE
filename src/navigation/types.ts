@@ -8,6 +8,9 @@ export interface TaskParam {
 
 export type RootStackParamList = {
   Onboarding: undefined;
+  Login: undefined;
+  SignUp: undefined;
+  SignUpComplete: undefined;
   Main: undefined;
   TaskCreate: undefined;
   Timer: { task: TaskParam };

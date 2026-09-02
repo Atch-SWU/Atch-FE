@@ -8,6 +8,9 @@ import { FONTS } from './src/constants/fonts';
 import { RootStackParamList } from './src/navigation/types';
 import MainScreen from './src/screens/MainScreen';
 import OnboardingScreen from './src/screens/OnboardingScreen';
+import LoginScreen from './src/screens/LoginScreen';
+import SignUpScreen from './src/screens/SignUpScreen';
+import SignUpCompleteScreen from './src/screens/SignUpCompleteScreen';
 import TimerScreen from './src/screens/TimerScreen';
 import SessionCompleteScreen from './src/screens/SessionCompleteScreen';
 import TaskCreateScreen from './src/screens/TaskCreateScreen';
@@ -32,6 +35,9 @@ export default function App() {
           initialRouteName={IS_LOGGED_IN ? 'Main' : 'Onboarding'}
         >
           <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+          <Stack.Screen name="Login" component={LoginScreen} />
+          <Stack.Screen name="SignUp" component={SignUpScreen} />
+          <Stack.Screen name="SignUpComplete" component={SignUpCompleteScreen} />
           <Stack.Screen name="Main" component={MainScreen} />
           <Stack.Screen name="TaskCreate" component={TaskCreateScreen} options={{ gestureEnabled: true, fullScreenGestureEnabled: true }} />
           <Stack.Screen name="Timer" component={TimerScreen} options={{ animation: 'slide_from_bottom' }} />
