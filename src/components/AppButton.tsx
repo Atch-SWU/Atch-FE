@@ -8,6 +8,8 @@ interface AppButtonProps {
   label: string;
   variant?: Variant;
   textVariant?: TypographyToken;
+  // 지정 시 variant 기본 텍스트색 대신 이 색을 사용
+  textColor?: string;
   onPress?: () => void;
   style?: StyleProp<ViewStyle>;
 }
@@ -23,6 +25,7 @@ export default function AppButton({
   label,
   variant = 'primary',
   textVariant,
+  textColor,
   onPress,
   style,
 }: AppButtonProps) {
@@ -40,7 +43,7 @@ export default function AppButton({
         style,
       ]}
     >
-      <AppText variant={textVariant ?? defaultText} color={v.text}>{label}</AppText>
+      <AppText variant={textVariant ?? defaultText} color={textColor ?? v.text}>{label}</AppText>
     </Pressable>
   );
 }

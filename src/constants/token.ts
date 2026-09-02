@@ -87,6 +87,15 @@ export const TYPOGRAPHY = {
   onboardingTitle: { fontFamily: 'Pretendard-Bold', fontSize: 24, lineHeight: 32 },
   onboardingSubtitle: { fontFamily: 'Pretendard-Medium', fontSize: 18, lineHeight: 26 },
 
+  // 로그인
+  authLinkText: { fontFamily: 'Pretendard-Regular', fontSize: 14, lineHeight: 17 },
+  authButtonText: { fontFamily: 'Pretendard-Bold', fontSize: 16, lineHeight: 19 },
+  authFieldLabel: { fontFamily: 'Pretendard-Bold', fontSize: 16, lineHeight: 19 },
+  signupCompleteTitle: { fontFamily: 'OkDanDan-Bold', fontSize: 32, lineHeight: 38 },
+  termsTitle: { fontFamily: 'Pretendard-Bold', fontSize: 21, lineHeight: 25 },
+  termsItemText: { fontFamily: 'Pretendard-Medium', fontSize: 13, lineHeight: 16 },
+  termsViewText: { fontFamily: 'Pretendard-SemiBold', fontSize: 11, lineHeight: 13 },
+
 } as const;
 
 export type TypographyToken = keyof typeof TYPOGRAPHY;
@@ -96,11 +105,13 @@ const PALETTE = {
   main100: '#2FCCDC', main80: '#68DCE8', main60: '#8EEAF3', main40: '#B3EBF3', main20: '#DEF6FB',
   white: '#FFFFFF', black: '#000000',
   grey100: '#F7F9F9', grey200: '#ECEEEE', grey300: '#DBDCDC', grey400: '#B4B7B7', grey500: '#919494',
-  grey600: '#6B6C6C', grey700: '#4F5151', grey800: '#303030', grey900: '#131414',
+  grey600: '#6B6C6C', grey650: '#4E4E4E', grey700: '#4F5151', grey800: '#303030', grey900: '#131414',
   // 보조 중립(칩 외 임시)
   grey50: '#F5F5F5', grey575: '#575757', greyDate: '#7C7C7C',
   completedBg: '#EBEBEB', completedBorder: '#E0E0E0', completedBadgeBg: '#8E8E8E',
   cardTitleText: '#2A2A2A', sectionLabelText: '#323232',
+  kakaoYellow: '#FDDC3F',
+  termsItemGrey: '#656565', termsViewGrey: '#BDBDBD',
 } as const;
 
 export const COLORS = {
@@ -210,6 +221,12 @@ export const COLORS = {
   doneRowBg: PALETTE.grey100,
   doneCheckBg: PALETTE.grey400,
   doneRowTextColor: PALETTE.grey400,
+  // 로그인 — 소셜 로그인 버튼
+  socialBtnBorder: PALETTE.grey300,
+  kakaoBtnBg: PALETTE.kakaoYellow,
+  authInputPlaceholder: PALETTE.grey650,
+  termsItemText: PALETTE.termsItemGrey,
+  termsViewText: PALETTE.termsViewGrey,
 } as const;
 
 export const CATEGORY_COLORS = {
