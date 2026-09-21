@@ -4,17 +4,19 @@ import { COLORS } from '../constants/token';
 interface ToggleSwitchProps {
   value: boolean;
   onValueChange: (v: boolean) => void;
+  /** on 상태 트랙 색상 오버라이드 (기본값 COLORS.toggleTrackOn) */
+  activeColor?: string;
 }
 
 /** 커스텀 토글 스위치 */
-export default function ToggleSwitch({ value, onValueChange }: ToggleSwitchProps) {
+export default function ToggleSwitch({ value, onValueChange, activeColor }: ToggleSwitchProps) {
   return (
     <Pressable
       onPress={() => onValueChange(!value)}
       style={[
         styles.track,
         {
-          backgroundColor: value ? COLORS.toggleTrackOn : COLORS.toggleTrackOff,
+          backgroundColor: value ? (activeColor ?? COLORS.toggleTrackOn) : COLORS.toggleTrackOff,
           alignItems: value ? 'flex-end' : 'flex-start',
         },
       ]}

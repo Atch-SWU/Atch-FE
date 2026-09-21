@@ -28,7 +28,7 @@ export default function LoginScreen({ navigation }: Props) {
     };
 
     const handleFindPassword = () => {
-        // TODO: 비밀번호 찾기 화면 연결.
+        navigation.navigate('FindPassword');
     };
 
     const handleSignUp = () => {

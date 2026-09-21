@@ -11,7 +11,9 @@ export type RootStackParamList = {
   Login: undefined;
   SignUp: undefined;
   SignUpComplete: undefined;
+  FindPassword: undefined;
   Main: undefined;
+  Settings: undefined;
   TaskCreate: undefined;
   Timer: { task: TaskParam };
   SessionComplete: {
