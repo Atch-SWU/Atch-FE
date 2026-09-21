@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
     },
 
     scrim: {
-        ...StyleSheet.absoluteFillObject,
+        ...StyleSheet.absoluteFill,
         backgroundColor: COLORS.scrim,
         opacity: 0.36,
     },

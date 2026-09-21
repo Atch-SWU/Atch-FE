@@ -46,7 +46,7 @@ export default function AppDialog({
 
 const styles = StyleSheet.create({
   overlay: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  scrim: { ...StyleSheet.absoluteFillObject, backgroundColor: COLORS.scrim, opacity: 0.6 },
+  scrim: { ...StyleSheet.absoluteFill, backgroundColor: COLORS.scrim, opacity: 0.6 },
   card: {
     width: 320, borderRadius: 30, backgroundColor: COLORS.dialogCardBg,
     alignItems: 'center', paddingHorizontal: 29, paddingTop: 26, paddingBottom: 26,

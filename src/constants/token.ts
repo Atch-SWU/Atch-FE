@@ -96,6 +96,19 @@ export const TYPOGRAPHY = {
   termsItemText: { fontFamily: 'Pretendard-Medium', fontSize: 13, lineHeight: 16 },
   termsViewText: { fontFamily: 'Pretendard-SemiBold', fontSize: 11, lineHeight: 13 },
 
+  // 상점
+  shopTitle: { fontFamily: 'OkDanDan-Bold', fontSize: 26, lineHeight: 31 },
+  shopNicknameBold: { fontFamily: 'Pretendard-Bold', fontSize: 26, lineHeight: 31 },
+  shopNicknameRegular: { fontFamily: 'Pretendard-Regular', fontSize: 26, lineHeight: 31 },
+  shopCategoryTab: { fontFamily: 'Pretendard-Medium', fontSize: 18, lineHeight: 22 },
+
+  // 설정
+  settingsHeaderTitle: { fontFamily: 'Pretendard-SemiBold', fontSize: 16, lineHeight: 19 },
+  settingsSectionLabel: { fontFamily: 'Pretendard-Bold', fontSize: 18, lineHeight: 22 },
+  settingsRowLabel: { fontFamily: 'Pretendard-Medium', fontSize: 16, lineHeight: 19 },
+  settingsNickname: { fontFamily: 'Pretendard-Bold', fontSize: 16, lineHeight: 19 },
+  settingsBioText: { fontFamily: 'Pretendard-Regular', fontSize: 14, lineHeight: 17 },
+
 } as const;
 
 export type TypographyToken = keyof typeof TYPOGRAPHY;
@@ -112,6 +125,14 @@ const PALETTE = {
   cardTitleText: '#2A2A2A', sectionLabelText: '#323232',
   kakaoYellow: '#FDDC3F',
   termsItemGrey: '#656565', termsViewGrey: '#BDBDBD',
+  // 상점
+  shopCharBg: '#F1F1F1',
+  itemLockedBg: 'rgba(106, 106, 106, 0.16)',
+  itemBorder: 'rgba(0, 0, 0, 0.2)',
+  // 설정
+  settingsDivider: '#D6D6D6',
+  settingsMutedText: '#858585',
+  settingsBioBg: '#F7F9F9',
 } as const;
 
 export const COLORS = {
@@ -227,6 +248,23 @@ export const COLORS = {
   authInputPlaceholder: PALETTE.grey650,
   termsItemText: PALETTE.termsItemGrey,
   termsViewText: PALETTE.termsViewGrey,
+  // 상점
+  shopCharBg: PALETTE.shopCharBg,
+  categoryTabActiveBg: PALETTE.main100,
+  categoryTabActiveBorder: PALETTE.main20,
+  categoryTabActiveText: PALETTE.main20,
+  categoryTabText: PALETTE.black,
+  itemOwnedBg: PALETTE.main20,
+  itemOwnedBadgeBg: PALETTE.main60,
+  itemLockedBg: PALETTE.itemLockedBg,
+  itemLockIcon: PALETTE.grey600,
+  itemBorder: PALETTE.itemBorder,
+  // 설정
+  settingsDivider: PALETTE.settingsDivider,
+  settingsMutedText: PALETTE.settingsMutedText,
+  settingsToggleActive: PALETTE.main80,
+  settingsAvatarBg: PALETTE.main20,
+  settingsBioBg: PALETTE.settingsBioBg,
 } as const;
 
 export const CATEGORY_COLORS = {

@@ -11,9 +11,11 @@ import OnboardingScreen from './src/screens/OnboardingScreen';
 import LoginScreen from './src/screens/LoginScreen';
 import SignUpScreen from './src/screens/SignUpScreen';
 import SignUpCompleteScreen from './src/screens/SignUpCompleteScreen';
+import FindPasswordScreen from './src/screens/FindPasswordScreen';
 import TimerScreen from './src/screens/TimerScreen';
 import SessionCompleteScreen from './src/screens/SessionCompleteScreen';
 import TaskCreateScreen from './src/screens/TaskCreateScreen';
+import SettingsScreen from './src/screens/SettingsScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -38,7 +40,9 @@ export default function App() {
           <Stack.Screen name="Login" component={LoginScreen} />
           <Stack.Screen name="SignUp" component={SignUpScreen} />
           <Stack.Screen name="SignUpComplete" component={SignUpCompleteScreen} />
+          <Stack.Screen name="FindPassword" component={FindPasswordScreen} options={{ gestureEnabled: true, fullScreenGestureEnabled: true }} />
           <Stack.Screen name="Main" component={MainScreen} />
+          <Stack.Screen name="Settings" component={SettingsScreen} options={{ gestureEnabled: true, fullScreenGestureEnabled: true }} />
           <Stack.Screen name="TaskCreate" component={TaskCreateScreen} options={{ gestureEnabled: true, fullScreenGestureEnabled: true }} />
           <Stack.Screen name="Timer" component={TimerScreen} options={{ animation: 'slide_from_bottom' }} />
           <Stack.Screen name="SessionComplete" component={SessionCompleteScreen} options={{ animation: 'fade' }} />
