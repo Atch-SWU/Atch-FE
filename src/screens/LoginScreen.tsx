@@ -57,10 +57,10 @@ export default function LoginScreen({ navigation }: Props) {
                 <View style={styles.logoArea}>
                     <Image
                         source={require('../assets/icon/auth-logo.png')}
-                        style={{ width: 104, height: 107 }}
+                        style={{ width: 130, height: 134 }}
                         resizeMode="contain"
                     />
-                    <AuthWordmark width={84} height={37} style={styles.wordmark} />
+                    <AuthWordmark width={105} height={46} style={styles.wordmark} />
                 </View>
 
                 <View style={styles.form}>
