@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Pressable, StyleSheet } from 'react-native';
+import { View, Image, Pressable, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
@@ -7,7 +7,6 @@ import AppText from '../components/AppText';
 import ToggleSwitch from '../components/ToggleSwitch';
 import ChevronLeft from '../assets/icon/chevron-left.svg';
 import ChevronRight from '../assets/icon/chevron-right-thin.svg';
-import AvatarPlaceholder from '../assets/icon/avatar-placeholder.svg';
 import { COLORS, SPACING } from '../constants/token';
 import { RootStackParamList } from '../navigation/types';
 
@@ -31,14 +30,18 @@ export default function SettingsScreen({ navigation }: Props) {
 
             <View style={styles.profileRow}>
                 <View style={styles.avatarCircle}>
-                    <AvatarPlaceholder width={40} height={40} />
+                    <Image
+                        source={require('../assets/onboarding/onboarding-4.png')}
+                        style={styles.avatarImage}
+                        resizeMode="contain"
+                    />
                 </View>
                 <View style={styles.profileInfo}>
                     <AppText variant="settingsNickname" color={COLORS.black}>
                         슈니
                     </AppText>
                     <View style={styles.bioBox}>
-                        <AppText variant="settingsBioText" color={COLORS.settingsMutedText}>
+                        <AppText variant="settingsBioText" color={COLORS.settingsBioTextColor}>
                             나는야 슈니
                         </AppText>
                     </View>
@@ -53,7 +56,7 @@ export default function SettingsScreen({ navigation }: Props) {
 
             <View style={styles.divider} />
 
-            <Pressable style={styles.row}>
+            <Pressable style={styles.row} onPress={() => navigation.navigate('ProfileManage')}>
                 <AppText variant="settingsRowLabel" color={COLORS.settingsMutedText} style={styles.indentedLabel}>
                     프로필 관리
                 </AppText>
@@ -62,7 +65,7 @@ export default function SettingsScreen({ navigation }: Props) {
 
             <View style={styles.divider} />
 
-            <Pressable style={styles.row}>
+            <Pressable style={styles.row} onPress={() => navigation.navigate('MyInfo')}>
                 <AppText variant="settingsRowLabel" color={COLORS.settingsMutedText} style={styles.indentedLabel}>
                     내 정보 관리
                 </AppText>
@@ -93,7 +96,7 @@ export default function SettingsScreen({ navigation }: Props) {
 
             <View style={styles.divider} />
 
-            <Pressable style={styles.row}>
+            <Pressable style={styles.row} onPress={() => navigation.navigate('AppSettings')}>
                 <AppText variant="settingsRowLabel" color={COLORS.black} style={styles.rowLabel}>앱 설정</AppText>
                 <ChevronRight width={16} height={16} color={COLORS.black} />
             </Pressable>
@@ -112,7 +115,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingHorizontal: SPACING.screenH,
         marginTop: 8,
-        marginBottom: 24,
+        marginBottom: 39,
     },
     backBtn: { width: 30, height: 30, alignItems: 'center', justifyContent: 'center' },
     headerTitle: { flex: 1, textAlign: 'center' },
@@ -125,23 +128,28 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     avatarCircle: {
-        width: 64,
-        height: 64,
-        borderRadius: 32,
+        width: 114,
+        height: 114,
+        borderRadius: 57,
         backgroundColor: COLORS.settingsAvatarBg,
         alignItems: 'center',
         justifyContent: 'center',
     },
+    avatarImage: {
+        width: 80,
+        height: 80,
+    },
     profileInfo: {
         flex: 1,
-        marginLeft: 14,
+        marginLeft: 20,
     },
     bioBox: {
         marginTop: 8,
+        height: 50,
         backgroundColor: COLORS.settingsBioBg,
-        borderRadius: 14,
+        borderRadius: 16,
         paddingHorizontal: 16,
-        paddingVertical: 12,
+        justifyContent: 'center',
     },
 
     divider: { height: 1, backgroundColor: COLORS.settingsDivider },

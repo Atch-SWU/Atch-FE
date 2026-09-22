@@ -1,4 +1,4 @@
-import { View, TextInput, StyleSheet, KeyboardTypeOptions } from 'react-native';
+import { View, TextInput, StyleSheet, KeyboardTypeOptions, StyleProp, ViewStyle } from 'react-native';
 import { COLORS, TYPOGRAPHY } from '../constants/token';
 
 type FormInputVariant = 'outlined' | 'filled';
@@ -15,6 +15,9 @@ interface FormInputProps {
   variant?: FormInputVariant;
   // 플레이스홀더 색상 — 지정 없으면 기본 COLORS.placeholderText 사용
   placeholderColor?: string;
+  // 박스 크기/정렬 커스텀 — multiline(자기소개 등) 텍스트 영역처럼 높이를 키우거나
+  // 텍스트를 상단 정렬해야 할 때 사용.
+  boxStyle?: StyleProp<ViewStyle>;
 }
 
 /** 라운드 입력 필드 — outlined(테두리) 또는 filled(배경 채움) */
@@ -28,15 +31,17 @@ export default function FormInput({
   autoCapitalize,
   variant = 'outlined',
   placeholderColor,
+  boxStyle,
 }: FormInputProps) {
   return (
-    <View style={[styles.box, variant === 'filled' && styles.boxFilled]}>
+    <View style={[styles.box, variant === 'filled' && styles.boxFilled, boxStyle]}>
       <TextInput
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
         placeholderTextColor={placeholderColor ?? COLORS.placeholderText}
         multiline={multiline}
+        textAlignVertical={multiline ? 'top' : undefined}
         secureTextEntry={secureTextEntry}
         keyboardType={keyboardType}
         autoCapitalize={autoCapitalize}

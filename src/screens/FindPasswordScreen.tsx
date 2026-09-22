@@ -49,7 +49,7 @@ export default function FindPasswordScreen({ navigation }: Props) {
         <SafeAreaView style={styles.root} edges={['top', 'bottom']}>
             <View style={styles.header}>
                 <Pressable style={styles.backBtn} onPress={() => navigation.goBack()} hitSlop={10}>
-                    <ChevronLeft width={20} height={20} color={COLORS.black} />
+                    <ChevronLeft width={20} height={20} color={COLORS.headerBackIcon} />
                 </Pressable>
                 <AppText variant="titleSmall" color={COLORS.textMain} style={styles.headerTitle}>
                     비밀번호 찾기
@@ -187,7 +187,14 @@ const styles = StyleSheet.create({
         marginBottom: 8,
     },
 
-    backBtn: { width: 30, height: 30, alignItems: 'center', justifyContent: 'center' },
+    backBtn: {
+        width: 30,
+        height: 30,
+        borderRadius: 15,
+        backgroundColor: COLORS.headerBackBg,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
 
     headerTitle: { flex: 1, textAlign: 'center' },
     headerSpacer: { width: 30 },

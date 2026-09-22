@@ -18,6 +18,11 @@ import TimerScreen from './src/screens/TimerScreen';
 import SessionCompleteScreen from './src/screens/SessionCompleteScreen';
 import TaskCreateScreen from './src/screens/TaskCreateScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
+import ProfileManageScreen from './src/screens/ProfileManageScreen';
+import MyInfoScreen from './src/screens/MyInfoScreen';
+import ChangePasswordScreen from './src/screens/ChangePasswordScreen';
+import AppSettingsScreen from './src/screens/AppSettingsScreen';
+import PushSettingsScreen from './src/screens/PushSettingsScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -79,6 +84,51 @@ export default function App() {
               <Stack.Screen
                 name="Settings"
                 component={SettingsScreen}
+                options={{
+                  gestureEnabled: true,
+                  fullScreenGestureEnabled: true,
+                }}
+              />
+
+              <Stack.Screen
+                name="ProfileManage"
+                component={ProfileManageScreen}
+                options={{
+                  gestureEnabled: true,
+                  fullScreenGestureEnabled: true,
+                }}
+              />
+
+              <Stack.Screen
+                name="MyInfo"
+                component={MyInfoScreen}
+                options={{
+                  gestureEnabled: true,
+                  fullScreenGestureEnabled: true,
+                }}
+              />
+
+              <Stack.Screen
+                name="ChangePassword"
+                component={ChangePasswordScreen}
+                options={{
+                  gestureEnabled: true,
+                  fullScreenGestureEnabled: true,
+                }}
+              />
+
+              <Stack.Screen
+                name="AppSettings"
+                component={AppSettingsScreen}
+                options={{
+                  gestureEnabled: true,
+                  fullScreenGestureEnabled: true,
+                }}
+              />
+
+              <Stack.Screen
+                name="PushSettings"
+                component={PushSettingsScreen}
                 options={{
                   gestureEnabled: true,
                   fullScreenGestureEnabled: true,

@@ -16,5 +16,5 @@ export default function AppText({
   style,
   ...rest
 }: AppTextProps) {
-  return <Text {...rest} style={[TYPOGRAPHY[variant], { color }, style]} />;
+  return <Text {...rest} style={[TYPOGRAPHY[variant], { color, textDecorationLine: 'none' }, style]} />;
 }
