@@ -105,14 +105,12 @@ export default function OnboardingScreen({ navigation }: Props) {
     const cardWidth = windowWidth - CARD_MARGIN_H * 2;
     const cardImageWidth = cardWidth - IMAGE_MARGIN * 2;
 
-   const imageAspectRatios: Record<number, number> = {
-    [ONBOARDING_PAGES[0].image]: 1179 / 2556,
-    [ONBOARDING_PAGES[1].image]: 1179 / 2556,
-    [ONBOARDING_PAGES[2].image]: 1179 / 2556,
-    [ONBOARDING_PAGES[3].image]: 1179 / 2556,
-};
-
-const imageAspectRatio = imageAspectRatios[page.image] ?? 1;
+    // 이미지마다 실제 원본 비율이 조금씩 달라서(스크린샷 크롭 차이 등) 하나의 고정값을
+    // 쓰면 카드가 과하게 커지거나(민트 박스가 남는 세로 공간을 거의 다 채움) 페이지마다
+    // 여백 느낌이 달라지는 문제가 있었음 — 번들된 이미지의 실제 width/height를 그대로 사용.
+    const assetSource = Image.resolveAssetSource(page.image);
+    const imageAspectRatio =
+        assetSource && assetSource.height > 0 ? assetSource.width / assetSource.height : 1;
 
 const cardImageHeightByWidth = cardImageWidth / imageAspectRatio;
 // wrapHeight를 아직 못 쟀으면(최초 렌더) 폭 기준 값을 그대로 사용.
