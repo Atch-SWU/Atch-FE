@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, ScrollView, Pressable, StyleSheet } from 'react-native';
+import { View, ScrollView, Pressable, StyleSheet, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import useAppDimensions from '../hooks/useAppDimensions';
 import { useNavigation } from '@react-navigation/native';
@@ -10,7 +10,6 @@ import type { SvgProps } from 'react-native-svg';
 import AppText from '../components/AppText';
 import ItemBox from '../components/ItemBox';
 import SettingsIcon from '../assets/icon/settings.svg';
-import AuthLogo from '../assets/icon/auth-logo.svg';
 import LiquidBlue from '../assets/items/liquid-blue.svg';
 import LiquidYellow from '../assets/items/liquid-yellow.svg';
 import LiquidPink from '../assets/items/liquid-pink.svg';
@@ -96,7 +95,11 @@ export default function ShopScreen() {
                     </Pressable>
                 </View>
 
-                <AuthLogo width={195} height={190} style={styles.character} />
+                <Image
+                    source={require('../assets/icon/auth-logo.png')}
+                    style={[styles.character, { width: 195, height: 190 }]}
+                    resizeMode="contain"
+                />
 
                 <View style={styles.nicknameRow}>
                     <AppText variant="shopNicknameBold" color={COLORS.black}>{NICKNAME}</AppText>
