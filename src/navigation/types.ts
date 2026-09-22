@@ -14,6 +14,11 @@ export type RootStackParamList = {
   FindPassword: undefined;
   Main: undefined;
   Settings: undefined;
+  ProfileManage: undefined;
+  MyInfo: undefined;
+  ChangePassword: undefined;
+  AppSettings: undefined;
+  PushSettings: undefined;
   TaskCreate: undefined;
   Timer: { task: TaskParam };
   SessionComplete: {

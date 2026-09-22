@@ -62,6 +62,11 @@ const CARD_MARGIN_H = 72;
 // 이 여백만은 항상 고정으로 유지되고, 카드·이미지 자체의 크기가 화면 폭에 맞춰 늘어나거나 줄어듦.
 const IMAGE_MARGIN = 22;
 
+// 민트 박스가 illustrationWrap(남은 세로 공간) 중 실제로 채우는 비율.
+// 1.0이면 박스가 남은 공간을 거의 꽉 채워 화면에 비해 너무 커 보이고,
+// 너무 작으면(0.6대) 이미지가 왜소해 보이므로 그 사이에서 목업 크기에 맞춤.
+const WRAP_FILL_RATIO = 0.85;
+
 // 4번째(마지막) 페이지 캐릭터 아이콘 크기 — 카드가 없어서 다른 페이지와 같은 폭 계산식을
 // 쓰면 너무 작게 나와서 별도로 지정. 화면이 너무 좁을 때만 방어적으로 줄어듦.
 const LAST_PAGE_ICON_WIDTH = 305;
@@ -74,6 +79,10 @@ export default function OnboardingScreen({ navigation }: Props) {
     const insets = useSafeAreaInsets();
     const { width: windowWidth, height: windowHeight } = useAppDimensions();
     const [pageIndex, setPageIndex] = useState(0);
+    // 민트 박스가 실제로 차지할 수 있는 세로 공간 — onLayout으로 측정.
+    // (웹 데스크톱처럼 화면이 가로로 넓고 세로는 짧은 경우, 세로로 긴 스크린샷 이미지가
+    //  이 공간보다 커져서 박스 밖(버튼 줄 쪽)으로 넘치는 버그가 있었음 — 그래서 세로 공간도 같이 체크.)
+    const [wrapHeight, setWrapHeight] = useState(0);
 
     const textToImageGap = Math.min(
         Math.max(
@@ -105,7 +114,15 @@ export default function OnboardingScreen({ navigation }: Props) {
 
 const imageAspectRatio = imageAspectRatios[page.image] ?? 1;
 
-const cardImageHeight = cardImageWidth / imageAspectRatio;
+const cardImageHeightByWidth = cardImageWidth / imageAspectRatio;
+// wrapHeight를 아직 못 쟀으면(최초 렌더) 폭 기준 값을 그대로 사용.
+// 박스가 남은 세로 공간을 거의 다 채우면 화면에 비해 너무 커 보이므로,
+// 실제로는 그 공간의 일부(WRAP_FILL_RATIO)만 채우도록 제한 — 위아래로 자연스러운 여백이 남음.
+const maxImageHeightByWrap =
+    wrapHeight > 0 ? wrapHeight * WRAP_FILL_RATIO - IMAGE_MARGIN * 2 : cardImageHeightByWidth;
+const cardImageHeight = Math.min(cardImageHeightByWidth, maxImageHeightByWrap);
+// 세로 공간이 부족해서 높이가 깎였다면, 비율 유지를 위해 폭도 그만큼 같이 줄임.
+const cardImageWidthFinal = cardImageHeight * imageAspectRatio;
 
     // 카드가 없는 마지막 페이지는 카드 폭 계산식을 안 쓰고 고정 크기(305x300)를 쓰되,
     // 화면이 그보다 좁을 때만 방어적으로 줄어들게 함.
@@ -114,7 +131,7 @@ const cardImageHeight = cardImageWidth / imageAspectRatio;
     const lastPageIconHeight =
         lastPageIconWidth * (LAST_PAGE_ICON_HEIGHT / LAST_PAGE_ICON_WIDTH);
 
-    const imageWidth = showCardBackdrop ? cardImageWidth : lastPageIconWidth;
+    const imageWidth = showCardBackdrop ? cardImageWidthFinal : lastPageIconWidth;
     const imageHeight = showCardBackdrop ? cardImageHeight : lastPageIconHeight;
 
     const goPrevious = () => {
@@ -171,7 +188,19 @@ const cardImageHeight = cardImageWidth / imageAspectRatio;
                 </AppText>
             </View>
 
-            <View style={[styles.illustrationWrap, { marginTop: textToImageGap }]}>
+            <View
+                style={[
+                    styles.illustrationWrap,
+                    {
+                        marginTop: textToImageGap,
+                        // 카드가 있는 페이지(1~3)만 세로 중앙 정렬로 위아래 여백을 주고,
+                        // 카드가 없는 마지막 캐릭터 페이지는 원래대로 상단 정렬 유지
+                        // (가운데 정렬로 바꿨더니 캐릭터 이미지 위치가 이상해 보이는 문제가 있었음).
+                        justifyContent: showCardBackdrop ? 'center' : 'flex-start',
+                    },
+                ]}
+                onLayout={(e) => setWrapHeight(e.nativeEvent.layout.height)}
+            >
                 {showCardBackdrop ? (
                     <View
                         style={[
@@ -237,13 +266,14 @@ const styles = StyleSheet.create({
     illustrationWrap: {
         flex: 1,
         alignItems: 'center',
-        justifyContent: 'flex-start',
     },
 
     illustrationBackdrop: {
         backgroundColor: COLORS.main20,
         borderTopLeftRadius: 32,
         borderTopRightRadius: 32,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
 
     buttonRow: {

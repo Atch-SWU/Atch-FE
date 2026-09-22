@@ -107,7 +107,7 @@ export const TYPOGRAPHY = {
   settingsSectionLabel: { fontFamily: 'Pretendard-Bold', fontSize: 18, lineHeight: 22 },
   settingsRowLabel: { fontFamily: 'Pretendard-Medium', fontSize: 16, lineHeight: 19 },
   settingsNickname: { fontFamily: 'Pretendard-Bold', fontSize: 16, lineHeight: 19 },
-  settingsBioText: { fontFamily: 'Pretendard-Regular', fontSize: 14, lineHeight: 17 },
+  settingsBioText: { fontFamily: 'Pretendard-Medium', fontSize: 14, lineHeight: 17 },
 
 } as const;
 
@@ -133,6 +133,9 @@ const PALETTE = {
   settingsDivider: '#D6D6D6',
   settingsMutedText: '#858585',
   settingsBioBg: '#F7F9F9',
+  settingsBioTextColor: '#4E4E4E',
+  settingsSectionLabelColor: '#AFAFAF',
+  mutedBtnBg: '#AFAFAF',
 } as const;
 
 export const COLORS = {
@@ -265,6 +268,10 @@ export const COLORS = {
   settingsToggleActive: PALETTE.main80,
   settingsAvatarBg: PALETTE.main20,
   settingsBioBg: PALETTE.settingsBioBg,
+  settingsBioTextColor: PALETTE.settingsBioTextColor,
+  settingsSectionLabelColor: PALETTE.settingsSectionLabelColor,
+  mutedBtnBg: PALETTE.mutedBtnBg,
+  mutedBtnText: PALETTE.white,
 } as const;
 
 export const CATEGORY_COLORS = {
