@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { View, Image, StyleSheet, useWindowDimensions } from 'react-native';
+import { View, Image, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import useAppDimensions from '../hooks/useAppDimensions';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import AppText from '../components/AppText';
@@ -71,7 +72,7 @@ const ONBOARDING_BUTTON_TEXT_VARIANT: TypographyToken = 'titleSmall';
 
 export default function OnboardingScreen({ navigation }: Props) {
     const insets = useSafeAreaInsets();
-    const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+    const { width: windowWidth, height: windowHeight } = useAppDimensions();
     const [pageIndex, setPageIndex] = useState(0);
 
     const textToImageGap = Math.min(
@@ -95,11 +96,16 @@ export default function OnboardingScreen({ navigation }: Props) {
     const cardWidth = windowWidth - CARD_MARGIN_H * 2;
     const cardImageWidth = cardWidth - IMAGE_MARGIN * 2;
 
-    const assetSize = Image.resolveAssetSource(page.image);
-    const cardImageHeight =
-        assetSize.width > 0
-            ? (cardImageWidth / assetSize.width) * assetSize.height
-            : cardImageWidth;
+   const imageAspectRatios: Record<number, number> = {
+    [ONBOARDING_PAGES[0].image]: 1179 / 2556,
+    [ONBOARDING_PAGES[1].image]: 1179 / 2556,
+    [ONBOARDING_PAGES[2].image]: 1179 / 2556,
+    [ONBOARDING_PAGES[3].image]: 1179 / 2556,
+};
+
+const imageAspectRatio = imageAspectRatios[page.image] ?? 1;
+
+const cardImageHeight = cardImageWidth / imageAspectRatio;
 
     // 카드가 없는 마지막 페이지는 카드 폭 계산식을 안 쓰고 고정 크기(305x300)를 쓰되,
     // 화면이 그보다 좁을 때만 방어적으로 줄어들게 함.

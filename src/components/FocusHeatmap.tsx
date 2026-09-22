@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
-import { View, StyleSheet, useWindowDimensions } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 
 import AppText from './AppText';
+import useAppDimensions from '../hooks/useAppDimensions';
 import { COLORS, SPACING } from '../constants/token';
 import { getIntensityColor } from '../data/reportDummyData';
 
@@ -32,7 +33,7 @@ export default function FocusHeatmap({
   responsive = false,
 }: FocusHeatmapProps) {
   const showLabels = rows.some((row) => !!row.label);
-  const { width: windowWidth } = useWindowDimensions();
+  const { width: windowWidth } = useAppDimensions();
   const cellCount = rows[0]?.values.length ?? 0;
 
   const cellSize = useMemo(() => {

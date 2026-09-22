@@ -309,3 +309,7 @@ export const COMPLETION_COLORS = {
 export const SPACING = {
   screenH: 16, cardGap: 12, cardRadius: 20, cardPaddingH: 22, cardPaddingV: 18,
 } as const;
+
+// 웹(Vercel) 배포 시 데스크톱 브라우저에서도 모바일 폭으로 보이게 고정하는 최대 폭.
+// App.tsx의 모바일 프레임과 useAppDimensions 훅이 이 값을 공유해야 함(둘 중 하나만 바꾸면 레이아웃이 어긋남).
+export const MAX_APP_WIDTH = 430;

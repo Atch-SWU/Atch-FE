@@ -3,10 +3,10 @@ import {
   View,
   Text,
   StyleSheet,
-  useWindowDimensions,
   type LayoutChangeEvent,
 } from 'react-native';
 import Svg, { Path, Defs, Filter, FeDropShadow } from 'react-native-svg';
+import useAppDimensions from '../hooks/useAppDimensions';
 
 const RADIUS = 10;
 const TAIL_WIDTH = 20;
@@ -22,7 +22,7 @@ interface MessageBubbleProps {
 
 export default function MessageBubble({ children, textStyle }: MessageBubbleProps) {
   const [textSize, setTextSize] = useState<{ width: number; height: number } | null>(null);
-  const { width: screenWidth } = useWindowDimensions();
+  const { width: screenWidth } = useAppDimensions();
   const maxBubbleWidth = screenWidth - 32;
   const maxTextWidth = maxBubbleWidth - H_PADDING * 2;
 

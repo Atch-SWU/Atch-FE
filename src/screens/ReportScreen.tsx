@@ -4,9 +4,9 @@ import {
   ScrollView,
   StyleSheet,
   Pressable,
-  useWindowDimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import useAppDimensions from '../hooks/useAppDimensions';
 
 import AppText from '../components/AppText';
 import { COLORS, SPACING } from '../constants/token';
@@ -20,7 +20,7 @@ const TAB_MARGIN_H = 41;
 
 export default function ReportScreen() {
   const insets = useSafeAreaInsets();
-  const { width: windowWidth } = useWindowDimensions();
+  const { width: windowWidth } = useAppDimensions();
 
   const [reportType, setReportType] =
     useState<ReportType>('weekly');

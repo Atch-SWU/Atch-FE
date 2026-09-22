@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
-import { View, StyleSheet, useWindowDimensions } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 
 import AppText from './AppText';
+import useAppDimensions from '../hooks/useAppDimensions';
 import { COLORS, SPACING } from '../constants/token';
 
 export interface StatCardItem {
@@ -18,7 +19,7 @@ const STAT_CARD_ROW_GAP = 15;
 
 /** 리포트 하단 통계 카드 2열 그리드 (주간/일간 공용) */
 export default function StatCardGrid({ items }: StatCardGridProps) {
-  const { width: windowWidth } = useWindowDimensions();
+  const { width: windowWidth } = useAppDimensions();
 
   // 좌우 간격(STAT_CARD_COLUMN_GAP)은 고정하고 남는 폭을 2등분해서
   // 카드 가로 길이를 계산 (히트맵 셀 · 막대 그래프와 동일한 방식).

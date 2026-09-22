@@ -1,5 +1,6 @@
-import { View, StyleSheet, useWindowDimensions } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import useAppDimensions from '../hooks/useAppDimensions';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import AppText from '../components/AppText';
@@ -20,7 +21,7 @@ const MAX_ICON_WIDTH = 260;
 
 export default function SignUpCompleteScreen({ navigation }: Props) {
     const insets = useSafeAreaInsets();
-    const { width: windowWidth } = useWindowDimensions();
+    const { width: windowWidth } = useAppDimensions();
 
     const iconWidth = Math.min(
         Math.max((windowWidth / REFERENCE_SCREEN_WIDTH) * BASE_ICON_WIDTH, MIN_ICON_WIDTH),
