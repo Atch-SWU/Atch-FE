@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import {
     View,
+    Image,
     StyleSheet,
     Pressable,
     Animated,
@@ -8,7 +9,6 @@ import {
 
 import AppText from '../components/AppText';
 import { COLORS } from '../constants/token';
-import ReportCharacter from '../assets/icon/match.svg';
 
 import RoundedChevron from '../components/RoundedChevron';
 import {
@@ -115,9 +115,10 @@ export default function WeeklyReport() {
             {/* 캐릭터 + 말풍선 */}
             <View style={styles.characterSection}>
 
-                <ReportCharacter
-                    width={160}
-                    height={170}
+                <Image
+                    source={require('../assets/icon/match.png')}
+                    style={{ width: 160, height: 170 }}
+                    resizeMode="contain"
                 />
 
                 <View style={styles.messageBubbleWrapper}>

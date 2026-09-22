@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
@@ -9,11 +9,7 @@ import FormInput from '../components/FormInput';
 import { COLORS, SPACING } from '../constants/token';
 import { RootStackParamList } from '../navigation/types';
 
-import AuthLogo from '../assets/icon/auth-logo.svg';
 import AuthWordmark from '../assets/icon/auth-wordmark.svg';
-import GoogleIcon from '../assets/icon/social-google.svg';
-import AppleIcon from '../assets/icon/social-apple.svg';
-import KakaoIcon from '../assets/icon/social-kakao.svg';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
 
@@ -59,7 +55,11 @@ export default function LoginScreen({ navigation }: Props) {
         >
             <View style={styles.topGroup}>
                 <View style={styles.logoArea}>
-                    <AuthLogo width={104} height={107} />
+                    <Image
+                        source={require('../assets/icon/auth-logo.png')}
+                        style={{ width: 104, height: 107 }}
+                        resizeMode="contain"
+                    />
                     <AuthWordmark width={84} height={37} style={styles.wordmark} />
                 </View>
 
@@ -113,21 +113,33 @@ export default function LoginScreen({ navigation }: Props) {
                     style={[styles.socialButton, styles.socialButtonOutlined]}
                     onPress={handleGoogleLogin}
                 >
-                    <GoogleIcon width={22} height={22} />
+                    <Image
+                        source={require('../assets/icon/social-google.png')}
+                        style={{ width: 22, height: 22 }}
+                        resizeMode="contain"
+                    />
                 </TouchableOpacity>
 
                 <TouchableOpacity
                     style={[styles.socialButton, styles.socialButtonOutlined]}
                     onPress={handleAppleLogin}
                 >
-                    <AppleIcon width={22} height={22} />
+                    <Image
+                        source={require('../assets/icon/social-apple.png')}
+                        style={{ width: 22, height: 22 }}
+                        resizeMode="contain"
+                    />
                 </TouchableOpacity>
 
                 <TouchableOpacity
                     style={[styles.socialButton, styles.socialButtonOutlined, styles.socialButtonKakao]}
                     onPress={handleKakaoLogin}
                 >
-                    <KakaoIcon width={30} height={30} />
+                    <Image
+                        source={require('../assets/icon/social-kakao.png')}
+                        style={{ width: 30, height: 30 }}
+                        resizeMode="contain"
+                    />
                 </TouchableOpacity>
             </View>
         </View>

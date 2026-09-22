@@ -1,11 +1,10 @@
-import { View, StyleSheet } from 'react-native';
+import { View, Image, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import useAppDimensions from '../hooks/useAppDimensions';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import AppText from '../components/AppText';
 import AppButton from '../components/AppButton';
-import AuthLogo from '../assets/icon/auth-logo.svg';
 import { COLORS, SPACING } from '../constants/token';
 import { RootStackParamList } from '../navigation/types';
 
@@ -48,7 +47,11 @@ export default function SignUpCompleteScreen({ navigation }: Props) {
                     가입 완료
                 </AppText>
 
-                <AuthLogo width={iconWidth} height={iconHeight} style={styles.logo} />
+                <Image
+                    source={require('../assets/icon/auth-logo.png')}
+                    style={[styles.logo, { width: iconWidth, height: iconHeight }]}
+                    resizeMode="contain"
+                />
 
                 <AppText variant="dialogTitle" color={COLORS.textSub} style={styles.welcomeText}>
                     {'ATCH!에 오신 걸 환영해요\n지금 바로 시작해볼까요?'}
