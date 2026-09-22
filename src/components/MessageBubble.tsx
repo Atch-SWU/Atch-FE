@@ -57,8 +57,16 @@ export default function MessageBubble({ children, textStyle }: MessageBubbleProp
     );
   }
 
-  const bubbleWidth = textSize.width + H_PADDING * 2;
-  const bubbleHeight = textSize.height + V_PADDING * 2;
+  // onLayout으로 측정한 값이 실제 텍스트 렌더링 폭보다 아주 살짝(1px 미만) 작게
+  // 반올림되는 경우가 있어서, 그 측정값을 그대로 텍스트 width로 다시 지정하면
+  // 웹에서만 마지막 글자가 다음 줄로 밀려나면서 말풍선 배경 밖으로 튀어나오는
+  // 버그가 있었음 — 올림 처리 + 여유 픽셀을 더해 항상 한 줄에 들어가도록 보정.
+  const MEASURE_SAFETY_PADDING = 2;
+  const measuredTextWidth = Math.ceil(textSize.width) + MEASURE_SAFETY_PADDING;
+  const measuredTextHeight = Math.ceil(textSize.height);
+
+  const bubbleWidth = measuredTextWidth + H_PADDING * 2;
+  const bubbleHeight = measuredTextHeight + V_PADDING * 2;
 
   const svgWidth = bubbleWidth + SHADOW_MARGIN * 2;
   const svgHeight = bubbleHeight + TAIL_HEIGHT + SHADOW_MARGIN * 2;
@@ -104,7 +112,7 @@ export default function MessageBubble({ children, textStyle }: MessageBubbleProp
             position: 'absolute',
             top: bodyTop + V_PADDING,
             left: left + H_PADDING,
-            width: textSize.width, 
+            width: measuredTextWidth,
           },
         ]}
       >
