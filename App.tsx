@@ -3,8 +3,10 @@ import { useFonts } from 'expo-font';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { View, StyleSheet, Platform } from 'react-native';
 
 import { FONTS } from './src/constants/fonts';
+import { MAX_APP_WIDTH } from './src/constants/token';
 import { RootStackParamList } from './src/navigation/types';
 import MainScreen from './src/screens/MainScreen';
 import OnboardingScreen from './src/screens/OnboardingScreen';
@@ -20,34 +22,119 @@ import SettingsScreen from './src/screens/SettingsScreen';
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 // TODO: 실제 로그인/인증 연동 전까지 쓰는 임시 값.
-// 로그인 상태를 들고 있는 로직이 붙으면 이 상수 대신 그 값을 사용하도록 교체.
-// true 면 온보딩을 건너뛰고 바로 홈(Main)으로 진입.
 const IS_LOGGED_IN = false;
 
 export default function App() {
   const [fontsLoaded] = useFonts(FONTS);
-  if (!fontsLoaded) return null;
+
+  if (!fontsLoaded) {
+    return null;
+  }
 
   return (
     <SafeAreaProvider>
       <StatusBar style="dark" />
-      <NavigationContainer>
-        <Stack.Navigator
-          screenOptions={{ headerShown: false }}
-          initialRouteName={IS_LOGGED_IN ? 'Main' : 'Onboarding'}
-        >
-          <Stack.Screen name="Onboarding" component={OnboardingScreen} />
-          <Stack.Screen name="Login" component={LoginScreen} />
-          <Stack.Screen name="SignUp" component={SignUpScreen} />
-          <Stack.Screen name="SignUpComplete" component={SignUpCompleteScreen} />
-          <Stack.Screen name="FindPassword" component={FindPasswordScreen} options={{ gestureEnabled: true, fullScreenGestureEnabled: true }} />
-          <Stack.Screen name="Main" component={MainScreen} />
-          <Stack.Screen name="Settings" component={SettingsScreen} options={{ gestureEnabled: true, fullScreenGestureEnabled: true }} />
-          <Stack.Screen name="TaskCreate" component={TaskCreateScreen} options={{ gestureEnabled: true, fullScreenGestureEnabled: true }} />
-          <Stack.Screen name="Timer" component={TimerScreen} options={{ animation: 'slide_from_bottom' }} />
-          <Stack.Screen name="SessionComplete" component={SessionCompleteScreen} options={{ animation: 'fade' }} />
-        </Stack.Navigator>
-      </NavigationContainer>
+
+      <View style={styles.webBackground}>
+        <View style={styles.mobileContainer}>
+          <NavigationContainer>
+            <Stack.Navigator
+              screenOptions={{ headerShown: false }}
+              initialRouteName={IS_LOGGED_IN ? 'Main' : 'Onboarding'}
+            >
+              <Stack.Screen
+                name="Onboarding"
+                component={OnboardingScreen}
+              />
+
+              <Stack.Screen
+                name="Login"
+                component={LoginScreen}
+              />
+
+              <Stack.Screen
+                name="SignUp"
+                component={SignUpScreen}
+              />
+
+              <Stack.Screen
+                name="SignUpComplete"
+                component={SignUpCompleteScreen}
+              />
+
+              <Stack.Screen
+                name="FindPassword"
+                component={FindPasswordScreen}
+                options={{
+                  gestureEnabled: true,
+                  fullScreenGestureEnabled: true,
+                }}
+              />
+
+              <Stack.Screen
+                name="Main"
+                component={MainScreen}
+              />
+
+              <Stack.Screen
+                name="Settings"
+                component={SettingsScreen}
+                options={{
+                  gestureEnabled: true,
+                  fullScreenGestureEnabled: true,
+                }}
+              />
+
+              <Stack.Screen
+                name="TaskCreate"
+                component={TaskCreateScreen}
+                options={{
+                  gestureEnabled: true,
+                  fullScreenGestureEnabled: true,
+                }}
+              />
+
+              <Stack.Screen
+                name="Timer"
+                component={TimerScreen}
+                options={{
+                  animation: 'slide_from_bottom',
+                }}
+              />
+
+              <Stack.Screen
+                name="SessionComplete"
+                component={SessionCompleteScreen}
+                options={{
+                  animation: 'fade',
+                }}
+              />
+            </Stack.Navigator>
+          </NavigationContainer>
+        </View>
+      </View>
     </SafeAreaProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  webBackground: {
+    flex: 1,
+    backgroundColor: '#000000',
+    alignItems: 'center',
+  },
+
+  mobileContainer: {
+    flex: 1,
+    width: '100%',
+    maxWidth: MAX_APP_WIDTH,
+    backgroundColor: '#FFFFFF',
+
+    // 웹 브라우저에서만 모바일 화면처럼 보이게 하기 위한 설정
+    ...(Platform.OS === 'web'
+      ? {
+          minHeight: '100%',
+        }
+      : {}),
+  },
+});

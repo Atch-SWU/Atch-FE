@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
-import { View, StyleSheet, useWindowDimensions } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 
 import AppText from './AppText';
+import useAppDimensions from '../hooks/useAppDimensions';
 import { COLORS, SPACING } from '../constants/token';
 
 interface TaskDurationBarChartProps {
@@ -36,7 +37,7 @@ export default function TaskDurationBarChart({
   barGap = DEFAULT_BAR_GAP,
   chartPaddingH = DEFAULT_CHART_PADDING_H,
 }: TaskDurationBarChartProps) {
-  const { width: windowWidth } = useWindowDimensions();
+  const { width: windowWidth } = useAppDimensions();
 
   const maxMinutes = Math.max(...data.map((item) => item.minutes), 1);
 

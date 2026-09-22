@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { View, ScrollView, Pressable, StyleSheet, useWindowDimensions } from 'react-native';
+import { View, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import useAppDimensions from '../hooks/useAppDimensions';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { FC } from 'react';
@@ -69,7 +70,7 @@ const TABS_ROW_HEIGHT = 76; // ScrollView 자체를 이 높이로 고정 — 컨
 export default function ShopScreen() {
     const insets = useSafeAreaInsets();
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-    const { width: windowWidth } = useWindowDimensions();
+    const { width: windowWidth } = useAppDimensions();
     const [activeCategory, setActiveCategory] = useState('liquid');
     // 첫 번째(액체) 탭 라벨의 실제 렌더 너비 — 타원(pill) 폭과 비교해서
     // "탭 전체(텍스트+타원)"를 통째로 오른쪽으로 밀어 타원 시작점을 아이템 박스
