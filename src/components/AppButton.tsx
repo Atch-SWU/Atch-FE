@@ -8,7 +8,6 @@ interface AppButtonProps {
   label: string;
   variant?: Variant;
   textVariant?: TypographyToken;
-  // 지정 시 variant 기본 텍스트색 대신 이 색을 사용
   textColor?: string;
   onPress?: () => void;
   style?: StyleProp<ViewStyle>;

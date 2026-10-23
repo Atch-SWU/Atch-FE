@@ -1,11 +1,10 @@
 /**
- * 디자인 토큰 (청록/main 기반 — Figma 공식 컬러칩 반영)
+ * 디자인 토큰 
  * ------------------------------------------------------------------
  * 컴포넌트·화면에서는 hex 직접 사용 금지. 아래 토큰만 참조.
  * hex 원본값은 오직 PALETTE 에만 존재.
  * 카테고리(업무/학습)는 현재 모두 청록(main)으로 통일 — 나중에 색 구분이
  * 필요하면 CATEGORY_COLORS 의 해당 값만 바꾸면 됨.
- * (ExtraBold 자리는 Pretendard-ExtraBold.otf 부재로 Bold 매핑)
  * ------------------------------------------------------------------
  */
 
@@ -30,7 +29,7 @@ export const TYPOGRAPHY = {
   completedTitle: { fontFamily: 'Pretendard-SemiBold', fontSize: 14, lineHeight: 17, letterSpacing: -0.21 },
 
   timerTime: { fontFamily: 'OkDanDan-Bold', fontSize: 60, lineHeight: 72, letterSpacing: -0.9 },
-  primaryBtn: { fontFamily: 'Pretendard-Bold', fontSize: 20, lineHeight: 24, letterSpacing: -0.3 },
+  primaryBtn: { fontFamily: 'SUIT-Bold', fontSize: 16, letterSpacing: -0.2 },
   subtleBtn: { fontFamily: 'Pretendard-SemiBold', fontSize: 16, lineHeight: 19, letterSpacing: -0.24 },
   estLabel: { fontFamily: 'Pretendard-SemiBold', fontSize: 14, lineHeight: 17, letterSpacing: -0.42 },
   estLabelNum: { fontFamily: 'Pretendard-Bold', fontSize: 14, lineHeight: 17, letterSpacing: -0.21 },
@@ -84,8 +83,8 @@ export const TYPOGRAPHY = {
   reportTagText: { fontFamily: 'Pretendard-SemiBold', fontSize: 10, lineHeight: 12 },
 
   // 온보딩
-  onboardingTitle: { fontFamily: 'Pretendard-Bold', fontSize: 24, lineHeight: 32 },
-  onboardingSubtitle: { fontFamily: 'Pretendard-Medium', fontSize: 18, lineHeight: 26 },
+  onboardingTitle: { fontFamily: 'SUIT-ExtraBold', fontSize: 24, lineHeight: 30 },
+  onboardingContent: { fontFamily: 'SUIT-Medium', fontSize: 16, lineHeight: 26 },
 
   // 로그인
   authLinkText: { fontFamily: 'Pretendard-Regular', fontSize: 14, lineHeight: 17 },
@@ -318,5 +317,4 @@ export const SPACING = {
 } as const;
 
 // 웹(Vercel) 배포 시 데스크톱 브라우저에서도 모바일 폭으로 보이게 고정하는 최대 폭.
-// App.tsx의 모바일 프레임과 useAppDimensions 훅이 이 값을 공유해야 함(둘 중 하나만 바꾸면 레이아웃이 어긋남).
 export const MAX_APP_WIDTH = 430;
