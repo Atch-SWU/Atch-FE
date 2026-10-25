@@ -119,7 +119,7 @@ export default function OnboardingScreen({ navigation }: Props) {
             <View style={styles.titleArea}>
                 <AppText
                     variant="onboardingTitle"
-                    color="#111111"
+                    color={COLORS.black}
                     style={styles.title}
                 >
                     {currentPage.title}
@@ -130,7 +130,7 @@ export default function OnboardingScreen({ navigation }: Props) {
             <View style={styles.contentArea}>
                 <AppText
                     variant="onboardingContent"
-                    color="#82808A"
+                    color={COLORS.gray500}
                     style={styles.contentText}
                 >
                     {currentPage.content}
@@ -184,7 +184,7 @@ export default function OnboardingScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: COLORS.background,
+        backgroundColor: COLORS.white,
         paddingHorizontal: 23,
     },
 
@@ -201,11 +201,11 @@ const styles = StyleSheet.create({
         width: 7,
         height: 7,
         borderRadius: 4,
-        backgroundColor: COLORS.grey200,
+        backgroundColor: COLORS.gray200,
     },
 
     activeDot: {
-        backgroundColor: '#FF4E13',
+        backgroundColor: COLORS.orange600,
     },
 
     /* 타이틀 */
@@ -260,6 +260,6 @@ const styles = StyleSheet.create({
         width: '100%',
         height: 60,
         borderRadius: 12,
-        backgroundColor: '#242327',
+        backgroundColor: COLORS.gray800,
     },
 });

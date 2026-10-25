@@ -11,7 +11,7 @@ interface AddButtonProps {
 export default function AddButton({ onPress, style }: AddButtonProps) {
   return (
     <Pressable onPress={onPress} style={[styles.btn, style]}>
-      <PlusIcon width={28} height={28} color={COLORS.addBtnIcon} />
+      <PlusIcon width={28} height={28} color={COLORS.gray800} />
     </Pressable>
   );
 }
@@ -20,6 +20,6 @@ const styles = StyleSheet.create({
   btn: {
     width: 54, height: 54, borderRadius: 27,
     alignItems: 'center', justifyContent: 'center',
-    backgroundColor: COLORS.addBtnBg,
+    backgroundColor: COLORS.white,
   },
 });

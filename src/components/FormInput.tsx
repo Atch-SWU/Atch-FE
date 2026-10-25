@@ -1,5 +1,13 @@
-import { View, TextInput, StyleSheet, KeyboardTypeOptions, StyleProp, ViewStyle } from 'react-native';
-import { COLORS, TYPOGRAPHY } from '../constants/token';
+import {
+  View,
+  TextInput,
+  StyleSheet,
+  KeyboardTypeOptions,
+  StyleProp,
+  ViewStyle,
+} from 'react-native';
+import { useState } from 'react';
+import { COLORS } from '../constants/token';
 
 type FormInputVariant = 'outlined' | 'filled';
 
@@ -11,16 +19,13 @@ interface FormInputProps {
   secureTextEntry?: boolean;
   keyboardType?: KeyboardTypeOptions;
   autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
-  // 입력창 스타일 — outlined(기본, 테두리형) / filled(배경 채움형, 로그인 화면 등에서 사용)
   variant?: FormInputVariant;
-  // 플레이스홀더 색상 — 지정 없으면 기본 COLORS.placeholderText 사용
   placeholderColor?: string;
-  // 박스 크기/정렬 커스텀 — multiline(자기소개 등) 텍스트 영역처럼 높이를 키우거나
-  // 텍스트를 상단 정렬해야 할 때 사용.
+  textColor?: string;
+  focusBorderColor?: string;
   boxStyle?: StyleProp<ViewStyle>;
 }
 
-/** 라운드 입력 필드 — outlined(테두리) 또는 filled(배경 채움) */
 export default function FormInput({
   value,
   onChangeText,
@@ -30,22 +35,39 @@ export default function FormInput({
   keyboardType,
   autoCapitalize,
   variant = 'outlined',
-  placeholderColor,
+  placeholderColor = COLORS.gray400,
+  textColor = COLORS.gray800,
+  focusBorderColor = COLORS.gray400,
   boxStyle,
 }: FormInputProps) {
+  const [focused, setFocused] = useState(false);
+
   return (
-    <View style={[styles.box, variant === 'filled' && styles.boxFilled, boxStyle]}>
+    <View
+      style={[
+        styles.box,
+        variant === 'filled' && styles.boxFilled,
+        focused && styles.boxFocused,
+        focused && {
+          backgroundColor: COLORS.gray300,
+          borderColor: focusBorderColor,
+        },
+        boxStyle,
+      ]}
+    >
       <TextInput
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
-        placeholderTextColor={placeholderColor ?? COLORS.placeholderText}
+        placeholderTextColor={placeholderColor}
         multiline={multiline}
         textAlignVertical={multiline ? 'top' : undefined}
         secureTextEntry={secureTextEntry}
         keyboardType={keyboardType}
         autoCapitalize={autoCapitalize}
-        style={[TYPOGRAPHY.formText, styles.input]}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        style={styles.input}
       />
     </View>
   );
@@ -54,19 +76,27 @@ export default function FormInput({
 const styles = StyleSheet.create({
   box: {
     borderWidth: 1,
-    borderColor: COLORS.inputBorder,
-    borderRadius: 16,
+    borderColor: 'transparent',
+    borderRadius: 12,
     minHeight: 50,
-    paddingHorizontal: 22,
+    paddingHorizontal: 20,
     justifyContent: 'center',
   },
+
   boxFilled: {
-    borderWidth: 0,
-    backgroundColor: COLORS.surface,
+    backgroundColor: COLORS.gray200,
     height: 50,
   },
+
+  boxFocused: {
+    borderWidth: 1,
+  },
+
   input: {
-    color: COLORS.textMain,
+    fontFamily: 'SUIT-Medium',
+    fontSize: 15,
+    lineHeight: 20,
+    color: COLORS.gray800,
     paddingVertical: 0,
   },
 });

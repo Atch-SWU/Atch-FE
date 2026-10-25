@@ -10,8 +10,7 @@ import { RootStackParamList } from '../navigation/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'SignUpComplete'>;
 
-// 아이콘 기준 사이즈(281x274) — 기준 화면 폭(iPhone 14/15, 390) 대비 비율로 반응형 계산.
-// 화면이 너무 좁거나 넓어도 과하게 작아지거나 커지지 않도록 방어적으로 clamp.
+
 const REFERENCE_SCREEN_WIDTH = 390;
 const BASE_ICON_WIDTH = 281;
 const ICON_ASPECT_RATIO = 274 / 281;
@@ -43,9 +42,6 @@ export default function SignUpCompleteScreen({ navigation }: Props) {
             ]}
         >
             <View style={styles.content}>
-                <AppText variant="signupCompleteTitle" color={COLORS.primary} style={styles.completeLabel}>
-                    가입 완료
-                </AppText>
 
                 <Image
                     source={require('../assets/icon/auth-logo.png')}
@@ -53,7 +49,7 @@ export default function SignUpCompleteScreen({ navigation }: Props) {
                     resizeMode="contain"
                 />
 
-                <AppText variant="dialogTitle" color={COLORS.textSub} style={styles.welcomeText}>
+                <AppText variant="dialogTitle" color={COLORS.gray800} style={styles.welcomeText}>
                     {'ATCH!에 오신 걸 환영해요\n지금 바로 시작해볼까요?'}
                 </AppText>
             </View>
@@ -72,7 +68,7 @@ export default function SignUpCompleteScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: COLORS.background,
+        backgroundColor: COLORS.gray100,
         paddingHorizontal: SPACING.screenH,
         justifyContent: 'space-between',
     },
@@ -91,7 +87,7 @@ const styles = StyleSheet.create({
     },
 
     startBtn: {
-        height: 52,
+        height: 60,
         borderRadius: 16,
     },
 });

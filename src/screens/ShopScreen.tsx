@@ -96,7 +96,7 @@ export default function ShopScreen() {
                 </View>
 
                 <Image
-                    source={require('../assets/icon/auth-logo.png')}
+                    source={require('../assets/icon/chart.svg')}
                     style={[styles.character, { width: 195, height: 190 }]}
                     resizeMode="contain"
                 />
