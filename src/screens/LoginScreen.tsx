@@ -1,20 +1,24 @@
 import { useState } from 'react';
-import { View, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import {
+    View,
+    StyleSheet,
+    TouchableOpacity,
+    Image,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import AppText from '../components/AppText';
 import AppButton from '../components/AppButton';
 import FormInput from '../components/FormInput';
-import { COLORS, SPACING } from '../constants/token';
+import { COLORS } from '../constants/token';
 import { RootStackParamList } from '../navigation/types';
-
-import AuthWordmark from '../assets/icon/auth-wordmark.svg';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
 
 export default function LoginScreen({ navigation }: Props) {
     const insets = useSafeAreaInsets();
+
     const [userId, setUserId] = useState('');
     const [password, setPassword] = useState('');
 
@@ -31,16 +35,9 @@ export default function LoginScreen({ navigation }: Props) {
         navigation.navigate('SignUp');
     };
 
-    const handleGoogleLogin = () => {
-        // TODO: 구글 소셜 로그인 연동.
-    };
-
-    const handleAppleLogin = () => {
-        // TODO: 애플 소셜 로그인 연동.
-    };
-
-    const handleKakaoLogin = () => {
-        // TODO: 카카오 소셜 로그인 연동.
+    const handleSnsLogin = (type: 'kakao' | 'google' | 'apple') => {
+        // TODO: SNS 로그인 API 연동
+        console.log(`${type} 로그인`);
     };
 
     return (
@@ -48,99 +45,126 @@ export default function LoginScreen({ navigation }: Props) {
             style={[
                 styles.container,
                 {
-                    paddingTop: insets.top + 48,
+                    paddingTop: 310,
                     paddingBottom: insets.bottom + 32,
                 },
             ]}
         >
-            <View style={styles.topGroup}>
-                <View style={styles.logoArea}>
-                    <Image
-                        source={require('../assets/icon/auth-logo.png')}
-                        style={{ width: 130, height: 134 }}
-                        resizeMode="contain"
-                    />
-                    <AuthWordmark width={105} height={46} style={styles.wordmark} />
-                </View>
-
-                <View style={styles.form}>
-                    <FormInput
-                        value={userId}
-                        onChangeText={setUserId}
-                        placeholder="아이디"
-                        variant="filled"
-                        placeholderColor={COLORS.authInputPlaceholder}
-                        autoCapitalize="none"
-                    />
-                    <FormInput
-                        value={password}
-                        onChangeText={setPassword}
-                        placeholder="비밀번호"
-                        variant="filled"
-                        secureTextEntry
-                        placeholderColor={COLORS.authInputPlaceholder}
-                        autoCapitalize="none"
-                    />
-                </View>
-
-                <AppButton
-                    label="로그인"
-                    variant="primary"
-                    textVariant="authButtonText"
-                    onPress={handleLogin}
-                    style={styles.loginButton}
+            {/* 입력 필드 */}
+            <View style={styles.form}>
+                <FormInput
+                    value={userId}
+                    onChangeText={setUserId}
+                    placeholder="아이디"
+                    variant="filled"
+                    placeholderColor={COLORS.gray400}
+                    textColor={COLORS.gray800}
+                    focusBorderColor={COLORS.gray400}
+                    autoCapitalize="none"
+                    boxStyle={styles.input}
                 />
 
-                <View style={styles.linkRow}>
-                    <TouchableOpacity onPress={handleFindPassword}>
-                        <AppText variant="authLinkText" color={COLORS.black}>
-                            비밀번호 찾기
-                        </AppText>
-                    </TouchableOpacity>
-
-                    <View style={styles.linkDivider} />
-
-                    <TouchableOpacity onPress={handleSignUp}>
-                        <AppText variant="authLinkText" color={COLORS.black}>
-                            회원가입
-                        </AppText>
-                    </TouchableOpacity>
-                </View>
+                <FormInput
+                    value={password}
+                    onChangeText={setPassword}
+                    placeholder="비밀번호"
+                    variant="filled"
+                    placeholderColor={COLORS.gray400}
+                    textColor={COLORS.gray800}
+                    focusBorderColor={COLORS.gray400}
+                    secureTextEntry
+                    autoCapitalize="none"
+                    boxStyle={styles.input}
+                />
             </View>
 
-            <View style={styles.socialRow}>
-                <TouchableOpacity
-                    style={[styles.socialButton, styles.socialButtonOutlined]}
-                    onPress={handleGoogleLogin}
-                >
-                    <Image
-                        source={require('../assets/icon/social-google.png')}
-                        style={{ width: 22, height: 22 }}
-                        resizeMode="contain"
-                    />
+            {/* 로그인 버튼 */}
+            <AppButton
+                label="로그인"
+                variant="primary"
+                textVariant="authButtonText"
+                onPress={handleLogin}
+                style={styles.loginButton}
+            />
+
+            {/* 비밀번호 찾기 / 회원가입 */}
+            <View style={styles.linkRow}>
+            
+
+                <TouchableOpacity onPress={handleSignUp}>
+                    <AppText
+                        variant="authLinkText"
+                        color={COLORS.gray600}
+                    >
+                        회원가입
+                    </AppText>
                 </TouchableOpacity>
 
-                <TouchableOpacity
-                    style={[styles.socialButton, styles.socialButtonOutlined]}
-                    onPress={handleAppleLogin}
-                >
-                    <Image
-                        source={require('../assets/icon/social-apple.png')}
-                        style={{ width: 22, height: 22 }}
-                        resizeMode="contain"
-                    />
-                </TouchableOpacity>
+                <View style={styles.linkDivider} />
 
-                <TouchableOpacity
-                    style={[styles.socialButton, styles.socialButtonOutlined, styles.socialButtonKakao]}
-                    onPress={handleKakaoLogin}
-                >
-                    <Image
-                        source={require('../assets/icon/social-kakao.png')}
-                        style={{ width: 30, height: 30 }}
-                        resizeMode="contain"
-                    />
+                <TouchableOpacity onPress={handleFindPassword}>
+                    <AppText
+                        variant="authLinkText"
+                        color={COLORS.gray600}
+                    >
+                        비밀번호 찾기
+                    </AppText>
                 </TouchableOpacity>
+            </View>
+
+            {/* SNS 로그인 영역 */}
+            <View style={styles.snsSection}>
+                <AppText
+                    variant="snsLoginText"
+                    color={COLORS.gray400}
+                >
+                    SNS 계정으로 로그인하기
+                </AppText>
+
+                <View style={styles.snsButtonRow}>
+
+                    <TouchableOpacity
+                        style={[
+                            styles.snsButton,
+                            styles.googleButton,
+                        ]}
+                        onPress={() => handleSnsLogin('google')}
+                    >
+                        <Image
+                            source={require('../assets/icon/social-google.png')}
+                            style={styles.snsIcon}
+                            resizeMode="contain"
+                        />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={[
+                            styles.snsButton,
+                            styles.appleButton,
+                        ]}
+                        onPress={() => handleSnsLogin('apple')}
+                    >
+                        <Image
+                            source={require('../assets/icon/social-apple.png')}
+                            style={styles.snsIcon}
+                            resizeMode="contain"
+                        />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={[
+                            styles.snsButton,
+                            styles.kakaoButton,
+                        ]}
+                        onPress={() => handleSnsLogin('kakao')}
+                    >
+                        <Image
+                            source={require('../assets/icon/social-kakao.png')}
+                            style={styles.kakaoIcon}
+                            resizeMode="contain"
+                        />
+                    </TouchableOpacity>
+                </View>
             </View>
         </View>
     );
@@ -149,32 +173,27 @@ export default function LoginScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: COLORS.background,
-        paddingHorizontal: SPACING.screenH,
-    },
-
-    topGroup: {},
-
-    logoArea: {
-        marginTop: 100,
-        alignItems: 'center',
-    },
-
-    wordmark: {
-        marginTop: 12,
+        backgroundColor: COLORS.gray100,
+        paddingHorizontal: 21,
     },
 
     form: {
-        marginTop: 67,
-        gap: 12,
+        gap: 10,
+    },
+
+    input: {
+        height: 55,
+        minHeight: 55,
+        borderRadius: 12,
+        paddingHorizontal: 20,
     },
 
     loginButton: {
-        width: 155,
-        height: 50,
-        alignSelf: 'center',
-        marginTop: 31,
-        borderRadius: 16,
+        width: '100%',
+        height: 60,
+        borderRadius: 12,
+        backgroundColor: COLORS.gray800,
+        marginTop: 26,
     },
 
     linkRow: {
@@ -187,33 +206,50 @@ const styles = StyleSheet.create({
 
     linkDivider: {
         width: 1,
-        height: 12,
+        height: 15,
+        backgroundColor: COLORS.gray300,
+    },
+
+    snsSection: {
+        alignItems: 'center',
+        marginTop: 59,
+    },
+
+    snsButtonRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 16,
+        marginTop: 17,
+    },
+
+    snsButton: {
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+
+    kakaoButton: {
+        backgroundColor: '#FDDC3F',
+    },
+
+    googleButton: {
+        backgroundColor: COLORS.white,
+    },
+
+    appleButton: {
         backgroundColor: COLORS.black,
     },
 
-    socialRow: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'center',
-        gap: 17,
-        marginTop: 26,
+    snsIcon: {
+        width: 20,
+        height: 20,
     },
 
-    socialButton: {
-        width: 49,
-        height: 49,
-        borderRadius: 24.5,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-
-    socialButtonOutlined: {
-        backgroundColor: COLORS.background,
-        borderWidth: 1,
-        borderColor: COLORS.socialBtnBorder,
-    },
-
-    socialButtonKakao: {
-        backgroundColor: COLORS.kakaoBtnBg,
+    kakaoIcon: {
+        width: 35,
+        height: 35,
     },
 });

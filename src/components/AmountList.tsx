@@ -20,7 +20,7 @@ export default function AmountList({ items, onChange }: AmountListProps) {
       {items.map((it, i) => (
         <View key={i} style={styles.item}>
           <View style={styles.index}>
-            <AppText variant="badgeLabel" color={COLORS.onAccent}>{i + 1}</AppText>
+            <AppText variant="badgeLabel" color={COLORS.white}>{i + 1}</AppText>
           </View>
           <TextInput
             value={it}

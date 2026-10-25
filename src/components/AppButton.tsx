@@ -14,9 +14,9 @@ interface AppButtonProps {
 }
 
 const VARIANT = {
-  primary: { bg: COLORS.primaryBtnBg, text: COLORS.primaryBtnText },
-  secondary: { bg: COLORS.secondaryBtnBg, text: COLORS.secondaryBtnText },
-  soft: { bg: COLORS.softBtnBg, text: COLORS.softBtnText },
+  primary: { bg: COLORS.gray800, text: COLORS.white },
+  secondary: { bg: COLORS.gray800, text: COLORS.white },
+  soft: { bg: COLORS.gray800, text: COLORS.white },
 };
 
 /** 공통 버튼 (색상/타이포 전부 토큰) */

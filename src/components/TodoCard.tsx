@@ -2,7 +2,7 @@ import { View, Pressable, StyleSheet } from 'react-native';
 import AppText from './AppText';
 import CategoryBadge from './CategoryBadge';
 import PlayIcon from '../assets/icon/play.svg';
-import { CATEGORY_COLORS, CategoryKey, COLORS, SPACING } from '../constants/token';
+import { COLORS, SPACING } from '../constants/token';
 
 interface TodoCardProps {
   title: string;
