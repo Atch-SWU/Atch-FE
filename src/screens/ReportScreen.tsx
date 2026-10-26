@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import {
   View,
   ScrollView,
@@ -6,31 +6,21 @@ import {
   Pressable,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import useAppDimensions from '../hooks/useAppDimensions';
 
 import AppText from '../components/AppText';
-import { COLORS, SPACING } from '../constants/token';
+import { COLORS } from '../constants/token';
 
 import WeeklyReport from './WeeklyReport';
 import DailyReport from './DailyReport';
 
 type ReportType = 'weekly' | 'daily';
 
-const TAB_MARGIN_H = 41;
-
 export default function ReportScreen() {
   const insets = useSafeAreaInsets();
-  const { width: windowWidth } = useAppDimensions();
 
+  // 기본 선택을 일간으로 설정
   const [reportType, setReportType] =
-    useState<ReportType>('weekly');
-
-  // 좌우 여백(TAB_MARGIN_H)은 고정하고 화면 폭에 맞춰 탭 바 가로 길이를 계산
-  // (히트맵 셀 · 막대 그래프 · 통계 카드와 동일한 방식).
-  const tabContainerWidth = useMemo(
-    () => windowWidth - TAB_MARGIN_H * 2,
-    [windowWidth],
-  );
+    useState<ReportType>('daily');
 
   return (
     <View style={styles.root}>
@@ -39,7 +29,7 @@ export default function ReportScreen() {
         contentContainerStyle={[
           styles.content,
           {
-            paddingTop: insets.top + 28,
+            paddingTop: insets.top + 17,
             paddingBottom: insets.bottom + 120,
           },
         ]}
@@ -47,30 +37,15 @@ export default function ReportScreen() {
         {/* 화면 제목 */}
         <AppText
           variant="reportTitle"
-          color={COLORS.textMain}
+          color={COLORS.black}
+          style={styles.title}
         >
           집중 패턴 리포트
         </AppText>
 
-        {/* 주간 / 일간 선택 */}
-        <View
-          style={[
-            styles.tabContainer,
-            { width: tabContainerWidth },
-          ]}
-        >
-          <Pressable
-            style={[
-              styles.tab,
-              reportType === 'weekly' && styles.activeTab,
-            ]}
-            onPress={() => setReportType('weekly')}
-          >
-            <AppText variant="bodyTask" color={COLORS.grey700}>
-              주간
-            </AppText>
-          </Pressable>
-
+        {/* 일간 / 주간 선택 */}
+        <View style={styles.tabContainer}>
+          {/* 일간 탭 */}
           <Pressable
             style={[
               styles.tab,
@@ -78,17 +53,54 @@ export default function ReportScreen() {
             ]}
             onPress={() => setReportType('daily')}
           >
-            <AppText variant="bodyTask" color={COLORS.grey700}>
+            <AppText
+              variant="bodyTask"
+              color={
+                reportType === 'daily'
+                  ? COLORS.gray700
+                  : COLORS.gray400
+              }
+              style={
+                reportType === 'daily'
+                  ? styles.activeTabText
+                  : styles.inactiveTabText
+              }
+            >
               일간
+            </AppText>
+          </Pressable>
+
+          {/* 주간 탭 */}
+          <Pressable
+            style={[
+              styles.tab,
+              reportType === 'weekly' && styles.activeTab,
+            ]}
+            onPress={() => setReportType('weekly')}
+          >
+            <AppText
+              variant="bodyTask"
+              color={
+                reportType === 'weekly'
+                  ? COLORS.gray700
+                  : COLORS.gray400
+              }
+              style={
+                reportType === 'weekly'
+                  ? styles.activeTabText
+                  : styles.inactiveTabText
+              }
+            >
+              주간
             </AppText>
           </Pressable>
         </View>
 
-        {/* 주간 / 일간 레포트 */}
-        {reportType === 'weekly' ? (
-          <WeeklyReport />
-        ) : (
+        {/* 일간 / 주간 리포트 */}
+        {reportType === 'daily' ? (
           <DailyReport />
+        ) : (
+          <WeeklyReport />
         )}
       </ScrollView>
     </View>
@@ -98,34 +110,54 @@ export default function ReportScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: COLORS.gray100,
   },
 
   content: {
-    paddingHorizontal: SPACING.screenH,
+    paddingHorizontal: 21,
+  },
+
+  title: {
+    fontFamily: 'SUIT-Bold',
+    fontSize: 18,
+    textAlign: 'center',
   },
 
   tabContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    alignSelf: 'center',
+    alignSelf: 'stretch',
     height: 48,
-    marginTop: 28,
+    marginTop: 17,
     marginBottom: 26,
-    paddingHorizontal: 4,
-    borderRadius: 60,
-    backgroundColor: COLORS.grey200,
+    padding: 4,
+    borderRadius: 14,
+    backgroundColor: COLORS.gray200,
   },
 
   tab: {
     flex: 1,
-    height: 42,
+    height: 40,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 60,
+    borderRadius: 12,
   },
 
   activeTab: {
     backgroundColor: COLORS.white,
+  },
+
+  activeTabText: {
+    fontFamily: 'SUIT-ExtraBold',
+    fontSize: 15,
+    lineHeight: 18,
+    color: COLORS.gray700,
+  },
+
+  inactiveTabText: {
+    fontFamily: 'SUIT-Bold',
+    fontSize: 15,
+    lineHeight: 18,
+    color: COLORS.gray400,
   },
 });

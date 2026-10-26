@@ -1,64 +1,41 @@
 import { useMemo, useRef, useState } from 'react';
-import {
-    View,
-    StyleSheet,
-    Pressable,
-    Animated,
-} from 'react-native';
+import { View, StyleSheet, Pressable, Animated, Image, Text, } from 'react-native';
 
 import AppText from '../components/AppText';
 import { COLORS } from '../constants/token';
-import ReportCharacter from '../assets/icon/match.svg';
+import ReportCharacter from '../assets/icon/auth-logo.png';
 
 import RoundedChevron from '../components/RoundedChevron';
-import {
-    dailyReports,
-    reportMessages,
-} from '../data/reportDummyData';
+import { dailyReports } from '../data/reportDummyData';
 import MessageBubble from '../components/MessageBubble';
 import GoalProgressCard from '../components/GoalProgressCard';
 import StatCardGrid from '../components/StatCardGrid';
 import TaskDurationBarChart from '../components/TaskDurationBarChart';
 import FocusSessionList from '../components/FocusSessionList';
 
-// TODO: 실제 시간대별 집중도 데이터 연동 전까지 쓰는 임시 UI용 더미 값 (14개, 6시~24시).
-// 5개 지점(6/10/14/18/24시)에만 라벨을 달아 대략적인 느낌만 잡아둔 상태.
+// TODO: 실제 시간대별 집중도 데이터 연동 전까지 쓰는 임시 UI용 더미 값 (6시~24시).
 const FOCUS_HOUR_BARS = [
-    { day: '6시', minutes: 15 },
-    { day: '', minutes: 30 },
-    { day: '', minutes: 45 },
-    { day: '10시', minutes: 60 },
-    { day: '', minutes: 80 },
-    { day: '', minutes: 95 },
-    { day: '', minutes: 105 },
-    { day: '14시', minutes: 115 },
-    { day: '', minutes: 100 },
-    { day: '', minutes: 85 },
-    { day: '18시', minutes: 70 },
-    { day: '', minutes: 50 },
-    { day: '', minutes: 30 },
-    { day: '24시', minutes: 10 },
+    { day: '6', minutes: 4 },
+    { day: '8', minutes: 22 },
+    { day: '10', minutes: 48 },
+    { day: '12', minutes: 14 },
+    { day: '14', minutes: 9 },
+    { day: '16', minutes: 30 },
+    { day: '18', minutes: 21 },
+    { day: '20', minutes: 7 },
+    { day: '22', minutes: 3 },
+    { day: '24', minutes: 0 },
 ];
 
 export default function DailyReport() {
     const [dayIndex, setDayIndex] = useState(0);
 
-    // 날짜 전환 시 콘텐츠 높이가 순간적으로 스냅되는(깜빡이는) 느낌을 줄이기 위한 페이드 트랜지션.
     const contentOpacity = useRef(new Animated.Value(1)).current;
 
     const report = dailyReports[dayIndex];
 
-    const message = useMemo(() => {
-        const randomIndex = Math.floor(
-            Math.random() * reportMessages.length,
-        );
-
-        return reportMessages[randomIndex];
-    }, [dayIndex]);
-
     const isFirstDay = dayIndex === 0;
-    const isLastDay =
-        dayIndex === dailyReports.length - 1;
+    const isLastDay = dayIndex === dailyReports.length - 1;
 
     const changeDay = (nextIndex: number) => {
         Animated.timing(contentOpacity, {
@@ -90,126 +67,120 @@ export default function DailyReport() {
 
     return (
         <View style={styles.container}>
-
             {/* 날짜 이동 */}
             <View style={styles.dateHeader}>
-
                 <Pressable
                     onPress={goPreviousDay}
                     disabled={isFirstDay}
-                    style={styles.arrowButton}
+                    style={[styles.arrowButton, { left: 0 }]}
                 >
                     <RoundedChevron
                         direction="left"
-                        color={isFirstDay ? COLORS.grey300 : COLORS.grey400}
+                        color={isFirstDay ? COLORS.gray300 : COLORS.gray700}
+                        width={9}
+                        height={15}
+                        strokeWidth={2.2}
                     />
                 </Pressable>
 
                 <AppText
-                    variant="bodyTask"
-                    color={COLORS.textMain}
+                    variant="reportDate"
+                    color={COLORS.black}
                 >
-                    {report.date}
+                    {report.date} {report.dayOfWeek}
                 </AppText>
 
                 <Pressable
                     onPress={goNextDay}
                     disabled={isLastDay}
-                    style={styles.arrowButton}
+                    style={[styles.arrowButton, { right: 0 }]}
                 >
                     <RoundedChevron
                         direction="right"
-                        color={isLastDay ? COLORS.grey300 : COLORS.grey400}
+                        color={isLastDay ? COLORS.gray300 : COLORS.gray700}
+                        width={9}
+                        height={15}
+                        strokeWidth={2.2}
                     />
                 </Pressable>
-
             </View>
 
             <Animated.View style={{ opacity: contentOpacity }}>
+                {/* 캐릭터 이미지 + 랜덤 멘트 */}
+                <View style={styles.characterSection}>
+                    <Image
+                        source={ReportCharacter}
+                        style={styles.characterImage}
+                        resizeMode="contain"
+                    />
 
-            {/* 캐릭터 + 랜덤 멘트 */}
-            <View style={styles.characterSection}>
-
-                <ReportCharacter
-                    width={160}
-                    height={170}
-                />
-
-                <View style={styles.messageBubbleWrapper}>
-                    <MessageBubble textStyle={styles.messageText}>
-                        {message}
-                    </MessageBubble>
+                    <View style={styles.messageBubbleWrapper}>
+                        <MessageBubble textStyle={styles.messageText}>
+                            오늘은{' '}
+                            <Text style={styles.highlightTime}>
+                                {report.peakFocusTime}
+                            </Text>
+                            에 집중력이 가장 높았어요!
+                        </MessageBubble>
+                    </View>
                 </View>
 
-            </View>
-
-            {/* 일간 목표 */}
-            <View style={styles.goalCardWrapper}>
-                <GoalProgressCard
-                    title="일간 목표"
-                    percent={report.goalPercent}
-                />
-            </View>
-
-            {/* 오늘의 통계 */}
-            <StatCardGrid
-                items={[
-                    {
-                        label: '총 집중 시간',
-                        value: report.focusTime,
-                    },
-                    {
-                        label: '완료한 작업',
-                        value: `${report.completedTasks}개`,
-                    },
-                    {
-                        label: '중단 횟수',
-                        value: `${report.interruptions}회`,
-                    },
-                    {
-                        label: '평균 집중시간',
-                        value: report.avgFocusTime,
-                    },
-                ]}
-            />
-
-            {/* 시간대별 집중도 */}
-            <View style={styles.section}>
-
-                <AppText
-                    variant="sectionLabelLg"
-                    color={COLORS.grey800}
-                >
-                    시간대별 집중도
-                </AppText>
-
-                <TaskDurationBarChart
-                    data={FOCUS_HOUR_BARS}
-                    chartPaddingH={24}
-                    barGap={5}
-                    baseBarWidth={4}
-                />
-
-            </View>
-
-            {/* 오늘의 집중 세션 */}
-            <View style={styles.section}>
-
-                <AppText
-                    variant="sectionLabelLg"
-                    color={COLORS.grey800}
-                >
-                    오늘의 집중 세션
-                </AppText>
-
-                <View style={styles.sessionListWrapper}>
-                    <FocusSessionList sessions={report.focusSessions} />
+                {/* 일간 목표 */}
+                <View style={styles.goalCardWrapper}>
+                    <GoalProgressCard
+                        title="오늘 목표"
+                        percent={report.goalPercent}
+                    />
                 </View>
 
-            </View>
+                {/* 오늘의 통계 */}
+                <StatCardGrid
+                    items={[
+                        {
+                            label: '총 집중 시간',
+                            value: report.focusTime,
+                        },
+                        {
+                            label: '완료한 작업',
+                            value: `${report.completedTasks}개`,
+                        },
+                        {
+                            label: '중단 횟수',
+                            value: `${report.interruptions}회`,
+                        },
+                        {
+                            label: '평균 집중시간',
+                            value: report.avgFocusTime,
+                        },
+                    ]}
+                />
 
+                {/* 시간대별 집중도 */}
+                <View style={styles.chartSection}>
+                    <TaskDurationBarChart
+                        data={FOCUS_HOUR_BARS}
+                        chartPaddingH={24}
+                        barGap={5}
+                        baseBarWidth={4}
+                    />
+                </View>
+
+                {/* 오늘의 집중 세션 */}
+                <View style={styles.sessionSection}>
+                    <AppText
+                        variant="sectionLabelLg"
+                        color={COLORS.black}
+                    >
+                        오늘의 집중 세션
+                    </AppText>
+
+                    <View style={styles.sessionListWrapper}>
+                        <FocusSessionList
+                            sessions={report.focusSessions}
+                        />
+                    </View>
+                </View>
             </Animated.View>
-
         </View>
     );
 }
@@ -220,47 +191,67 @@ const styles = StyleSheet.create({
     },
 
     dateHeader: {
+        height: 30,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: 34,
+        position: 'relative',
     },
 
     arrowButton: {
-        width: 40,
-        height: 40,
+        position: 'absolute',
+        top: 0,
+        width: 30,
+        height: 30,
+        borderRadius: 15,
+        backgroundColor: COLORS.white,
         alignItems: 'center',
         justifyContent: 'center',
     },
 
     characterSection: {
         alignItems: 'center',
-        paddingBottom: 31,
+        paddingBottom: 28,
     },
 
+    characterImage: {
+        width: 180,
+        height: 150,
+    },
 
     messageBubbleWrapper: {
         width: '100%',
-        marginTop: 12,
+        marginTop: 16,
         alignItems: 'center',
     },
 
     messageText: {
-        fontSize: 14,
+        fontFamily: 'SUIT-Bold',
+        fontSize: 13,
         lineHeight: 20,
-        color: COLORS.textMain,
+        color: COLORS.gray700,
+    },
+
+    highlightTime: {
+        fontFamily: 'SUIT-ExtraBold',
+        color: COLORS.orange600,
+        fontSize: 13,
     },
 
     goalCardWrapper: {
-        marginBottom: 21,
+        marginBottom: 20,
     },
 
-    section: {
+    chartSection: {
+        marginTop: 20,
+    },
+
+    sessionSection: {
         marginTop: 36,
     },
 
     sessionListWrapper: {
         marginTop: 12,
     },
-
 });

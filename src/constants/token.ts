@@ -14,7 +14,7 @@ export const TYPOGRAPHY = {
   cardMeta: { fontFamily: 'SUIT-SemiBold', fontSize: 12, lineHeight: 15, letterSpacing: -0.18 },
   badgeLabel: { fontFamily: 'SUIT-SemiBold', fontSize: 12, lineHeight: 14 },
   sectionLabel: { fontFamily: 'SUIT-Bold', fontSize: 14, lineHeight: 17 },
-  sectionLabelLg: { fontFamily: 'SUIT-Bold', fontSize: 18, lineHeight: 22 },
+  sectionLabelLg: { fontFamily: 'SUIT-Bold', fontSize: 15, lineHeight: 22 },
   completedDate: { fontFamily: 'SUIT-Medium', fontSize: 12, lineHeight: 14, letterSpacing: -0.15 },
   completedTitle: { fontFamily: 'SUIT-SemiBold', fontSize: 14, lineHeight: 17, letterSpacing: -0.21 },
 
@@ -61,17 +61,24 @@ export const TYPOGRAPHY = {
 
   // 리포트
   reportTitle: { fontFamily: 'SUIT-Bold', fontSize: 26, lineHeight: 31, letterSpacing: -0.39 },
-  reportDate: { fontFamily: 'SUIT-SemiBold', fontSize: 18, lineHeight: 22 },
+  reportDate: { fontFamily: 'SUIT-Bold', fontSize: 15, lineHeight: 22 },
   reportGridLabel: { fontFamily: 'SUIT-Regular', fontSize: 14, lineHeight: 17 },
-  reportGoalPercent: { fontFamily: 'SUIT-Bold', fontSize: 20, lineHeight: 24 },
-  reportGoalAchieved: { fontFamily: 'SUIT-Medium', fontSize: 16, lineHeight: 20 },
-  reportStatLabel: { fontFamily: 'SUIT-Medium', fontSize: 14, lineHeight: 17 },
-  reportStatValue: { fontFamily: 'SUIT-SemiBold', fontSize: 22, lineHeight: 27 },
-  reportSessionTime: { fontFamily: 'SUIT-Bold', fontSize: 13, lineHeight: 16 },
-  reportSessionTitle: { fontFamily: 'SUIT-SemiBold', fontSize: 16, lineHeight: 19 },
+  reportGoalPercent: { fontFamily: 'SUIT-ExtraBold', fontSize: 26, lineHeight: 32 },
+  reportGoalAchieved: { fontFamily: 'SUIT-SemiBold', fontSize: 13, lineHeight: 17 },
+  reportStatLabel: { fontFamily: 'SUIT-Medium', fontSize: 13, lineHeight: 17 },
+  reportStatValue: { fontFamily: 'SUIT-ExtraBold', fontSize: 26, lineHeight: 32 },
+  reportSessionTime: { fontFamily: 'SUIT-ExtraBold', fontSize: 14, lineHeight: 16 },
+  reportSessionTitle: { fontFamily: 'SUIT-Bold', fontSize: 16, lineHeight: 19 },
+  reportSessionPause: { fontFamily: 'SUIT-Medium', fontSize: 12, lineHeight: 15 },
   reportSessionDuration: { fontFamily: 'SUIT-Bold', fontSize: 14, lineHeight: 17 },
   reportTagText: { fontFamily: 'SUIT-SemiBold', fontSize: 10, lineHeight: 12 },
-
+  reportChartTitle: { fontFamily: 'SUIT-Medium', fontSize: 13, lineHeight: 17 },
+  reportChartUnit: { fontFamily: 'SUIT-Medium', fontSize: 13, lineHeight: 17 },
+  reportChartTime: { fontFamily: 'SUIT-SemiBold', fontSize: 10, lineHeight: 13 },
+  reportChartValue: { fontFamily: 'SUIT-ExtraBold', fontSize: 10, lineHeight: 13 },
+  reportSessionDurationValue: { fontFamily: 'SUIT-Bold', fontSize: 18, lineHeight: 22 },
+  reportSessionDurationUnit: { fontFamily: 'SUIT-Bold', fontSize: 18, lineHeight: 22 },
+  
   // 온보딩
   onboardingTitle: { fontFamily: 'SUIT-ExtraBold', fontSize: 24, lineHeight: 30 },
   onboardingContent: { fontFamily: 'SUIT-Medium', fontSize: 16, lineHeight: 26 },
@@ -130,7 +137,7 @@ export const COLORS = {
 
 
 export const SPACING = {
-  screenH: 16,
+  screenH: 21,
   cardGap: 12,
   cardRadius: 20,
   cardPaddingH: 22,

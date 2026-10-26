@@ -4,7 +4,6 @@ import { TYPOGRAPHY, TypographyToken, COLORS } from '../constants/token';
 interface AppTextProps extends TextProps {
   /** token.ts 의 TYPOGRAPHY 키 */
   variant: TypographyToken;
-  /** token 색상값 (기본 textMain). hex 직접 입력 금지 */
   color?: string;
   style?: StyleProp<TextStyle>;
 }
@@ -12,7 +11,7 @@ interface AppTextProps extends TextProps {
 /** 타이포/색상을 토큰으로만 받는 공통 텍스트 */
 export default function AppText({
   variant,
-  color = COLORS.textMain,
+  color = COLORS.black,
   style,
   ...rest
 }: AppTextProps) {
