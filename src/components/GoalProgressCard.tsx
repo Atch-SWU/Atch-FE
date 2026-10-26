@@ -19,21 +19,36 @@ export default function GoalProgressCard({
     <View style={styles.goalCard}>
 
       <View style={styles.goalHeader}>
-        <AppText variant="bodyTask" color={COLORS.white}>
+
+        {/* 오늘 목표 */}
+        <AppText
+          variant="bodyTask"
+          color={COLORS.gray600}
+          style={styles.goalTitle}
+        >
           {title}
         </AppText>
 
+        {/* 00% 달성 */}
         <View style={styles.goalPercentRow}>
-          <AppText variant="reportGoalPercent" color={COLORS.white}>
+          <AppText
+            variant="reportGoalPercent"
+            color={COLORS.orange600}
+          >
             {percent}%
           </AppText>
 
-          <AppText variant="reportGoalAchieved" color={COLORS.white}>
-            {' '}달성!
+          <AppText
+            variant="reportGoalAchieved"
+            color={COLORS.gray600}
+          >
+            {' '}달성
           </AppText>
         </View>
+
       </View>
 
+      {/* 달성률 바 */}
       <View style={styles.goalTrack}>
         <View
           style={[
@@ -49,10 +64,10 @@ export default function GoalProgressCard({
 
 const styles = StyleSheet.create({
   goalCard: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: COLORS.white,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: COLORS.main40,
+    borderColor: COLORS.gray200,
     paddingHorizontal: 23,
     paddingVertical: 18,
   },
@@ -64,21 +79,26 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
 
+  goalTitle: {
+    fontSize: 15,
+    lineHeight: 19,
+  },
+
   goalPercentRow: {
     flexDirection: 'row',
     alignItems: 'baseline',
   },
 
   goalTrack: {
-    height: 12,
-    borderRadius: 4,
-    backgroundColor: COLORS.white,
+    height: 8,
+    borderRadius: 10,
+    backgroundColor: COLORS.gray200,
     overflow: 'hidden',
   },
 
   goalProgress: {
     height: '100%',
-    borderRadius: 4,
-    backgroundColor: COLORS.main40,
+    borderRadius: 10,
+    backgroundColor: COLORS.orange500,
   },
 });

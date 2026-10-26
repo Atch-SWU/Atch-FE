@@ -1,15 +1,35 @@
 import { View, Pressable, StyleSheet } from 'react-native';
 import HomeIcon from '../assets/icon/home.svg';
+import HomeActiveIcon from '../assets/icon/home-active.svg';
 import TodoIcon from '../assets/icon/todo.svg';
+import TodoActiveIcon from '../assets/icon/todo-active.svg';
 import ChartIcon from '../assets/icon/chart.svg';
+import ChartActiveIcon from '../assets/icon/chart-active.svg';
 import ProfileIcon from '../assets/icon/profile.svg';
+import ProfileActiveIcon from '../assets/icon/profile-active.svg';
 import { COLORS } from '../constants/token';
 
 const TABS = [
-  { key: 'home', Icon: HomeIcon },
-  { key: 'todo', Icon: TodoIcon },
-  { key: 'stats', Icon: ChartIcon },
-  { key: 'profile', Icon: ProfileIcon },
+  {
+    key: 'home',
+    Icon: HomeIcon,
+    ActiveIcon: HomeActiveIcon,
+  },
+  {
+    key: 'todo',
+    Icon: TodoIcon,
+    ActiveIcon: TodoActiveIcon,
+  },
+  {
+    key: 'stats',
+    Icon: ChartIcon,
+    ActiveIcon: ChartActiveIcon,
+  },
+  {
+    key: 'profile',
+    Icon: ProfileIcon,
+    ActiveIcon: ProfileActiveIcon,
+  },
 ] as const;
 
 export type TabKey = (typeof TABS)[number]['key'];
@@ -20,19 +40,24 @@ interface BottomNavBarProps {
 }
 
 /** 플로팅 하단 네비게이션 */
-export default function BottomNavBar({ active = 'home', onChange }: BottomNavBarProps) {
+export default function BottomNavBar({
+  active = 'home',
+  onChange,
+}: BottomNavBarProps) {
   return (
     <View style={styles.bar}>
-      {TABS.map(({ key, Icon }) => {
+      {TABS.map(({ key, Icon, ActiveIcon }) => {
         const isActive = key === active;
+        const CurrentIcon = isActive ? ActiveIcon : Icon;
+
         return (
-          <Pressable key={key} style={styles.tab} onPress={() => onChange?.(key)}>
-            <View style={[styles.iconWrap, isActive && styles.iconWrapActive]}>
-              <Icon
-                width={26}
-                height={26}
-                color={isActive ? COLORS.navIconActive : COLORS.navIconInactive}
-              />
+          <Pressable
+            key={key}
+            style={styles.tab}
+            onPress={() => onChange?.(key)}
+          >
+            <View style={styles.iconWrap}>
+              <CurrentIcon width={26} height={26} />
             </View>
           </Pressable>
         );
@@ -49,14 +74,16 @@ const styles = StyleSheet.create({
     height: 70,
     paddingHorizontal: 10,
     borderRadius: 46.5,
-    backgroundColor: COLORS.navBarBg,
-    shadowColor: COLORS.shadow,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.12,
-    shadowRadius: 16,
+    backgroundColor: COLORS.gray800,
     elevation: 8,
   },
-  tab: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+
+  tab: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
   iconWrap: {
     width: 56,
     height: 55,
@@ -64,5 +91,4 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: 30,
   },
-  iconWrapActive: { backgroundColor: COLORS.navActiveBg },
 });

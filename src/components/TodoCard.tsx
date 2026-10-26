@@ -6,45 +6,52 @@ import { COLORS, SPACING } from '../constants/token';
 
 interface TodoCardProps {
   title: string;
-  category: CategoryKey;
+  category: string;
   estimateText: string;
   onPressAction?: () => void;
 }
 
-/** 오늘 할 일 카드 (카테고리 색상은 token 에서 결정) */
+/** 오늘 할 일 카드 */
 export default function TodoCard({
   title,
   category,
   estimateText,
   onPressAction,
 }: TodoCardProps) {
-  const theme = CATEGORY_COLORS[category];
-
   return (
-    <View
-      style={[
-        styles.card,
-        { backgroundColor: theme.cardBg, borderColor: theme.cardBorder },
-      ]}
-    >
+    <View style={styles.card}>
       <View style={styles.left}>
         <View style={styles.titleRow}>
-          <AppText variant="cardTitle" color={COLORS.cardTitle}>
+          <AppText variant="cardTitle" color={COLORS.black}>
             {title}
           </AppText>
+
           <CategoryBadge
-            label={theme.label}
-            bgColor={theme.badgeBg}
-            textColor={theme.badgeText}
+            label={category}
+            bgColor={COLORS.gray200}
+            textColor={COLORS.gray600}
           />
         </View>
-        <AppText variant="cardMeta" color={theme.metaText} style={styles.meta}>
+
+        <AppText
+          variant="cardMeta"
+          color={COLORS.gray600}
+          style={styles.meta}
+        >
           {estimateText}
         </AppText>
       </View>
 
-      <Pressable hitSlop={8} onPress={onPressAction} style={styles.action}>
-        <PlayIcon width={25} height={25} color={theme.actionColor} />
+      <Pressable
+        hitSlop={8}
+        onPress={onPressAction}
+        style={styles.action}
+      >
+        <PlayIcon
+          width={25}
+          height={25}
+          color={COLORS.gray600}
+        />
       </Pressable>
     </View>
   );
@@ -57,11 +64,23 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     borderRadius: SPACING.cardRadius,
     borderWidth: 1,
+    borderColor: COLORS.gray200,
+    backgroundColor: COLORS.white,
     paddingHorizontal: SPACING.cardPaddingH,
     paddingVertical: SPACING.cardPaddingV,
   },
-  left: { flex: 1 },
-  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  meta: { marginTop: 6 },
-  action: { marginLeft: 12 },
+  left: {
+    flex: 1,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  meta: {
+    marginTop: 6,
+  },
+  action: {
+    marginLeft: 12,
+  },
 });

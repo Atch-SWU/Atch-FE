@@ -1,19 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  type LayoutChangeEvent,
-} from 'react-native';
-import Svg, { Path, Defs, Filter, FeDropShadow } from 'react-native-svg';
+import { View, Text, StyleSheet, type LayoutChangeEvent } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 import useAppDimensions from '../hooks/useAppDimensions';
+import { COLORS } from '../constants/token';
 
 const RADIUS = 10;
 const TAIL_WIDTH = 20;
 const TAIL_HEIGHT = 10;
 const H_PADDING = 16;
 const V_PADDING = 10;
-const SHADOW_MARGIN = 12;
+const SHADOW_MARGIN = 0;
 
 interface MessageBubbleProps {
   children: React.ReactNode;
@@ -26,7 +22,6 @@ export default function MessageBubble({ children, textStyle }: MessageBubbleProp
   const maxBubbleWidth = screenWidth - 32;
   const maxTextWidth = maxBubbleWidth - H_PADDING * 2;
 
-  // ⬇️ children이 바뀌면 다시 측정 단계로
   useEffect(() => {
     setTextSize(null);
   }, [children]);
@@ -42,11 +37,12 @@ export default function MessageBubble({ children, textStyle }: MessageBubbleProp
         style={[
           styles.hiddenMeasure,
           {
-            fontFamily: 'Pretendard-SemiBold',
-            fontSize: 12,
+            fontFamily: 'SUIT-Bold',
+            fontSize: 13,
+            fontWeight: '600',
             lineHeight: 17,
-            letterSpacing: -0.2, 
-            maxWidth: maxTextWidth, 
+            letterSpacing: -0.2,
+            maxWidth: maxTextWidth,
           },
           textStyle,
         ]}
@@ -57,10 +53,6 @@ export default function MessageBubble({ children, textStyle }: MessageBubbleProp
     );
   }
 
-  // onLayout으로 측정한 값이 실제 텍스트 렌더링 폭보다 아주 살짝(1px 미만) 작게
-  // 반올림되는 경우가 있어서, 그 측정값을 그대로 텍스트 width로 다시 지정하면
-  // 웹에서만 마지막 글자가 다음 줄로 밀려나면서 말풍선 배경 밖으로 튀어나오는
-  // 버그가 있었음 — 올림 처리 + 여유 픽셀을 더해 항상 한 줄에 들어가도록 보정.
   const MEASURE_SAFETY_PADDING = 2;
   const measuredTextWidth = Math.ceil(textSize.width) + MEASURE_SAFETY_PADDING;
   const measuredTextHeight = Math.ceil(textSize.height);
@@ -96,12 +88,7 @@ export default function MessageBubble({ children, textStyle }: MessageBubbleProp
   return (
     <View style={{ width: svgWidth, height: svgHeight }}>
       <Svg width={svgWidth} height={svgHeight}>
-        <Defs>
-          <Filter id="bubbleShadow" x="-50%" y="-50%" width="200%" height="200%">
-            <FeDropShadow dx="0" dy="2" stdDeviation="4" floodColor="#000000" floodOpacity="0.12" />
-          </Filter>
-        </Defs>
-        <Path d={path} fill="#FFFFFF" filter="url(#bubbleShadow)" />
+        <Path d={path} fill="#FFFFFF" />
       </Svg>
 
       <Text
@@ -128,11 +115,13 @@ const styles = StyleSheet.create({
     opacity: 0,
     alignSelf: 'flex-start',
   },
+
   messageText: {
-    fontFamily: 'Pretendard-SemiBold',
-    fontSize: 12,
+    fontFamily: 'SUIT-Bold',
+    fontSize: 13,
+    fontWeight: '600',
     lineHeight: 17,
     letterSpacing: -0.2,
-    color: '#303030',
+    color: COLORS.gray700,
   },
 });

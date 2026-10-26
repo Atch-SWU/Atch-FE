@@ -1,12 +1,7 @@
-export const reportMessages = [
-  '이번주는 집중을 꽤나 잘했는걸?',
-  '지난주보다 더 성장했어!',
-  '오늘 집중도는 아주 좋았다?',
-  '이 정도면 정말 잘하고 있는데?',
-];
-
 export interface WeeklyReportData {
   title: string;
+  dateRange: string;
+  peakFocusDay: string;
   goalMinutes: number;
   completedGoalMinutes: number;
   totalFocusTime: string;
@@ -27,7 +22,9 @@ export interface WeeklyReportData {
 
 export const weeklyReports: WeeklyReportData[] = [
   {
-    title: '5월 첫째주',
+    title: '5월 1주차',
+    dateRange: '05/01~05/07',
+    peakFocusDay: '목요일',
     goalMinutes: 1020,
     completedGoalMinutes: 938,
     totalFocusTime: '15H 36M',
@@ -67,18 +64,20 @@ export const weeklyReports: WeeklyReportData[] = [
     ],
 
     taskDuration: [
-      { day: 'MON', minutes: 0 },
-      { day: 'TUE', minutes: 80 },
-      { day: 'WED', minutes: 180 },
-      { day: 'THU', minutes: 320 },
-      { day: 'FRI', minutes: 40 },
-      { day: 'SAT', minutes: 150 },
-      { day: 'SUN', minutes: 110 },
+      { day: '월', minutes: 0 },
+      { day: '화', minutes: 80 },
+      { day: '수', minutes: 180 },
+      { day: '목', minutes: 320 },
+      { day: '금', minutes: 40 },
+      { day: '토', minutes: 150 },
+      { day: '일', minutes: 110 },
     ],
   },
 
   {
-    title: '5월 둘째주',
+    title: '5월 2주차',
+    dateRange: '05/08~05/14',
+    peakFocusDay: '화요일',
     goalMinutes: 1200,
     completedGoalMinutes: 1040,
     totalFocusTime: '17H 20M',
@@ -118,18 +117,20 @@ export const weeklyReports: WeeklyReportData[] = [
     ],
 
     taskDuration: [
-      { day: 'MON', minutes: 90 },
-      { day: 'TUE', minutes: 180 },
-      { day: 'WED', minutes: 240 },
-      { day: 'THU', minutes: 360 },
-      { day: 'FRI', minutes: 120 },
-      { day: 'SAT', minutes: 200 },
-      { day: 'SUN', minutes: 160 },
+      { day: '월', minutes: 90 },
+      { day: '화', minutes: 180 },
+      { day: '수', minutes: 240 },
+      { day: '목', minutes: 360 },
+      { day: '금', minutes: 120 },
+      { day: '토', minutes: 200 },
+      { day: '일', minutes: 160 },
     ],
   },
 
   {
-    title: '5월 셋째주',
+    title: '5월 3주차',
+    dateRange: '05/15~05/21',
+    peakFocusDay: '토요일',
     goalMinutes: 900,
     completedGoalMinutes: 720,
     totalFocusTime: '12H 00M',
@@ -169,13 +170,13 @@ export const weeklyReports: WeeklyReportData[] = [
     ],
 
     taskDuration: [
-      { day: 'MON', minutes: 30 },
-      { day: 'TUE', minutes: 90 },
-      { day: 'WED', minutes: 150 },
-      { day: 'THU', minutes: 220 },
-      { day: 'FRI', minutes: 60 },
-      { day: 'SAT', minutes: 110 },
-      { day: 'SUN', minutes: 80 },
+      { day: '월', minutes: 30 },
+      { day: '화', minutes: 90 },
+      { day: '수', minutes: 150 },
+      { day: '목', minutes: 220 },
+      { day: '금', minutes: 60 },
+      { day: '토', minutes: 110 },
+      { day: '일', minutes: 80 },
     ],
   },
 ];
@@ -193,13 +194,14 @@ export interface FocusSessionData {
 
 export interface DailyReportData {
   date: string;
+  dayOfWeek: string;
   goalPercent: number;
   focusTime: string;
   completedTasks: number;
-  /** 중단 횟수 */
   interruptions: number;
   /** 평균 집중 시간 */
   avgFocusTime: string;
+  peakFocusTime: string;
   focusGrid: number[];
   /** 오늘의 집중 세션 목록 */
   focusSessions: FocusSessionData[];
@@ -208,11 +210,13 @@ export interface DailyReportData {
 export const dailyReports: DailyReportData[] = [
   {
     date: '5월 7일',
+    dayOfWeek: '수요일',
     goalPercent: 92,
     focusTime: '4H 36M',
     completedTasks: 5,
     interruptions: 2,
     avgFocusTime: '55M',
+    peakFocusTime: '오전 10시',
     focusSessions: [
       {
         time: '10:10',
@@ -247,11 +251,13 @@ export const dailyReports: DailyReportData[] = [
 
   {
     date: '5월 8일',
+    dayOfWeek: '목요일',
     goalPercent: 78,
     focusTime: '3H 54M',
     completedTasks: 4,
     interruptions: 4,
     avgFocusTime: '39M',
+    peakFocusTime: '오전 12시',
     focusSessions: [
       {
         time: '09:15',
@@ -293,11 +299,13 @@ export const dailyReports: DailyReportData[] = [
 
   {
     date: '5월 9일',
+    dayOfWeek: '금요일',
     goalPercent: 96,
     focusTime: '4H 48M',
     completedTasks: 7,
     interruptions: 1,
     avgFocusTime: '1H 08M',
+    peakFocusTime: '오후 10시',
     focusSessions: [
       {
         time: '07:30',
@@ -362,14 +370,14 @@ export const dailyReports: DailyReportData[] = [
 export function getIntensityColor(value: number) {
   switch (value) {
     case 0:
-      return '#F7F9F9';
+      return '#F8F8F8';
     case 1:
-      return '#DEF6FB';
+      return '#FFF0E7';
     case 2:
-      return '#68DCE8';
+      return '#FFD2C3';
     case 3:
-      return '#2FCCDC';
+      return '#FF8C66';
     default:
-      return '#F7F9F9';
+      return '#FF6734';
   }
 }

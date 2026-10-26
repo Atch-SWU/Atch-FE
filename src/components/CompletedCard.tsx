@@ -1,7 +1,7 @@
 import { View, StyleSheet } from 'react-native';
 import AppText from './AppText';
 import CategoryBadge from './CategoryBadge';
-import { COMPLETED_COLORS, SPACING } from '../constants/token';
+import { COLORS } from '../constants/token';
 
 interface CompletedCardProps {
   date: string;
@@ -16,18 +16,18 @@ export default function CompletedCard({ date, title, badgeText }: CompletedCardP
       style={[
         styles.card,
         {
-          backgroundColor: COMPLETED_COLORS.cardBg,
-          borderColor: COMPLETED_COLORS.cardBorder,
+          backgroundColor: COLORS.gray100,
+          borderColor: COLORS.gray100,
         },
       ]}
     >
       <View style={styles.left}>
-        <AppText variant="completedDate" color={COMPLETED_COLORS.dateText}>
+        <AppText variant="completedDate" color={ COLORS.gray100 }>
           {date}
         </AppText>
         <AppText
           variant="completedTitle"
-          color={COMPLETED_COLORS.titleText}
+          color={ COLORS.gray100 }
           style={styles.title}
         >
           {title}
@@ -36,8 +36,8 @@ export default function CompletedCard({ date, title, badgeText }: CompletedCardP
 
       <CategoryBadge
         label={badgeText}
-        bgColor={COMPLETED_COLORS.badgeBg}
-        textColor={COMPLETED_COLORS.badgeText}
+        bgColor={ COLORS.gray100 }
+        textColor={ COLORS.gray100 }
       />
     </View>
   );
@@ -48,9 +48,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    borderRadius: SPACING.cardRadius,
+    borderRadius: 13,
     borderWidth: 1,
-    paddingHorizontal: SPACING.cardPaddingH,
+    paddingHorizontal: 13,
     paddingVertical: 14,
   },
   left: { flex: 1 },

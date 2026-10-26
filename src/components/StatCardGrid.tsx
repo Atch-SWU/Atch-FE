@@ -15,14 +15,14 @@ interface StatCardGridProps {
 }
 
 const STAT_CARD_COLUMN_GAP = 14;
-const STAT_CARD_ROW_GAP = 15;
+const STAT_CARD_ROW_GAP = 12;
 
 /** 리포트 하단 통계 카드 2열 그리드 (주간/일간 공용) */
 export default function StatCardGrid({ items }: StatCardGridProps) {
   const { width: windowWidth } = useAppDimensions();
 
   // 좌우 간격(STAT_CARD_COLUMN_GAP)은 고정하고 남는 폭을 2등분해서
-  // 카드 가로 길이를 계산 (히트맵 셀 · 막대 그래프와 동일한 방식).
+  // 카드 가로 길이를 계산
   const cardWidth = useMemo(() => {
     const availableWidth =
       windowWidth - SPACING.screenH * 2 - STAT_CARD_COLUMN_GAP;
@@ -37,11 +37,20 @@ export default function StatCardGrid({ items }: StatCardGridProps) {
           key={item.label}
           style={[styles.statCard, { width: cardWidth }]}
         >
-          <AppText variant="reportStatLabel" color={COLORS.grey500}>
+          {/* 왼쪽 위 */}
+          <AppText
+            variant="reportStatLabel"
+            color={COLORS.gray500}
+          >
             {item.label}
           </AppText>
 
-          <AppText variant="reportStatValue" color={COLORS.grey800}>
+          {/* 오른쪽 아래 */}
+          <AppText
+            variant="reportStatValue"
+            color={COLORS.gray800}
+            style={styles.statValue}
+          >
             {item.value}
           </AppText>
         </View>
@@ -62,10 +71,15 @@ const styles = StyleSheet.create({
     minHeight: 86,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: COLORS.grey200,
-    backgroundColor: COLORS.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 5,
+    borderColor: COLORS.gray200,
+    backgroundColor: COLORS.white,
+    paddingHorizontal: 18,
+    paddingTop: 18,
+    paddingBottom: 12,
+  },
+
+  statValue: {
+    alignSelf: 'flex-end',
+    marginTop: 17,
   },
 });
