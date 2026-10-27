@@ -367,10 +367,10 @@ const styles = StyleSheet.create({
 
     resetBtn: {
         height: 60,
-        borderRadius: 16,
+        borderRadius: 12,
     },
 
     resetBtnDisabled: {
-        backgroundColor: COLORS.gray400,
+        backgroundColor: COLORS.gray300,
     },
 });

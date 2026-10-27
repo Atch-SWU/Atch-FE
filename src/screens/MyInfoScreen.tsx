@@ -4,178 +4,383 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import AppText from '../components/AppText';
-import ToggleSwitch from '../components/ToggleSwitch';
-import ChevronLeft from '../assets/icon/chevron-left.svg';
-import ChevronRight from '../assets/icon/chevron-right.svg';
-import { COLORS, SPACING } from '../constants/token';
+import WithdrawModal from '../components/WithdrawModal';
+import ChevronLeft from '../assets/icon/chevron-left-bold.svg';
+import ChevronRight from '../assets/icon/chevron-right-bold.svg';
+import { COLORS } from '../constants/token';
 import { RootStackParamList } from '../navigation/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'MyInfo'>;
 
-// TODO: 실제 유저 이메일/연동 상태 데이터로 교체.
+// TODO: 추후 API에서 실제 유저 이메일을 받아오도록 변경
 const USER_EMAIL = 'swu1234@gmail.com';
 
 export default function MyInfoScreen({ navigation }: Props) {
-    const [appleLinked, setAppleLinked] = useState(true);
-    const [kakaoLinked, setKakaoLinked] = useState(false);
-    const [googleLinked, setGoogleLinked] = useState(false);
+    const [snsOneEnabled, setSnsOneEnabled] = useState(true);
+    const [snsTwoEnabled, setSnsTwoEnabled] = useState(false);
+    const [snsThreeEnabled, setSnsThreeEnabled] = useState(false);
+
+    // 회원 탈퇴 모달
+    const [showWithdrawModal, setShowWithdrawModal] = useState(false);
 
     return (
         <SafeAreaView style={styles.root} edges={['top', 'bottom']}>
+            {/* 상단 헤더 */}
             <View style={styles.header}>
-                <Pressable style={styles.backBtn} onPress={() => navigation.goBack()} hitSlop={10}>
-                    <ChevronLeft width={20} height={20} color={COLORS.black} />
+                <Pressable
+                    style={styles.backButton}
+                    onPress={() => navigation.goBack()}
+                    hitSlop={10}
+                >
+                    <ChevronLeft
+                        width={7}
+                        height={13}
+                        color={COLORS.gray700}
+                    />
                 </Pressable>
-                <AppText variant="settingsHeaderTitle" color={COLORS.black} style={styles.headerTitle}>
+
+                <AppText
+                    variant="settingsHeaderTitle"
+                    color={COLORS.black}
+                    style={styles.headerTitle}
+                >
                     내 정보 관리
                 </AppText>
-                <View style={styles.headerSpacer} />
             </View>
 
-            <AppText
-                variant="settingsRowLabel"
-                color={COLORS.settingsSectionLabelColor}
-                style={[styles.sectionLabel, styles.firstSectionLabel]}
-            >
-                내 정보
-            </AppText>
-
-            <View style={styles.divider} />
-
-            <Pressable style={styles.infoRow}>
-                <AppText variant="settingsRowLabel" color={COLORS.black}>
-                    이메일
+            {/* 내 정보 */}
+            <View style={styles.section}>
+                <AppText
+                    variant="settingsRowLabel"
+                    color={COLORS.gray700}
+                    style={styles.sectionTitle}
+                >
+                    내 정보
                 </AppText>
-                <View style={styles.rowRight}>
-                    <AppText variant="settingsBioText" color={COLORS.settingsSectionLabelColor}>
+
+                {/* 이메일 */}
+                <View style={styles.infoCard}>
+                    <AppText
+                        variant="settingsRowLabel"
+                        color={COLORS.black}
+                        style={styles.cardLabel}
+                    >
+                        이메일
+                    </AppText>
+
+                    <AppText
+                        variant="settingsRowLabel"
+                        color={COLORS.gray400}
+                        style={styles.email}
+                    >
                         {USER_EMAIL}
                     </AppText>
-                    <ChevronRight width={16} height={16} color={COLORS.black} />
                 </View>
-            </Pressable>
 
-            <View style={styles.divider} />
+                {/* 비밀번호 변경 */}
+                <Pressable
+                    style={styles.infoCardSpacing}
+                    onPress={() => navigation.navigate('ChangePassword')}
+                >
+                    <AppText
+                        variant="settingsRowLabel"
+                        color={COLORS.black}
+                        style={styles.cardLabel}
+                    >
+                        비밀번호 변경
+                    </AppText>
 
-            <Pressable style={styles.infoRow} onPress={() => navigation.navigate('ChangePassword')}>
-                <AppText variant="settingsRowLabel" color={COLORS.black}>
-                    비밀번호
-                </AppText>
-                <ChevronRight width={16} height={16} color={COLORS.black} />
-            </Pressable>
+                    <ChevronRight
+                        width={7}
+                        height={13}
+                        color={COLORS.gray600}
+                    />
+                </Pressable>
 
-            <View style={styles.divider} />
+                {/* 회원 탈퇴 */}
+                <Pressable
+                    style={styles.infoCardSpacing}
+                    onPress={() => setShowWithdrawModal(true)}
+                >
+                    <AppText
+                        variant="settingsRowLabel"
+                        color={COLORS.black}
+                        style={styles.cardLabel}
+                    >
+                        회원 탈퇴
+                    </AppText>
 
-            <Pressable style={styles.infoRow}>
-                <AppText variant="settingsRowLabel" color={COLORS.black}>
-                    회원 탈퇴
-                </AppText>
-                <ChevronRight width={16} height={16} color={COLORS.black} />
-            </Pressable>
-
-            <View style={styles.divider} />
-
-            <AppText
-                variant="settingsRowLabel"
-                color={COLORS.settingsSectionLabelColor}
-                style={[styles.sectionLabel, styles.secondSectionLabel]}
-            >
-                SNS 계정 연동
-            </AppText>
-
-            <View style={styles.divider} />
-
-            <View style={styles.linkRow}>
-                <AppText variant="settingsRowLabel" color={COLORS.black}>
-                    Apple 연동
-                </AppText>
-                <ToggleSwitch
-                    value={appleLinked}
-                    onValueChange={setAppleLinked}
-                    activeColor={COLORS.settingsToggleActive}
-                />
+                    <ChevronRight
+                        width={7}
+                        height={13}
+                        color={COLORS.gray600}
+                    />
+                </Pressable>
             </View>
 
-            <View style={styles.divider} />
-
-            <View style={styles.linkRow}>
-                <AppText variant="settingsRowLabel" color={COLORS.black}>
-                    카카오 연동
+            {/* SNS 계정 연동 */}
+            <View style={styles.snsSection}>
+                <AppText
+                    variant="settingsRowLabel"
+                    color={COLORS.gray700}
+                    style={styles.sectionTitle}
+                >
+                    SNS 계정 연동
                 </AppText>
-                <ToggleSwitch
-                    value={kakaoLinked}
-                    onValueChange={setKakaoLinked}
-                    activeColor={COLORS.settingsToggleActive}
-                />
+
+                <View style={styles.snsCard}>
+                    <AppText
+                        variant="settingsRowLabel"
+                        color={COLORS.black}
+                        style={styles.cardLabel}
+                    >
+                        Apple 연동
+                    </AppText>
+
+                    <Pressable
+                        onPress={() => setSnsOneEnabled(!snsOneEnabled)}
+                        hitSlop={8}
+                    >
+                        <View
+                            style={[
+                                styles.toggle,
+                                snsOneEnabled
+                                    ? styles.toggleOn
+                                    : styles.toggleOff,
+                            ]}
+                        >
+                            <View
+                                style={[
+                                    styles.toggleCircle,
+                                    snsOneEnabled
+                                        ? styles.circleOn
+                                        : styles.circleOff,
+                                ]}
+                            />
+                        </View>
+                    </Pressable>
+                </View>
+
+                <View style={styles.snsCardSpacing}>
+                    <AppText
+                        variant="settingsRowLabel"
+                        color={COLORS.black}
+                        style={styles.cardLabel}
+                    >
+                        카카오 연동
+                    </AppText>
+
+                    <Pressable
+                        onPress={() => setSnsTwoEnabled(!snsTwoEnabled)}
+                        hitSlop={8}
+                    >
+                        <View
+                            style={[
+                                styles.toggle,
+                                snsTwoEnabled
+                                    ? styles.toggleOn
+                                    : styles.toggleOff,
+                            ]}
+                        >
+                            <View
+                                style={[
+                                    styles.toggleCircle,
+                                    snsTwoEnabled
+                                        ? styles.circleOn
+                                        : styles.circleOff,
+                                ]}
+                            />
+                        </View>
+                    </Pressable>
+                </View>
+
+                <View style={styles.snsCardSpacing}>
+                    <AppText
+                        variant="settingsRowLabel"
+                        color={COLORS.black}
+                        style={styles.cardLabel}
+                    >
+                        Google 연동
+                    </AppText>
+
+                    <Pressable
+                        onPress={() => setSnsThreeEnabled(!snsThreeEnabled)}
+                        hitSlop={8}
+                    >
+                        <View
+                            style={[
+                                styles.toggle,
+                                snsThreeEnabled
+                                    ? styles.toggleOn
+                                    : styles.toggleOff,
+                            ]}
+                        >
+                            <View
+                                style={[
+                                    styles.toggleCircle,
+                                    snsThreeEnabled
+                                        ? styles.circleOn
+                                        : styles.circleOff,
+                                ]}
+                            />
+                        </View>
+                    </Pressable>
+                </View>
             </View>
 
-            <View style={styles.divider} />
-
-            <View style={styles.linkRow}>
-                <AppText variant="settingsRowLabel" color={COLORS.black}>
-                    Google 연동
-                </AppText>
-                <ToggleSwitch
-                    value={googleLinked}
-                    onValueChange={setGoogleLinked}
-                    activeColor={COLORS.settingsToggleActive}
-                />
-            </View>
-
-            <View style={styles.divider} />
+            {/* 회원 탈퇴 모달 */}
+            <WithdrawModal
+                visible={showWithdrawModal}
+                onCancel={() => setShowWithdrawModal(false)}
+                onConfirm={() => setShowWithdrawModal(false)}
+            />
         </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
-    root: { flex: 1, backgroundColor: COLORS.background },
+    root: {
+        flex: 1,
+        backgroundColor: COLORS.gray100,
+        paddingHorizontal: 21,
+    },
 
+    /* 상단 헤더 */
     header: {
+        position: 'relative',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingTop: 17,
+    },
+
+    backButton: {
+        position: 'absolute',
+        left: 0,
+        top: 13,
+        height: 24,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+
+    headerTitle: {
+        fontFamily: 'SUIT-Bold',
+        fontSize: 18,
+        lineHeight: 22,
+        color: COLORS.black,
+    },
+
+    /* 내 정보 */
+    section: {
+        marginTop: 26,
+    },
+
+    sectionTitle: {
+        fontFamily: 'SUIT-Bold',
+        fontSize: 15,
+        lineHeight: 20,
+        color: COLORS.gray700,
+    },
+
+    infoCard: {
+        marginTop: 15,
+        width: '100%',
+        backgroundColor: COLORS.white,
+        borderRadius: 12,
+        paddingHorizontal: 20,
+        paddingVertical: 22,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingHorizontal: SPACING.screenH,
-        marginTop: 8,
-        marginBottom: 0,
     },
-    backBtn: { width: 30, height: 30, alignItems: 'center', justifyContent: 'center' },
-    headerTitle: { flex: 1, textAlign: 'center' },
-    headerSpacer: { width: 30 },
 
-    sectionLabel: {
-        // "내 정보"/"SNS 계정 연동" — 왼쪽 간격 21
-        paddingLeft: 21,
-        paddingRight: SPACING.screenH + 8,
-        marginBottom: 10,
-    },
-    // "내 정보" — 헤더와의 간격 60
-    firstSectionLabel: { marginTop: 60 },
-    // "SNS 계정 연동" — 바로 위 구분선과의 간격 29
-    secondSectionLabel: { marginTop: 29 },
-
-    divider: { height: 1, backgroundColor: COLORS.settingsDivider },
-
-    // 이메일/비밀번호/회원 탈퇴 — 위아래 구분선과 16 간격(paddingVertical로 위/아래 동일 적용)
-    infoRow: {
+    infoCardSpacing: {
+        marginTop: 10,
+        width: '100%',
+        backgroundColor: COLORS.white,
+        borderRadius: 12,
+        paddingHorizontal: 20,
+        paddingVertical: 22,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        // 이메일/비밀번호/회원 탈퇴 — 왼쪽 간격 33(섹션 라벨보다 더 들어가 보이도록)
-        paddingLeft: 33,
-        paddingRight: SPACING.screenH + 8,
-        paddingVertical: 16,
     },
-    // Apple/카카오/Google 연동 — 위아래 구분선과 19 간격
-    linkRow: {
+
+    cardLabel: {
+        fontFamily: 'SUIT-SemiBold',
+        fontSize: 15,
+        lineHeight: 20,
+        color: COLORS.black,
+    },
+
+    email: {
+        fontFamily: 'SUIT-Medium',
+        fontSize: 15,
+        lineHeight: 20,
+        color: COLORS.gray400,
+    },
+
+    /* SNS 계정 연동 */
+    snsSection: {
+        marginTop: 32,
+    },
+
+    snsCard: {
+        marginTop: 15,
+        width: '100%',
+        backgroundColor: COLORS.white,
+        borderRadius: 12,
+        paddingHorizontal: 20,
+        paddingVertical: 22,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingLeft: 33,
-        paddingRight: SPACING.screenH + 8,
-        paddingVertical: 19,
     },
-    rowRight: {
+
+    snsCardSpacing: {
+        marginTop: 10,
+        width: '100%',
+        backgroundColor: COLORS.white,
+        borderRadius: 12,
+        paddingHorizontal: 20,
+        paddingVertical: 22,
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 6,
+        justifyContent: 'space-between',
     },
+
+
+    /* 토글 */
+    toggle: {
+        width: 48,
+        height: 29,
+        borderRadius: 15,
+        justifyContent: 'center',
+        paddingHorizontal: 3,
+    },
+
+    toggleOn: {
+        backgroundColor: COLORS.black,
+        alignItems: 'flex-end',
+    },
+
+    toggleOff: {
+        backgroundColor: COLORS.gray300,
+        alignItems: 'flex-start',
+    },
+
+    toggleCircle: {
+        width: 23,
+        height: 23,
+        borderRadius: 12,
+        backgroundColor: COLORS.white,
+    },
+
+    circleOn: {
+        marginRight: 0,
+    },
+
+    circleOff: {
+        marginLeft: 0,
+    },
+
 });
