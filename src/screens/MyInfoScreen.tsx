@@ -6,7 +6,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import AppText from '../components/AppText';
 import ToggleSwitch from '../components/ToggleSwitch';
 import ChevronLeft from '../assets/icon/chevron-left.svg';
-import ChevronRight from '../assets/icon/chevron-right-thin.svg';
+import ChevronRight from '../assets/icon/chevron-right.svg';
 import { COLORS, SPACING } from '../constants/token';
 import { RootStackParamList } from '../navigation/types';
 
