@@ -69,7 +69,7 @@ export default function ProfileManageScreen({ navigation }: Props) {
                     onChangeText={setNickname}
                     placeholder="닉네임"
                     variant="filled"
-                    placeholderColor={COLORS.grey500}
+                    placeholderColor={COLORS.gray500}
                     boxStyle={styles.fieldBox}
                 />
 
@@ -81,7 +81,7 @@ export default function ProfileManageScreen({ navigation }: Props) {
                     onChangeText={setBio}
                     placeholder="자신을 소개할 수 있는 멘트를 작성해주세요"
                     variant="filled"
-                    placeholderColor={COLORS.grey500}
+                    placeholderColor={COLORS.gray500}
                     multiline
                     boxStyle={[styles.fieldBox, styles.bioBox]}
                 />
@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
         width: 114,
         height: 114,
         borderRadius: 57,
-        backgroundColor: COLORS.settingsAvatarBg,
+        backgroundColor: COLORS.primarySoft,
         alignItems: 'center',
         justifyContent: 'center',
         overflow: 'hidden',

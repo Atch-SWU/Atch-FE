@@ -21,7 +21,7 @@ export default function MainScreen() {
         {tab === 'stats' && <ReportScreen />}
         {tab === 'profile' && <MyPage />}
       </View>
-      <View style={[styles.navWrap, { bottom: insets.bottom + 8 }]}>
+      <View style={[styles.navWrap, { bottom: insets.bottom + 16 }]}>
         <BottomNavBar active={tab} onChange={setTab} />
       </View>
     </View>

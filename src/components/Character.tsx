@@ -1,24 +1,16 @@
-import { View, StyleSheet } from 'react-native';
-import { COLORS } from '../constants/token';
+import { Image, StyleProp, ImageStyle } from 'react-native';
+import Metchi from '../assets/character/metchi.png';
+
+/** 원본(피그마 export) 비율 768 x 642 */
+const RATIO = 642 / 768;
 
 interface CharacterProps {
+  /** 가로 크기 (세로는 원본 비율로 자동) */
   size?: number;
+  style?: StyleProp<ImageStyle>;
 }
 
-/**
- * 멧취 캐릭터 자리표시자.
- * TODO: 실제 멧취 PNG 확보 시 아래 View 를 <Image source={...} /> 로 교체하면 끝.
- *   예) import Metchi from '../assets/character/metchi.png';
- *       return <Image source={Metchi} style={{ width: size, height: size }} resizeMode="contain" />;
- */
-export default function Character({ size = 160 }: CharacterProps) {
-  return <View style={[styles.placeholder, { width: size, height: size, borderRadius: size / 2 }]} />;
+/** 멧치 캐릭터 (피그마 image 38 export) */
+export default function Character({ size = 160, style }: CharacterProps) {
+  return <Image source={Metchi} style={[{ width: size, height: size * RATIO }, style]} resizeMode="contain" />;
 }
-
-const styles = StyleSheet.create({
-  placeholder: {
-    backgroundColor: COLORS.grey200,
-    borderWidth: 1,
-    borderColor: COLORS.grey300,
-  },
-});

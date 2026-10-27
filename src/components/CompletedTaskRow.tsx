@@ -5,33 +5,37 @@ import { COLORS } from '../constants/token';
 
 interface CompletedTaskRowProps {
   title: string;
+  /** 보조 텍스트 (예: '30분 집중') */
+  subText?: string;
 }
 
-/** 투두리스트 완료 행 (체크 원 + 취소선 제목) */
-export default function CompletedTaskRow({ title }: CompletedTaskRowProps) {
+/** 투두리스트 '완료 작업' 행 (피그마 6:7903: 360x73, 체크 원 24) */
+export default function CompletedTaskRow({ title, subText }: CompletedTaskRowProps) {
   return (
     <View style={styles.row}>
       <View style={styles.check}>
-        <CheckIcon width={13} height={13} color={COLORS.onAccent} />
+        <CheckIcon width={14} height={14} color={COLORS.textInverse} />
       </View>
-      <AppText variant="doneRowText" color={COLORS.doneRowTextColor} style={styles.title}>{title}</AppText>
+      <View style={styles.texts}>
+        <AppText variant="todoItemTitleText" color={COLORS.textBody}>{title}</AppText>
+        {subText ? (
+          <AppText variant="todoParent" color={COLORS.textWeak} style={styles.sub}>{subText}</AppText>
+        ) : null}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.doneRowBg,
-    borderRadius: 16,
-    paddingHorizontal: 21,
-    paddingVertical: 14,
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: COLORS.surface, borderRadius: 14,
+    paddingHorizontal: 20, paddingVertical: 16,
   },
   check: {
-    width: 22, height: 22, borderRadius: 11,
-    backgroundColor: COLORS.doneCheckBg,
-    alignItems: 'center', justifyContent: 'center',
+    width: 24, height: 24, borderRadius: 12,
+    backgroundColor: COLORS.fillBlack, alignItems: 'center', justifyContent: 'center',
   },
-  title: { marginLeft: 16, textDecorationLine: 'line-through' },
+  texts: { marginLeft: 14 },
+  sub: { marginTop: 6 },
 });

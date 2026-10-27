@@ -91,7 +91,7 @@ export default function MyInfoScreen({ navigation }: Props) {
                 <ToggleSwitch
                     value={appleLinked}
                     onValueChange={setAppleLinked}
-                    activeColor={COLORS.settingsToggleActive}
+                    activeColor={COLORS.primaryBright}
                 />
             </View>
 
@@ -104,7 +104,7 @@ export default function MyInfoScreen({ navigation }: Props) {
                 <ToggleSwitch
                     value={kakaoLinked}
                     onValueChange={setKakaoLinked}
-                    activeColor={COLORS.settingsToggleActive}
+                    activeColor={COLORS.primaryBright}
                 />
             </View>
 
@@ -117,7 +117,7 @@ export default function MyInfoScreen({ navigation }: Props) {
                 <ToggleSwitch
                     value={googleLinked}
                     onValueChange={setGoogleLinked}
-                    activeColor={COLORS.settingsToggleActive}
+                    activeColor={COLORS.primaryBright}
                 />
             </View>
 

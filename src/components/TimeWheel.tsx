@@ -49,7 +49,7 @@ function Column({ items, selectedIndex, onSelect }: ColumnProps) {
         <View key={i} style={styles.item}>
           <AppText
             variant={i === selectedIndex ? 'wheelSelected' : 'wheelIdle'}
-            color={i === selectedIndex ? COLORS.wheelSelectedColor : COLORS.wheelIdleColor}
+            color={i === selectedIndex ? COLORS.textMain : COLORS.textPlaceholder}
           >
             {it}
           </AppText>

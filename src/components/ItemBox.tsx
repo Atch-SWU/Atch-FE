@@ -33,7 +33,7 @@ export default function ItemBox({ size, owned, Icon, onPress }: ItemBoxProps) {
                 </View>
             ) : (
                 <View style={styles.lockBadge}>
-                    <LockIcon width={13} height={13} color={COLORS.itemLockIcon} />
+                    <LockIcon width={13} height={13} color={COLORS.textSub} />
                 </View>
             )}
         </Pressable>
@@ -48,7 +48,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
-    boxOwned: { backgroundColor: COLORS.itemOwnedBg },
+    boxOwned: { backgroundColor: COLORS.primarySoft },
     boxLocked: { backgroundColor: COLORS.itemLockedBg },
 
     checkBadge: {
@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: COLORS.itemOwnedBadgeBg,
+        backgroundColor: COLORS.primaryLight,
     },
     lockBadge: {
         position: 'absolute',

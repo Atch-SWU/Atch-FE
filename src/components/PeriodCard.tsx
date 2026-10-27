@@ -24,43 +24,39 @@ interface PeriodCardProps {
 }
 
 const pad = (n: number) => String(n).padStart(2, '0');
-const fmtDate = (d: Date) => `${d.getFullYear()}. ${pad(d.getMonth() + 1)}. ${pad(d.getDate())}.`;
-const fmtTime = (d: Date) => {
+export const fmtDate = (d: Date) => `${d.getFullYear()}. ${pad(d.getMonth() + 1)}. ${pad(d.getDate())}.`;
+export const fmtTime = (d: Date) => {
   let h = d.getHours();
   const ampm = h < 12 ? 'AM' : 'PM';
   h = h % 12;
   if (h === 0) h = 12;
   return `${ampm} ${pad(h)}:${pad(d.getMinutes())}`;
 };
-const defaultTime = () => {
-  const d = new Date();
-  d.setHours(18, 0, 0, 0);
-  return d;
-};
 
 function Pill({
-  label, active, minWidth, iconType, onPress,
-}: {
-  label: string | null;
-  active: boolean;
-  minWidth: number;
-  iconType: 'date' | 'time';
-  onPress: () => void;
-}) {
+  label, active, width, iconType, onPress,
+}: { label: string | null; active: boolean; width: number; iconType: 'date' | 'time'; onPress: () => void }) {
+  const iconColor = active ? COLORS.primary : COLORS.iconWeak;
   return (
-    <Pressable onPress={onPress} style={[styles.pill, { minWidth }]}>
+    <Pressable onPress={onPress} style={[styles.pill, { width }, active && styles.pillActive]}>
       {label != null ? (
-        <AppText variant="formText" color={active ? COLORS.pillActiveText : COLORS.pillText}>{label}</AppText>
+        <AppText variant="formPillText" color={active ? COLORS.primary : COLORS.textBody}>{label}</AppText>
       ) : iconType === 'date' ? (
-        <CalendarIcon width={18} height={18} color={active ? COLORS.pillActiveText : COLORS.pillIcon} />
+        <CalendarIcon width={18} height={18} color={iconColor} />
       ) : (
-        <ClockOutline width={18} height={18} color={active ? COLORS.pillActiveText : COLORS.pillIcon} />
+        <ClockOutline width={18} height={18} color={iconColor} />
       )}
     </Pressable>
   );
 }
 
-/** iOS 네이티브 시간 피커 (실시간 반영, 버튼 없음) */
+const defaultTime = (hour: number) => {
+  const d = new Date();
+  d.setHours(hour, 0, 0, 0);
+  return d;
+};
+
+/** iOS 네이티브 시간 피커 (실시간 반영, 확인 버튼 없음 — 필을 다시 누르면 닫힘) */
 function TimePicker({ value, onChange }: { value: Date; onChange: (d: Date) => void }) {
   return (
     <View style={styles.timeWrap}>
@@ -76,7 +72,7 @@ function TimePicker({ value, onChange }: { value: Date; onChange: (d: Date) => v
   );
 }
 
-/** 기간 설정 카드 */
+/** 기간 설정 (피그마 6:4316 / 6:5083 / 6:5219): 행 3개 각 55h r12, 간격 4, 피커는 해당 카드 안에서 확장 */
 export default function PeriodCard(props: PeriodCardProps) {
   const {
     allDay, onToggleAllDay,
@@ -84,57 +80,74 @@ export default function PeriodCard(props: PeriodCardProps) {
     onChangeStartDate, onChangeStartTime, onChangeEndDate, onChangeEndTime,
   } = props;
   const [open, setOpen] = useState<OpenKey>(null);
+  const toggle = (k: Exclude<OpenKey, null>) => setOpen(open === k ? null : k);
 
-  const openTime = (key: 'startTime' | 'endTime', current: Date | null, setter: (d: Date) => void) => {
-    if (open === key) { setOpen(null); return; }
-    if (current == null) setter(defaultTime());
-    setOpen(key);
-  };
+  const renderRow = (
+    label: string,
+    dKey: 'startDate' | 'endDate',
+    tKey: 'startTime' | 'endTime',
+    date: Date | null,
+    time: Date | null,
+    onDate: (d: Date) => void,
+    onTime: (d: Date) => void,
+    defaultHour: number,
+  ) => (
+    <View style={styles.card}>
+      <View style={styles.row}>
+        <AppText variant="formRowText" color={COLORS.textStrong}>{label}</AppText>
+        <View style={styles.pills}>
+          <Pill label={date ? fmtDate(date) : null} active={open === dKey} width={108} iconType="date" onPress={() => toggle(dKey)} />
+          {!allDay && (
+            <Pill
+              label={time ? fmtTime(time) : null}
+              active={open === tKey}
+              width={89}
+              iconType="time"
+              onPress={() => {
+                if (open !== tKey && !time) onTime(defaultTime(defaultHour));
+                toggle(tKey);
+              }}
+            />
+          )}
+        </View>
+      </View>
+      {open === dKey && (
+        <>
+          <View style={styles.divider} />
+          <Calendar value={date} onSelect={(d) => { onDate(d); setOpen(null); }} />
+        </>
+      )}
+      {open === tKey && !allDay && (
+        <>
+          <View style={styles.divider} />
+          <TimePicker value={time ?? defaultTime(defaultHour)} onChange={onTime} />
+        </>
+      )}
+    </View>
+  );
 
   return (
-    <View style={styles.card}>
-      <View style={styles.rowToggle}>
-        <AppText variant="formText" color={COLORS.formRowLabel}>하루 종일</AppText>
-        <ToggleSwitch value={allDay} onValueChange={onToggleAllDay} />
+    <View style={styles.wrap}>
+      <View style={[styles.card, styles.row]}>
+        <AppText variant="formRowText" color={COLORS.textStrong}>하루 종일</AppText>
+        <ToggleSwitch variant="form" value={allDay} onValueChange={onToggleAllDay} />
       </View>
-
-      <View style={styles.divider} />
-
-      <View style={styles.row}>
-        <AppText variant="formText" color={COLORS.formRowLabel}>시작</AppText>
-        <View style={styles.pills}>
-          <Pill label={startDate ? fmtDate(startDate) : null} active={open === 'startDate'} minWidth={108} iconType="date" onPress={() => setOpen(open === 'startDate' ? null : 'startDate')} />
-          {!allDay && (
-            <Pill label={startTime ? fmtTime(startTime) : null} active={open === 'startTime'} minWidth={89} iconType="time" onPress={() => openTime('startTime', startTime, onChangeStartTime)} />
-          )}
-        </View>
-      </View>
-      {open === 'startDate' && <Calendar value={startDate} onSelect={(d) => { onChangeStartDate(d); setOpen(null); }} />}
-      {open === 'startTime' && <TimePicker value={startTime ?? defaultTime()} onChange={onChangeStartTime} />}
-
-      <View style={styles.divider} />
-
-      <View style={styles.row}>
-        <AppText variant="formText" color={COLORS.formRowLabel}>종료</AppText>
-        <View style={styles.pills}>
-          <Pill label={endDate ? fmtDate(endDate) : null} active={open === 'endDate'} minWidth={108} iconType="date" onPress={() => setOpen(open === 'endDate' ? null : 'endDate')} />
-          {!allDay && (
-            <Pill label={endTime ? fmtTime(endTime) : null} active={open === 'endTime'} minWidth={89} iconType="time" onPress={() => openTime('endTime', endTime, onChangeEndTime)} />
-          )}
-        </View>
-      </View>
-      {open === 'endDate' && <Calendar value={endDate} onSelect={(d) => { onChangeEndDate(d); setOpen(null); }} />}
-      {open === 'endTime' && <TimePicker value={endTime ?? defaultTime()} onChange={onChangeEndTime} />}
+      {renderRow('시작', 'startDate', 'startTime', startDate, startTime, onChangeStartDate, onChangeStartTime, 18)}
+      {renderRow('종료', 'endDate', 'endTime', endDate, endTime, onChangeEndDate, onChangeEndTime, 19)}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: { borderWidth: 1, borderColor: COLORS.inputBorder, borderRadius: 16, paddingHorizontal: 22 },
-  rowToggle: { height: 51, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  row: { height: 51, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  divider: { height: 1, backgroundColor: COLORS.formDivider },
-  pills: { flexDirection: 'row', gap: 7 },
-  pill: { backgroundColor: COLORS.pillBg, borderRadius: 12, paddingHorizontal: 14, height: 36, alignItems: 'center', justifyContent: 'center' },
-  timeWrap: { paddingBottom: 8 },
+  wrap: { gap: 4 },
+  card: {
+    borderWidth: 1, borderColor: COLORS.border, borderRadius: 12,
+    backgroundColor: COLORS.surface, paddingHorizontal: 21, overflow: 'hidden',
+  },
+  row: { height: 53, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  divider: { height: 1, backgroundColor: COLORS.border },
+  pills: { flexDirection: 'row', gap: 6 },
+  pill: { height: 36, borderRadius: 12, backgroundColor: COLORS.formPillBg, alignItems: 'center', justifyContent: 'center' },
+  pillActive: { backgroundColor: COLORS.fillSoft },
+  timeWrap: { paddingVertical: 4 },
 });

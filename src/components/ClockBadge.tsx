@@ -12,7 +12,7 @@ interface ClockBadgeProps {
 
 /** 시계 원형 아이콘 + 시간 라벨 */
 export default function ClockBadge({
-  time, circleColor, timeColor, iconColor = COLORS.onAccent,
+  time, circleColor, timeColor, iconColor = COLORS.textInverse,
 }: ClockBadgeProps) {
   return (
     <View style={styles.wrap}>
