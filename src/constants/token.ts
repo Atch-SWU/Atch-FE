@@ -1,15 +1,5 @@
 import type { TextStyle } from 'react-native';
 
-/**
- * 디자인 토큰 — 색/글자 스타일은 이 파일에서만 정의한다. (hex 직접 사용 금지)
- *
- * 구조: ① TYPOGRAPHY(글자) → ② PALETTE(원색) → ③ COLORS(역할별 색) → ④ SPACING
- * 색을 바꾸고 싶으면 PALETTE 의 값을, 역할을 바꾸고 싶으면 COLORS 의 매핑을 수정한다.
- */
-
-// ═══════════════════════════════ ① TYPOGRAPHY ═══════════════════════════════
-// t(굵기, 크기, 줄높이?, 자간?)  — 피그마 텍스트 스타일 그대로
-
 type Weight = 'Regular' | 'Medium' | 'SemiBold' | 'Bold' | 'ExtraBold';
 
 const t = (weight: Weight, fontSize: number, lineHeight?: number, letterSpacing?: number): TextStyle => ({
@@ -162,8 +152,6 @@ export const TYPOGRAPHY = {
 
 export type TypographyToken = keyof typeof TYPOGRAPHY;
 
-// ═══════════════════════════════ ② PALETTE ═══════════════════════════════
-// 팀 확정 컬러칩 (원색). 컴포넌트에서는 가급적 ③ 역할 토큰을 쓴다.
 
 const PALETTE = {
   white: '#FFFFFF',
@@ -190,8 +178,6 @@ const PALETTE = {
   transparent: 'transparent',
 } as const;
 
-// ═══════════════════════════════ ③ COLORS ═══════════════════════════════
-// 역할(role) 기준 토큰. 같은 역할이면 화면이 달라도 같은 토큰을 쓴다.
 
 export const COLORS = {
   ...PALETTE, // COLORS.gray200 처럼 원색도 접근 가능
@@ -247,7 +233,6 @@ export const COLORS = {
   mutedBtnBg: '#AFAFAF',
 } as const;
 
-// ═══════════════════════════════ ④ SPACING ═══════════════════════════════
 
 export const SPACING = {
   screenH: 21,     // 화면 좌우 여백

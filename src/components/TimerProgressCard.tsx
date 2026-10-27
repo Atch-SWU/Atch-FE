@@ -1,6 +1,6 @@
 import { View, Pressable, StyleSheet } from 'react-native';
 import AppText from './AppText';
-import ChevronRight from '../assets/icon/chevron-right-thin.svg';
+import ChevronRight from '../assets/icon/chevron-right.svg';
 import { COLORS } from '../constants/token';
 
 interface TimerProgressCardProps {
