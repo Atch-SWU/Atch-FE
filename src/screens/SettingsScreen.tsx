@@ -1,5 +1,10 @@
 import { useState } from 'react';
-import { View, StyleSheet, Pressable } from 'react-native';
+import {
+    View,
+    StyleSheet,
+    Pressable,
+    Alert,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
@@ -8,12 +13,87 @@ import ChevronLeft from '../assets/icon/chevron-left-bold.svg';
 import ChevronRight from '../assets/icon/chevron-right-bold.svg';
 import { COLORS } from '../constants/token';
 import { RootStackParamList } from '../navigation/types';
+import {
+    getRefreshToken,
+    clearTokens,
+} from '../api/tokenStorage';
+import { BASE_URL } from '../api/config';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Settings'>;
 
 export default function SettingsScreen({ navigation }: Props) {
     const [myInfoEnabled, setMyInfoEnabled] = useState(true);
     const [taskSwitchEnabled, setTaskSwitchEnabled] = useState(true);
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+    // 로그아웃 API
+    const handleLogout = async () => {
+        if (isLoggingOut) return;
+
+        setIsLoggingOut(true);
+
+        try {
+            // 현재 기기의 Refresh Token 조회
+            const refreshToken = await getRefreshToken();
+
+            if (!refreshToken) {
+                // 저장된 토큰이 없다면 로컬 토큰을 정리하고 로그인 화면으로 이동
+                await clearTokens();
+                navigation.replace('Login');
+                return;
+            }
+
+            // 서버 로그아웃 요청
+            // 명세에 따라 Authorization 헤더는 보내지 않음
+            const response = await fetch(
+                `${BASE_URL}/api/v1/auth/logout`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        refreshToken,
+                    }),
+                },
+            );
+
+            // 204: 로그아웃 성공 또는 이미 폐기된 세션
+            if (response.status === 204) {
+                await clearTokens();
+                navigation.replace('Login');
+                return;
+            }
+
+            // 503: 서버 세션 폐기 여부를 확인할 수 없음
+            if (response.status === 503) {
+                Alert.alert(
+                    '로그아웃 실패',
+                    '서버에 일시적인 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.',
+                );
+                return;
+            }
+
+            // 기타 HTTP 오류
+            const errorData = await response
+                .json()
+                .catch(() => null);
+
+            Alert.alert(
+                '로그아웃 실패',
+                errorData?.message ??
+                    '로그아웃 중 오류가 발생했습니다. 다시 시도해 주세요.',
+            );
+        } catch {
+            // 네트워크 오류 또는 로컬 토큰 삭제 오류
+            Alert.alert(
+                '로그아웃 실패',
+                '서버 연결 또는 로그인 정보 처리 중 문제가 발생했습니다. 네트워크를 확인한 후 다시 시도해 주세요.',
+            );
+        } finally {
+            setIsLoggingOut(false);
+        }
+    };
 
     return (
         <SafeAreaView style={styles.root} edges={['top', 'bottom']}>
@@ -92,7 +172,9 @@ export default function SettingsScreen({ navigation }: Props) {
                     </AppText>
 
                     <Pressable
-                        onPress={() => setMyInfoEnabled(!myInfoEnabled)}
+                        onPress={() =>
+                            setMyInfoEnabled(!myInfoEnabled)
+                        }
                         hitSlop={8}
                     >
                         <View
@@ -151,13 +233,19 @@ export default function SettingsScreen({ navigation }: Props) {
                     </Pressable>
                 </View>
             </View>
-            <Pressable style={styles.logoutButton}>
+
+            {/* 로그아웃 */}
+            <Pressable
+                style={styles.logoutButton}
+                onPress={handleLogout}
+                disabled={isLoggingOut}
+            >
                 <AppText
                     variant="settingsRowLabel"
                     color={COLORS.gray800}
                     style={styles.logoutText}
                 >
-                    로그아웃
+                    {isLoggingOut ? '로그아웃 중...' : '로그아웃'}
                 </AppText>
             </Pressable>
         </SafeAreaView>

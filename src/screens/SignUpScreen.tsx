@@ -13,7 +13,7 @@ import CheckIcon from '../assets/icon/check.svg';
 import { COLORS, SPACING } from '../constants/token';
 import { RootStackParamList } from '../navigation/types';
 import { getOrCreateDeviceId } from '../utils/deviceId';
-import * as SecureStore from 'expo-secure-store';
+import { saveTokens } from '../api/tokenStorage';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'SignUp'>;
 
@@ -275,15 +275,7 @@ export default function SignUpScreen({ navigation }: Props) {
                 }
 
                 try {
-                    await SecureStore.setItemAsync(
-                        'atch_access_token',
-                        accessToken,
-                    );
-
-                    await SecureStore.setItemAsync(
-                        'atch_refresh_token',
-                        refreshToken,
-                    );
+                    await saveTokens(accessToken, refreshToken);
                 } catch {
                     Alert.alert(
                         '회원가입 완료',
@@ -335,9 +327,17 @@ export default function SignUpScreen({ navigation }: Props) {
             if (errorCode === 'SIGNUP_COMPLETED_LOGIN_FAILED') {
                 Alert.alert(
                     '회원가입 완료',
-                    '계정은 생성되었지만 자동 로그인에 실패했어요. 로그인 화면으로 이동해 주세요.',
+                    '계정은 생성되었지만 자동 로그인에 실패했어요. 로그인 화면에서 다시 로그인해 주세요.',
+                    [
+                        {
+                            text: '확인',
+                            onPress: () => {
+                                setTermsVisible(false);
+                                navigation.replace('Login');
+                            },
+                        },
+                    ],
                 );
-                // TODO: 로그인 화면으로 이동
                 return;
             }
 

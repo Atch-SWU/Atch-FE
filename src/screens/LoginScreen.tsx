@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import {
     View,
@@ -7,7 +6,7 @@ import {
     Image,
     Alert,
 } from 'react-native';
-import * as SecureStore from 'expo-secure-store';
+import { saveTokens } from '../api/tokenStorage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
@@ -85,17 +84,20 @@ export default function LoginScreen({ navigation }: Props) {
                 }
 
                 // 토큰 안전하게 저장
-                await SecureStore.setItemAsync(
-                    'atch_access_token',
-                    data.accessToken
-                );
+                try {
+                    await saveTokens(data.accessToken, data.refreshToken);
+                } catch (storageError) {
+                    console.error('토큰 저장 오류:', storageError);
 
-                await SecureStore.setItemAsync(
-                    'atch_refresh_token',
-                    data.refreshToken
-                );
+                    Alert.alert(
+                        '로그인 오류',
+                        '로그인 정보 저장에 실패했어요. 다시 시도해 주세요.'
+                    );
 
-                // 메인 화면으로 이동
+                    return;
+                }
+
+                // 토큰 저장 성공 후 메인 화면으로 이동
                 navigation.replace('Main');
                 return;
             }
@@ -113,7 +115,7 @@ export default function LoginScreen({ navigation }: Props) {
             Alert.alert(
                 '로그인 실패',
                 data?.message ??
-                    `로그인에 실패했습니다. (${response.status})`
+                `로그인에 실패했습니다. (${response.status})`
             );
         } catch (error) {
             console.error('로그인 오류:', error);
