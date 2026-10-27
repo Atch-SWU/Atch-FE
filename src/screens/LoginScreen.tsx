@@ -1,10 +1,13 @@
+
 import { useState } from 'react';
 import {
     View,
     StyleSheet,
     TouchableOpacity,
     Image,
+    Alert,
 } from 'react-native';
+import * as SecureStore from 'expo-secure-store';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
@@ -13,6 +16,8 @@ import AppButton from '../components/AppButton';
 import FormInput from '../components/FormInput';
 import { COLORS } from '../constants/token';
 import { RootStackParamList } from '../navigation/types';
+import { BASE_URL } from '../api/config';
+import { getOrCreateDeviceId } from '../utils/deviceId';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
 
@@ -21,10 +26,105 @@ export default function LoginScreen({ navigation }: Props) {
 
     const [userId, setUserId] = useState('');
     const [password, setPassword] = useState('');
+    const [isLoggingIn, setIsLoggingIn] = useState(false);
 
-    const handleLogin = () => {
-        // TODO: 실제 로그인 API 연동 전까지는 임시로 홈으로 이동.
-        navigation.replace('Main');
+    const handleLogin = async () => {
+        const email = userId.trim();
+
+        // 입력값 확인
+        if (!email || !password) {
+            Alert.alert(
+                '로그인 안내',
+                '이메일과 비밀번호를 입력해 주세요.'
+            );
+            return;
+        }
+
+        // 중복 로그인 요청 방지
+        if (isLoggingIn) {
+            return;
+        }
+
+        setIsLoggingIn(true);
+
+        try {
+            // 기기 고유 ID 가져오기
+            const deviceId = await getOrCreateDeviceId();
+
+            // 로그인 API 요청
+            const response = await fetch(
+                `${BASE_URL}/api/v1/auth/login`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Accept: 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email,
+                        password,
+                        deviceId,
+                    }),
+                }
+            );
+
+            // 응답 데이터 읽기
+            const data = await response.json().catch(() => null);
+
+            // 로그인 성공
+            if (response.status === 200) {
+                if (
+                    !data?.accessToken ||
+                    !data?.refreshToken
+                ) {
+                    Alert.alert(
+                        '로그인 오류',
+                        '서버 응답에 토큰 정보가 없습니다.'
+                    );
+                    return;
+                }
+
+                // 토큰 안전하게 저장
+                await SecureStore.setItemAsync(
+                    'atch_access_token',
+                    data.accessToken
+                );
+
+                await SecureStore.setItemAsync(
+                    'atch_refresh_token',
+                    data.refreshToken
+                );
+
+                // 메인 화면으로 이동
+                navigation.replace('Main');
+                return;
+            }
+
+            // 이메일 또는 비밀번호 오류
+            if (response.status === 401) {
+                Alert.alert(
+                    '로그인 실패',
+                    '이메일 또는 비밀번호를 확인해 주세요.'
+                );
+                return;
+            }
+
+            // 그 외 서버 오류
+            Alert.alert(
+                '로그인 실패',
+                data?.message ??
+                    `로그인에 실패했습니다. (${response.status})`
+            );
+        } catch (error) {
+            console.error('로그인 오류:', error);
+
+            Alert.alert(
+                '연결 오류',
+                '서버에 연결할 수 없습니다. 네트워크와 서버 상태를 확인해 주세요.'
+            );
+        } finally {
+            setIsLoggingIn(false);
+        }
     };
 
     const handleFindPassword = () => {
@@ -35,7 +135,9 @@ export default function LoginScreen({ navigation }: Props) {
         navigation.navigate('SignUp');
     };
 
-    const handleSnsLogin = (type: 'kakao' | 'google' | 'apple') => {
+    const handleSnsLogin = (
+        type: 'kakao' | 'google' | 'apple'
+    ) => {
         // TODO: SNS 로그인 API 연동
         console.log(`${type} 로그인`);
     };
@@ -80,7 +182,7 @@ export default function LoginScreen({ navigation }: Props) {
 
             {/* 로그인 버튼 */}
             <AppButton
-                label="로그인"
+                label={isLoggingIn ? '로그인 중...' : '로그인'}
                 variant="primary"
                 textVariant="authButtonText"
                 onPress={handleLogin}
@@ -89,8 +191,6 @@ export default function LoginScreen({ navigation }: Props) {
 
             {/* 비밀번호 찾기 / 회원가입 */}
             <View style={styles.linkRow}>
-            
-
                 <TouchableOpacity onPress={handleSignUp}>
                     <AppText
                         variant="authLinkText"
@@ -122,7 +222,6 @@ export default function LoginScreen({ navigation }: Props) {
                 </AppText>
 
                 <View style={styles.snsButtonRow}>
-
                     <TouchableOpacity
                         style={[
                             styles.snsButton,
