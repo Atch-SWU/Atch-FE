@@ -1,5 +1,12 @@
-import { useMemo, useRef, useState } from 'react';
-import { View, StyleSheet, Pressable, Animated, Image, Text, } from 'react-native';
+import { useRef, useState } from 'react';
+import {
+    View,
+    StyleSheet,
+    Pressable,
+    Animated,
+    Image,
+    Text,
+} from 'react-native';
 
 import AppText from '../components/AppText';
 import { COLORS } from '../constants/token';
@@ -76,7 +83,11 @@ export default function DailyReport() {
                 >
                     <RoundedChevron
                         direction="left"
-                        color={isFirstDay ? COLORS.gray300 : COLORS.gray700}
+                        color={
+                            isFirstDay
+                                ? COLORS.gray300
+                                : COLORS.gray700
+                        }
                         width={9}
                         height={15}
                         strokeWidth={2.2}
@@ -97,7 +108,11 @@ export default function DailyReport() {
                 >
                     <RoundedChevron
                         direction="right"
-                        color={isLastDay ? COLORS.gray300 : COLORS.gray700}
+                        color={
+                            isLastDay
+                                ? COLORS.gray300
+                                : COLORS.gray700
+                        }
                         width={9}
                         height={15}
                         strokeWidth={2.2}
@@ -106,80 +121,103 @@ export default function DailyReport() {
             </View>
 
             <Animated.View style={{ opacity: contentOpacity }}>
-                {/* 캐릭터 이미지 + 랜덤 멘트 */}
-                <View style={styles.characterSection}>
-                    <Image
-                        source={ReportCharacter}
-                        style={styles.characterImage}
-                        resizeMode="contain"
-                    />
-
-                    <View style={styles.messageBubbleWrapper}>
-                        <MessageBubble textStyle={styles.messageText}>
-                            오늘은{' '}
-                            <Text style={styles.highlightTime}>
-                                {report.peakFocusTime}
-                            </Text>
-                            에 집중력이 가장 높았어요!
-                        </MessageBubble>
-                    </View>
-                </View>
-
-                {/* 일간 목표 */}
-                <View style={styles.goalCardWrapper}>
-                    <GoalProgressCard
-                        title="오늘 목표"
-                        percent={report.goalPercent}
-                    />
-                </View>
-
-                {/* 오늘의 통계 */}
-                <StatCardGrid
-                    items={[
-                        {
-                            label: '총 집중 시간',
-                            value: report.focusTime,
-                        },
-                        {
-                            label: '완료한 작업',
-                            value: `${report.completedTasks}개`,
-                        },
-                        {
-                            label: '중단 횟수',
-                            value: `${report.interruptions}회`,
-                        },
-                        {
-                            label: '평균 집중시간',
-                            value: report.avgFocusTime,
-                        },
-                    ]}
-                />
-
-                {/* 시간대별 집중도 */}
-                <View style={styles.chartSection}>
-                    <TaskDurationBarChart
-                        data={FOCUS_HOUR_BARS}
-                        chartPaddingH={24}
-                        barGap={5}
-                        baseBarWidth={4}
-                    />
-                </View>
-
-                {/* 오늘의 집중 세션 */}
-                <View style={styles.sessionSection}>
-                    <AppText
-                        variant="sectionLabelLg"
-                        color={COLORS.black}
-                    >
-                        오늘의 집중 세션
-                    </AppText>
-
-                    <View style={styles.sessionListWrapper}>
-                        <FocusSessionList
-                            sessions={report.focusSessions}
+                {/* 완료한 작업이 없는 경우 */}
+                {report.completedTasks === 0 ? (
+                    <View style={styles.emptySection}>
+                        <Image
+                            source={ReportCharacter}
+                            style={styles.emptyImage}
+                            resizeMode="contain"
                         />
+
+                        <AppText
+                            variant="bodyTask"
+                            color={COLORS.gray400}
+                            style={styles.emptyText}
+                        >
+                            오늘 완료된 작업이 없어요
+                        </AppText>
                     </View>
-                </View>
+                ) : (
+                    <>
+                        {/* 캐릭터 이미지 + 랜덤 멘트 */}
+                        <View style={styles.characterSection}>
+                            <Image
+                                source={ReportCharacter}
+                                style={styles.characterImage}
+                                resizeMode="contain"
+                            />
+
+                            <View style={styles.messageBubbleWrapper}>
+                                <MessageBubble
+                                    textStyle={styles.messageText}
+                                >
+                                    오늘은{' '}
+                                    <Text style={styles.highlightTime}>
+                                        {report.peakFocusTime}
+                                    </Text>
+                                    에 집중력이 가장 높았어요!
+                                </MessageBubble>
+                            </View>
+                        </View>
+
+                        {/* 일간 목표 */}
+                        <View style={styles.goalCardWrapper}>
+                            <GoalProgressCard
+                                title="오늘 목표"
+                                percent={report.goalPercent}
+                            />
+                        </View>
+
+                        {/* 오늘의 통계 */}
+                        <StatCardGrid
+                            items={[
+                                {
+                                    label: '총 집중 시간',
+                                    value: report.focusTime,
+                                },
+                                {
+                                    label: '완료한 작업',
+                                    value: `${report.completedTasks}개`,
+                                },
+                                {
+                                    label: '중단 횟수',
+                                    value: `${report.interruptions}회`,
+                                },
+                                {
+                                    label: '평균 집중시간',
+                                    value: report.avgFocusTime,
+                                },
+                            ]}
+                        />
+
+                        {/* 시간대별 집중도 */}
+                        <View style={styles.chartSection}>
+                            <TaskDurationBarChart
+                                data={FOCUS_HOUR_BARS}
+                                chartPaddingH={24}
+                                barGap={5}
+                                baseBarWidth={4}
+                            />
+                        </View>
+
+                        {/* 오늘의 집중 세션 */}
+                        <View style={styles.sessionSection}>
+                            <AppText
+                                variant="sectionLabelLg"
+                                color={COLORS.black}
+                            >
+                                오늘의 집중 세션
+                            </AppText>
+
+                            <View style={styles.sessionListWrapper}>
+                                <FocusSessionList
+                                    sessions={report.focusSessions}
+                                />
+                            </View>
+                        </View>
+                    </>
+                )}
             </Animated.View>
         </View>
     );
@@ -253,5 +291,25 @@ const styles = StyleSheet.create({
 
     sessionListWrapper: {
         marginTop: 12,
+    },
+
+    emptySection: {
+        alignItems: 'center',
+        paddingTop: 130,
+        paddingBottom: 40,
+    },
+
+    emptyImage: {
+        width: 216,
+        height: 180,
+        opacity: 0.3,
+    },
+
+    emptyText: {
+        marginTop: 20,
+        fontFamily: 'SUIT-Regular',
+        fontSize: 15,
+        lineHeight: 20,
+        color: COLORS.gray400,
     },
 });
