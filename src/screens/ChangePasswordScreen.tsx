@@ -89,7 +89,7 @@ export default function ChangePasswordScreen({ navigation }: Props) {
                     </View>
                 </View>
                 {currentPasswordError && (
-                    <AppText variant="statCaption" color={COLORS.tipText} style={styles.hintText}>
+                    <AppText variant="statCaption" color={COLORS.primary} style={styles.hintText}>
                         비밀번호가 일치하지 않습니다.
                     </AppText>
                 )}
@@ -115,7 +115,7 @@ export default function ChangePasswordScreen({ navigation }: Props) {
                         <CheckIcon width={12} height={12} color={COLORS.white} />
                     </View>
                 </View>
-                <AppText variant="statCaption" color={COLORS.tipText} style={styles.hintText}>
+                <AppText variant="statCaption" color={COLORS.primary} style={styles.hintText}>
                     영어 대소문자/특수문자 (!@#$%*) 각 하나 이상인 8-16자
                 </AppText>
 
@@ -137,7 +137,7 @@ export default function ChangePasswordScreen({ navigation }: Props) {
                     </View>
                 </View>
                 {showMismatch && (
-                    <AppText variant="statCaption" color={COLORS.tipText} style={styles.hintText}>
+                    <AppText variant="statCaption" color={COLORS.primary} style={styles.hintText}>
                         비밀번호가 일치하지 않습니다.
                     </AppText>
                 )}
@@ -148,7 +148,7 @@ export default function ChangePasswordScreen({ navigation }: Props) {
                     label="비밀번호 찾기"
                     variant="soft"
                     textVariant="authButtonText"
-                    textColor={COLORS.mutedBtnText}
+                    textColor={COLORS.textInverse}
                     onPress={handleFindPassword}
                     style={[styles.findPasswordBtn, styles.findPasswordBtnBg]}
                 />
@@ -210,8 +210,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
-    checkBadgeActive: { backgroundColor: COLORS.grey900 },
-    checkBadgeInactive: { backgroundColor: COLORS.grey300 },
+    checkBadgeActive: { backgroundColor: COLORS.black },
+    checkBadgeInactive: { backgroundColor: COLORS.gray300 },
 
     hintText: { marginTop: 6, marginLeft: 8 },
 

@@ -59,7 +59,7 @@ export default function AppSettingsScreen({ navigation }: Props) {
                 <ToggleSwitch
                     value={adAlertEnabled}
                     onValueChange={setAdAlertEnabled}
-                    activeColor={COLORS.settingsToggleActive}
+                    activeColor={COLORS.primaryBright}
                 />
             </View>
 
@@ -72,7 +72,7 @@ export default function AppSettingsScreen({ navigation }: Props) {
                 <ToggleSwitch
                     value={dataConsentEnabled}
                     onValueChange={setDataConsentEnabled}
-                    activeColor={COLORS.settingsToggleActive}
+                    activeColor={COLORS.primaryBright}
                 />
             </View>
 

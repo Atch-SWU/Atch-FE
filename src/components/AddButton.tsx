@@ -7,19 +7,19 @@ interface AddButtonProps {
   style?: StyleProp<ViewStyle>;
 }
 
-/** 우상단 일정 추가(+) 버튼 */
+/** 우상단 일정 추가(+) 버튼 — 피그마: 38x38 원, 다크 */
 export default function AddButton({ onPress, style }: AddButtonProps) {
   return (
-    <Pressable onPress={onPress} style={[styles.btn, style]}>
-      <PlusIcon width={28} height={28} color={COLORS.gray800} />
+    <Pressable onPress={onPress} hitSlop={8} style={[styles.btn, style]}>
+      <PlusIcon width={20} height={20} color={COLORS.textInverse} />
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   btn: {
-    width: 54, height: 54, borderRadius: 27,
+    width: 38, height: 38, borderRadius: 22,
     alignItems: 'center', justifyContent: 'center',
-    backgroundColor: COLORS.white,
+    backgroundColor: COLORS.fillDark,
   },
 });

@@ -1,9 +1,8 @@
-import { CategoryKey } from '../constants/token';
-
 export interface TaskParam {
   title: string;
-  category: CategoryKey;
   estimateText: string;
+  /** 작업 정보 팝업용 메모 (없으면 '-') */
+  memo?: string;
 }
 
 export type RootStackParamList = {
@@ -20,13 +19,16 @@ export type RootStackParamList = {
   AppSettings: undefined;
   PushSettings: undefined;
   TaskCreate: undefined;
+  CompletedTasks: undefined;
   Timer: { task: TaskParam };
   SessionComplete: {
     taskTitle: string;
     taskDate: string;
-    elapsedText: string;
+    /** 실제 소요(초) */
+    elapsedSec: number;
+    /** 예상 소요(초) */
+    estimateSec: number;
     pauseCount: number;
-    overText: string;
     nextTask: TaskParam | null;
   };
 };

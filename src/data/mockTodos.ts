@@ -1,105 +1,101 @@
-import { CategoryKey } from '../constants/token';
-
-export interface TodoItem {
+// ===== 홈 =====
+export interface HomeTask {
   id: string;
   title: string;
-  category: CategoryKey;
+  /** 상위 작업명 (없을 수 있음) */
+  parent?: string;
   estimateText: string;
 }
 
-export interface CompletedItem {
-  id: string;
-  date: string;
-  title: string;
-  badgeText: string;
-}
-
-export const TODOS: TodoItem[] = [
-  { id: '1', title: '주간회의 준비', category: 'work', estimateText: '예상 45분' },
-  { id: '2', title: '팀 미팅 자료 준비', category: 'work', estimateText: '예상 45분' },
-  { id: '3', title: '알고리즘 문제 풀이', category: 'study', estimateText: '예상 60분' },
-  { id: 't', title: '세션 완료 테스트', category: 'study', estimateText: '예상 30초' },
+export const HOME_TASKS: HomeTask[] = [
+  { id: 'h1', title: '주간 회의 준비', parent: '팀 주간 보고', estimateText: '예상 45분' },
+  { id: 'h2', title: '일정 자료 정리', parent: '팀 주간 보고', estimateText: '예상 30분' },
+  { id: 'h3', title: '알고리즘 문제 풀이', estimateText: '예상 1시간' },
 ];
 
-export const COMPLETED: CompletedItem[] = [
-  { id: '1', date: '5월 16일', title: '팀 미팅 자료 준비', badgeText: '5분 단축' },
-  { id: '2', date: '5월 16일', title: '독서 20페이지', badgeText: '2분 초과' },
-  { id: '3', date: '5월 14일', title: '알고리즘 문제 풀기', badgeText: '15분 단축' },
-];
-
-// ===== 투두리스트 메인화면용 =====
-export interface WeekDay {
-  wd: string;
-  day: number;
-  selected?: boolean;
-  dot?: boolean;
-}
-export const WEEK: WeekDay[] = [
-  { wd: '일', day: 17 },
-  { wd: '월', day: 18 },
-  { wd: '화', day: 19, selected: true, dot: true },
-  { wd: '수', day: 20 },
-  { wd: '목', day: 21, dot: true },
-  { wd: '금', day: 22, dot: true },
-  { wd: '토', day: 23 },
-];
-
-export interface DayTask {
-  id: string;
-  statusLabel: string;
-  status: 'focus' | 'planned';
-  title: string;
-  time: string;
-}
-export const TODAY_TASKS: DayTask[] = [
-  { id: '1', statusLabel: '집중중', status: 'focus', title: '주간 회의 준비', time: '45m' },
-  { id: '2', statusLabel: '예정', status: 'planned', title: '디자인 피드백 정리', time: '1h' },
-];
-
-export interface OverdueTask {
-  id: string;
-  overLabel: string;
-  title: string;
-  percent: number;
-  time: string;
-}
-export const OVERDUE: OverdueTask = {
-  id: 'o1',
-  overLabel: 'D+2 초과',
-  title: '기획안 초안 작성',
-  percent: 55,
-  time: '2h',
+/** 진행중인 작업 (없으면 null) */
+export const HOME_IN_PROGRESS: { taskId: string; estimateText: string; progressText: string; percent: number } | null = {
+  taskId: 'h1',
+  estimateText: '예상 소요시간 45분',
+  progressText: '45분 진행',
+  percent: 45,
 };
 
-export const DONE_TASKS: string[] = ['아침 스트레칭', '이메일 확인'];
+export const HOME_STATS = { weekDone: 18, completionRate: 89, grade: 'B등급', rewardPercent: 2 };
 
-// ===== 날짜별 일정(민트 점) & 투두 =====
-// key: `${year}-${monthIndex}-${day}` (monthIndex 0-based, 4 = 5월)
+// ===== 투두리스트 =====
+export interface DayTask {
+  id: string;
+  /** 상위 태스크 이름 (세부 분량일 때 위에 작게 표시) */
+  parent?: string;
+  title: string;
+  estimateText: string;
+}
+
+export interface InProgressTask {
+  id: string;
+  badgeLabel: string;
+  title: string;
+  estimateText: string;
+  progressText: string;
+  percent: number;
+}
+
+export interface DoneTask {
+  id: string;
+  title: string;
+  subText: string;
+}
+
+/** 오늘(2026-5-19) 진행중 태스크 */
+export const IN_PROGRESS: InProgressTask = {
+  id: 'p1',
+  badgeLabel: '오늘 마감!',
+  title: '기획안 초안 작성',
+  estimateText: '예상 소요시간 45분',
+  progressText: '45분 진행',
+  percent: 45,
+};
+
+export const TODAY_TASKS: DayTask[] = [
+  { id: '1', parent: '기획안 초안 작성', title: '래퍼런스 3개 모으기', estimateText: '예상 15분' },
+  { id: '2', parent: '기획안 초안 작성', title: '핵심 메시지 한 줄 정하기', estimateText: '예상 10분' },
+  { id: '3', title: '디자인 피드백 정리', estimateText: '예상 10분' },
+];
+
+export const DONE_TASKS: DoneTask[] = [
+  { id: 'd1', title: '자료스크랩', subText: '30분 집중' },
+];
+
+// ===== 날짜별 투두 (key: `${year}-${monthIndex}-${day}`, monthIndex 0-based) =====
 export const dateKey = (y: number, m: number, day: number) => `${y}-${m}-${day}`;
 
 export const TASKS_BY_DATE: Record<string, DayTask[]> = {
   [dateKey(2026, 4, 19)]: TODAY_TASKS,
   [dateKey(2026, 4, 21)]: [
-    { id: 'd21a', statusLabel: '예정', status: 'planned', title: '논문 리뷰 정리', time: '1h' },
+    { id: 'd21a', title: '논문 리뷰 정리', estimateText: '예상 60분' },
   ],
   [dateKey(2026, 4, 22)]: [
-    { id: 'd22a', statusLabel: '예정', status: 'planned', title: '스터디 발표 준비', time: '2h' },
-    { id: 'd22b', statusLabel: '예정', status: 'planned', title: '운동 기록', time: '30m' },
-  ],
-  [dateKey(2026, 4, 14)]: [
-    { id: 'd14a', statusLabel: '완료', status: 'planned', title: '알고리즘 문제 풀기', time: '1h' },
+    { id: 'd22a', title: '스터디 발표 준비', estimateText: '예상 90분' },
+    { id: 'd22b', title: '운동 기록', estimateText: '예상 30분' },
   ],
   [dateKey(2026, 5, 3)]: [
-    { id: 'd53a', statusLabel: '예정', status: 'planned', title: '월초 회고 작성', time: '40m' },
-  ],
-  [dateKey(2026, 5, 12)]: [
-    { id: 'd512a', statusLabel: '예정', status: 'planned', title: '디자인 QA', time: '1h' },
+    { id: 'd53a', title: '월초 회고 작성', estimateText: '예상 40분' },
   ],
 };
 
-/** 해당 날짜에 일정(있는/있던)이 있어 민트 점을 찍을지 */
-export const hasEvent = (y: number, m: number, day: number) => dateKey(y, m, day) in TASKS_BY_DATE;
-
-/** 해당 날짜의 할 일 목록 (없으면 빈 배열) */
 export const tasksForDate = (y: number, m: number, day: number): DayTask[] =>
   TASKS_BY_DATE[dateKey(y, m, day)] ?? [];
+
+
+// ===== 완료작업 목록 (날짜별) =====
+export const COMPLETED_BY_DATE: Record<string, DoneTask[]> = {
+  [dateKey(2026, 4, 19)]: [
+    { id: 'c1', title: '일정 자료 준비', subText: '32분 집중' },
+    { id: 'c2', title: '독서 30페이지 읽기', subText: '32분 집중' },
+    { id: 'c3', title: '알고리즘 문제 풀기', subText: '58분 집중' },
+  ],
+};
+
+export const completedForDate = (y: number, m: number, day: number): DoneTask[] =>
+  COMPLETED_BY_DATE[dateKey(y, m, day)] ?? [];

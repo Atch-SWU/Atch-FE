@@ -38,7 +38,7 @@ export default function PushSettingsScreen({ navigation }: Props) {
                 <ToggleSwitch
                     value={pushReceiveEnabled}
                     onValueChange={setPushReceiveEnabled}
-                    activeColor={COLORS.settingsToggleActive}
+                    activeColor={COLORS.primaryBright}
                 />
             </View>
 
@@ -51,7 +51,7 @@ export default function PushSettingsScreen({ navigation }: Props) {
                 <ToggleSwitch
                     value={nightAlertEnabled}
                     onValueChange={setNightAlertEnabled}
-                    activeColor={COLORS.settingsToggleActive}
+                    activeColor={COLORS.primaryBright}
                 />
             </View>
 
