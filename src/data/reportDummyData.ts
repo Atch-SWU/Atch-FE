@@ -181,9 +181,8 @@ export const weeklyReports: WeeklyReportData[] = [
   },
 ];
 
-/** 오늘의 집중 세션 한 건 — 백엔드 연동 전까지 쓰는 더미 데이터 구조 */
+/** 오늘의 집중 세션 한 건 — 백엔드 연동 전까지 쓰는 더미 데이터 */
 export interface FocusSessionData {
-  /** 시작 시각, "HH:MM" */
   time: string;
   title: string;
   durationMinutes: number;
@@ -356,6 +355,26 @@ export const dailyReports: DailyReportData[] = [
         completed: true,
         interruptions: 0,
       },
+    ],
+    focusGrid: [
+      3, 2, 1, 3, 2,
+      0, 3, 2, 1, 3,
+      2, 3, 0, 2, 1,
+      3, 2, 3, 1, 0,
+      2, 1, 3, 2, 3,
+    ],
+  },
+
+  {
+    date: '5월 10일',
+    dayOfWeek: '토요일',
+    goalPercent: 96,
+    focusTime: '4H 48M',
+    completedTasks: 0,
+    interruptions: 1,
+    avgFocusTime: '1H 08M',
+    peakFocusTime: '오후 10시',
+    focusSessions: [
     ],
     focusGrid: [
       3, 2, 1, 3, 2,
