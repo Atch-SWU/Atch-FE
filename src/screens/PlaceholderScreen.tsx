@@ -9,7 +9,7 @@ interface PlaceholderScreenProps {
 export default function PlaceholderScreen({ label }: PlaceholderScreenProps) {
   return (
     <View style={styles.root}>
-      <AppText variant="titleCore" color={COLORS.textSub}>{label} 준비 중</AppText>
+      <AppText variant="titleCore" color={COLORS.textWeak}>{label} 준비 중</AppText>
     </View>
   );
 }

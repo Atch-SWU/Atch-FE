@@ -17,6 +17,7 @@ import FindPasswordScreen from './src/screens/FindPasswordScreen';
 import TimerScreen from './src/screens/TimerScreen';
 import SessionCompleteScreen from './src/screens/SessionCompleteScreen';
 import TaskCreateScreen from './src/screens/TaskCreateScreen';
+import CompletedTasksScreen from './src/screens/CompletedTasksScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 import ProfileManageScreen from './src/screens/ProfileManageScreen';
 import MyInfoScreen from './src/screens/MyInfoScreen';
@@ -138,6 +139,15 @@ export default function App() {
               <Stack.Screen
                 name="TaskCreate"
                 component={TaskCreateScreen}
+                options={{
+                  gestureEnabled: true,
+                  fullScreenGestureEnabled: true,
+                }}
+              />
+
+              <Stack.Screen
+                name="CompletedTasks"
+                component={CompletedTasksScreen}
                 options={{
                   gestureEnabled: true,
                   fullScreenGestureEnabled: true,

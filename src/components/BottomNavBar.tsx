@@ -73,7 +73,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     height: 70,
     paddingHorizontal: 10,
-    borderRadius: 46.5,
+    borderRadius: 40,
     backgroundColor: COLORS.gray800,
     elevation: 8,
   },

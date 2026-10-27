@@ -79,7 +79,7 @@ export default function SettingsScreen({ navigation }: Props) {
                 <ToggleSwitch
                     value={repeatScheduleEnabled}
                     onValueChange={setRepeatScheduleEnabled}
-                    activeColor={COLORS.settingsToggleActive}
+                    activeColor={COLORS.primaryBright}
                 />
             </View>
 
@@ -90,7 +90,7 @@ export default function SettingsScreen({ navigation }: Props) {
                 <ToggleSwitch
                     value={taskSwapEnabled}
                     onValueChange={setTaskSwapEnabled}
-                    activeColor={COLORS.settingsToggleActive}
+                    activeColor={COLORS.primaryBright}
                 />
             </View>
 
@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
         width: 114,
         height: 114,
         borderRadius: 57,
-        backgroundColor: COLORS.settingsAvatarBg,
+        backgroundColor: COLORS.primarySoft,
         alignItems: 'center',
         justifyContent: 'center',
     },

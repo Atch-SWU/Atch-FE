@@ -1,19 +1,24 @@
 import { useEffect, useMemo, useState } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, Pressable, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import AppText from '../components/AppText';
-import AppButton from '../components/AppButton';
 import CloseButton from '../components/CloseButton';
-import EstimateCard from '../components/EstimateCard';
+import Character from '../components/Character';
+import SpeechBubble from '../components/SpeechBubble';
+import TimerProgressCard from '../components/TimerProgressCard';
 import PauseDialog from '../components/PauseDialog';
 import ExtendDialog from '../components/ExtendDialog';
+import TaskInfoDialog from '../components/TaskInfoDialog';
 import { COLORS, SPACING } from '../constants/token';
 import { RootStackParamList } from '../navigation/types';
-import { TODOS } from '../data/mockTodos';
+import { HOME_TASKS } from '../data/mockTodos';
+import { formatClock, formatKoreanDate, formatKoreanTime } from '../utils/date';
 
 const EXTEND_COUNTDOWN = 10;
+const MSG_READY = '멧치는 준비됐어요! 시작해볼까요?';
+const MSG_FOCUS = '멧치랑 같이 집중해봐요! 멧멧!';
 
 function parseEstimateSeconds(text: string): number {
   const min = text.match(/(\d+)\s*분/);
@@ -23,16 +28,6 @@ function parseEstimateSeconds(text: string): number {
   if (sec) total += parseInt(sec[1], 10);
   return total > 0 ? total : 25 * 60;
 }
-function formatClock(s: number) {
-  const m = Math.floor(s / 60);
-  const sec = s % 60;
-  return `${String(m).padStart(2, '0')} : ${String(sec).padStart(2, '0')}`;
-}
-function formatElapsed(s: number) {
-  const m = Math.floor(s / 60);
-  const sec = s % 60;
-  return m > 0 ? `${m}분 ${sec}초` : `${sec}초`;
-}
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Timer'>;
 type Status = 'idle' | 'running' | 'overtime';
@@ -40,6 +35,7 @@ type Status = 'idle' | 'running' | 'overtime';
 export default function TimerScreen({ navigation, route }: Props) {
   const { task } = route.params;
   const totalSeconds = useMemo(() => parseEstimateSeconds(task.estimateText), [task.estimateText]);
+  const today = useMemo(() => new Date(), []);
 
   const [status, setStatus] = useState<Status>('idle');
   const [remaining, setRemaining] = useState(totalSeconds);
@@ -51,6 +47,8 @@ export default function TimerScreen({ navigation, route }: Props) {
   const [extendVisible, setExtendVisible] = useState(false);
   const [extendCountdown, setExtendCountdown] = useState(EXTEND_COUNTDOWN);
   const [extendMode, setExtendMode] = useState<'initial' | 'resume'>('initial');
+  const [infoVisible, setInfoVisible] = useState(false);
+  const [startedAt, setStartedAt] = useState<Date | null>(null);
 
   // 남은 시간 카운트다운
   useEffect(() => {
@@ -85,26 +83,26 @@ export default function TimerScreen({ navigation, route }: Props) {
   const elapsed = totalSeconds - remaining + overtimeSec;
   const progress = hasExtended ? 1 : totalSeconds > 0 ? (totalSeconds - remaining) / totalSeconds : 0;
   const estimateLabel = task.estimateText.replace('예상 ', '');
-  const timeText = hasExtended ? `+ ${formatClock(overtimeSec)}` : formatClock(remaining);
-  const timeColor = hasExtended ? COLORS.overtime : COLORS.timerText;
+  const timeText = hasExtended ? `+${formatClock(overtimeSec)}` : formatClock(remaining);
+  const timeColor = hasExtended ? COLORS.primary : COLORS.textMain;
   const extendTitle =
     extendMode === 'resume'
-      ? `${formatElapsed(overtimeSec)} 연장됐어요!\n작업을 더 연장할까요?`
+      ? `${Math.floor(overtimeSec / 60)}분 ${overtimeSec % 60}초 연장됐어요!\n작업을 더 연장할까요?`
       : '시간을 연장할까요?';
 
   const nextTask = useMemo(() => {
-    const idx = TODOS.findIndex((t) => t.title === task.title);
-    const n = idx >= 0 ? TODOS[idx + 1] : undefined;
-    return n ? { title: n.title, category: n.category, estimateText: n.estimateText } : null;
+    const idx = HOME_TASKS.findIndex((t) => t.title === task.title);
+    const n = idx >= 0 ? HOME_TASKS[idx + 1] : undefined;
+    return n ? { title: n.title, estimateText: n.estimateText } : null;
   }, [task.title]);
 
   const goComplete = () =>
     navigation.replace('SessionComplete', {
       taskTitle: task.title,
-      taskDate: '5월 19일',
-      elapsedText: formatElapsed(elapsed),
+      taskDate: formatKoreanDate(today),
+      elapsedSec: elapsed,
+      estimateSec: totalSeconds,
       pauseCount,
-      overText: overtimeSec > 0 ? `+${formatElapsed(overtimeSec)}` : '없음',
       nextTask,
     });
 
@@ -123,8 +121,9 @@ export default function TimerScreen({ navigation, route }: Props) {
   }, [extendVisible, extendCountdown]);
 
   const onStart = () => {
+    if (!startedAt) setStartedAt(new Date());
     if (pausedFrom === 'overtime') {
-      // 초과 상태에서 재개 → 이어서 연장 확인 팝업 (민트 유지)
+      // 초과 상태에서 재개 → 이어서 연장 확인 팝업
       setExtendMode('resume');
       setExtendVisible(true);
       setExtendCountdown(EXTEND_COUNTDOWN);
@@ -144,44 +143,46 @@ export default function TimerScreen({ navigation, route }: Props) {
   };
 
   const running = status === 'running' || status === 'overtime';
+  const start = startedAt ?? new Date();
+  const end = new Date(start.getTime() + totalSeconds * 1000);
 
   return (
     <SafeAreaView style={styles.root} edges={['top', 'bottom']}>
       <View style={styles.header}>
-        <View style={styles.headerText}>
-          <AppText variant="homeDate" color={COLORS.dateText}>5월 19일</AppText>
-          <AppText variant="homeHeadline" color={COLORS.textMain} style={styles.taskTitle}>{task.title}</AppText>
-        </View>
-        <CloseButton onPress={() => navigation.goBack()} />
+        <AppText variant="todoDate" color={COLORS.textBody}>{formatKoreanDate(today)}</AppText>
+        <AppText variant="todoScreenTitle" color={COLORS.textMain} numberOfLines={1} style={styles.title}>{task.title}</AppText>
+        <CloseButton variant="circle" style={styles.close} onPress={() => navigation.goBack()} />
       </View>
 
-      <View style={styles.spacer} />
-
-      <AppText variant="timerTime" color={timeColor} style={styles.time}>{timeText}</AppText>
+      <View style={styles.middle}>
+        <SpeechBubble text={running ? MSG_FOCUS : MSG_READY} />
+        <Character size={256} style={styles.character} />
+        <AppText variant="timerClock" color={timeColor} style={styles.time}>{timeText}</AppText>
+      </View>
 
       <View style={styles.bottom}>
-        <EstimateCard
-          category={task.category}
-          estimateLabel={estimateLabel}
-          elapsedLabel={formatElapsed(elapsed) + ' 소요'}
-          progress={progress}
-        />
-        <AppButton label="작업 정보 표시하기" variant="soft" style={styles.infoBtn} />
+        <TimerProgressCard estimateLabel={estimateLabel} progress={progress} onPressInfo={() => setInfoVisible(true)} />
         {running ? (
           <View style={styles.actionRow}>
-            <AppButton label="일시 정지" variant="secondary" style={styles.actionFlex} onPress={onPausePress} />
-            <AppButton label="완료" variant="primary" style={styles.actionFlex} onPress={goComplete} />
+            <Pressable style={[styles.actionBtn, { backgroundColor: COLORS.fillMuted }]} onPress={onPausePress}>
+              <View style={styles.pauseIcon}>
+                <View style={styles.pauseBar} />
+                <View style={styles.pauseBar} />
+              </View>
+              <AppText variant="timerBtnText" color={COLORS.textWeak}>일시 정지</AppText>
+            </Pressable>
+            <Pressable style={[styles.actionBtn, { backgroundColor: COLORS.fillDark }]} onPress={goComplete}>
+              <AppText variant="timerBtnText" color={COLORS.textInverse}>완료</AppText>
+            </Pressable>
           </View>
         ) : (
-          <AppButton label="시작" variant="primary" style={styles.actionBtn} onPress={onStart} />
+          <Pressable style={[styles.startBtn, { backgroundColor: COLORS.primary }]} onPress={onStart}>
+            <AppText variant="timerStartText" color={COLORS.textInverse}>시작하기</AppText>
+          </Pressable>
         )}
       </View>
 
-      <PauseDialog
-        visible={pauseVisible}
-        onCancel={() => setPauseVisible(false)}
-        onConfirm={onPauseConfirm}
-      />
+      <PauseDialog visible={pauseVisible} onCancel={() => setPauseVisible(false)} onConfirm={onPauseConfirm} />
       <ExtendDialog
         visible={extendVisible}
         countdown={extendCountdown}
@@ -189,20 +190,29 @@ export default function TimerScreen({ navigation, route }: Props) {
         onCancel={cancelExtend}
         onConfirm={confirmExtend}
       />
+      <TaskInfoDialog
+        visible={infoVisible}
+        startText={formatKoreanTime(start)}
+        endText={formatKoreanTime(end)}
+        memo={task.memo?.trim() ? task.memo : '-'}
+        onClose={() => setInfoVisible(false)}
+      />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: COLORS.background, paddingHorizontal: SPACING.screenH },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginTop: 24 },
-  headerText: { flex: 1 },
-  taskTitle: { marginTop: 6 },
-  spacer: { flex: 1 },
-  time: { textAlign: 'center', marginBottom: 24 },
-  bottom: { paddingBottom: 8 },
-  infoBtn: { marginTop: 11 },
-  actionBtn: { marginTop: 11 },
-  actionRow: { flexDirection: 'row', gap: 11, marginTop: 11 },
-  actionFlex: { flex: 1 },
+  header: { marginTop: 30 },
+  title: { marginTop: 2, marginRight: 50 },
+  close: { position: 'absolute', right: 0, top: 12 },
+  middle: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  character: { marginTop: 8 },
+  time: { marginTop: 8, textAlign: 'center' },
+  bottom: { paddingBottom: 16 },
+  actionRow: { flexDirection: 'row', gap: 8, marginTop: 45 },
+  actionBtn: { flex: 1, height: 60, borderRadius: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 },
+  startBtn: { marginTop: 45, height: 60, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  pauseIcon: { flexDirection: 'row', gap: 4 },
+  pauseBar: { width: 3, height: 12, borderRadius: 5, backgroundColor: COLORS.iconWeak },
 });

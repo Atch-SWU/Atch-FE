@@ -91,7 +91,7 @@ export default function ShopScreen() {
                 <View style={styles.headerRow}>
                     <AppText variant="shopTitle" color={COLORS.black}>상점</AppText>
                     <Pressable hitSlop={10} onPress={() => navigation.navigate('Settings')}>
-                        <SettingsIcon width={24} height={24} color={COLORS.grey900} />
+                        <SettingsIcon width={24} height={24} color={COLORS.black} />
                     </Pressable>
                 </View>
 
@@ -139,7 +139,7 @@ export default function ShopScreen() {
                                 )}
                                 <AppText
                                     variant="shopCategoryTab"
-                                    color={isActive ? COLORS.categoryTabActiveText : COLORS.categoryTabText}
+                                    color={isActive ? COLORS.primarySoft : COLORS.textMain}
                                     onLayout={
                                         isFirst
                                             ? (e) => setFirstTabTextWidth(e.nativeEvent.layout.width)
@@ -221,9 +221,9 @@ const styles = StyleSheet.create({
     tabPillBg: {
         position: 'absolute',
         borderRadius: 20,
-        backgroundColor: COLORS.categoryTabActiveBg,
+        backgroundColor: COLORS.primary,
         borderWidth: 1,
-        borderColor: COLORS.categoryTabActiveBorder,
+        borderColor: COLORS.primarySoft,
     },
 
     grid: {
