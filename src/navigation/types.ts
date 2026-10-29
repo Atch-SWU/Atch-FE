@@ -1,4 +1,6 @@
 export interface TaskParam {
+  /** 서버 Todo ID (완료 처리에 사용) */
+  id?: number;
   title: string;
   estimateText: string;
   /** 작업 정보 팝업용 메모 (없으면 '-') */
@@ -20,7 +22,7 @@ export type RootStackParamList = {
   PushSettings: undefined;
   TaskCreate: undefined;
   CompletedTasks: undefined;
-  Timer: { task: TaskParam };
+  Timer: { task: TaskParam; /** 이 작업 다음에 보여줄 작업 */ nextTask?: TaskParam | null };
   SessionComplete: {
     taskTitle: string;
     taskDate: string;

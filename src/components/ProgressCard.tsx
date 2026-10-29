@@ -1,7 +1,7 @@
 import { View, Pressable, StyleSheet } from 'react-native';
 import AppText from './AppText';
 import PlayIcon from '../assets/icon/play.svg';
-import { COLORS } from '../constants/token';
+import { COLORS, SPACING } from '../constants/token';
 
 interface ProgressCardProps {
   badgeLabel: string;
@@ -70,13 +70,14 @@ const styles = StyleSheet.create({
   badgeRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   badge: {
     alignSelf: 'flex-start',
+    marginLeft: SPACING.chipInset,
     height: 25,
     paddingHorizontal: 8,
     borderRadius: 10,
     justifyContent: 'center',
     backgroundColor: COLORS.surface,
   },
-  title: { marginTop: 8 },
+  title: { marginTop: 8, marginLeft: SPACING.glyphInset },
   play: {
     width: 45, height: 45, borderRadius: 23,
     alignItems: 'center', justifyContent: 'center',

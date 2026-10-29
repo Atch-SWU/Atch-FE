@@ -1,7 +1,7 @@
 import { View, Pressable, StyleSheet } from 'react-native';
 import AppText from './AppText';
 import PlayIcon from '../assets/icon/play.svg';
-import { COLORS } from '../constants/token';
+import { COLORS, SPACING } from '../constants/token';
 
 interface HomeTaskCardProps {
   title: string;
@@ -36,8 +36,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
   },
   texts: { flex: 1, marginRight: 12, alignItems: 'flex-start' },
-  chip: { height: 25, paddingHorizontal: 8, borderRadius: 10, backgroundColor: COLORS.primaryTint, alignItems: 'center', justifyContent: 'center' },
-  title: { marginTop: 8 },
+  chip: { marginLeft: SPACING.chipInset, height: 25, paddingHorizontal: 8, borderRadius: 10, backgroundColor: COLORS.primaryTint, alignItems: 'center', justifyContent: 'center' },
+  title: { marginTop: 8, marginLeft: SPACING.glyphInset },
   parent: { marginTop: 6 },
   play: { width: 45, height: 45, borderRadius: 22.5, backgroundColor: COLORS.fillMuted, alignItems: 'center', justifyContent: 'center' },
 });

@@ -19,3 +19,22 @@ export function formatClock(totalSec: number): string {
   const s = totalSec % 60;
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
+
+const pad2 = (n: number) => String(n).padStart(2, '0');
+
+/** Date → "2026-10-29" (API의 date 형식) */
+export function toDateString(d: Date): string {
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+}
+
+/** Date → "09:00:00" (API의 time 형식) */
+export function toTimeString(d: Date): string {
+  return `${pad2(d.getHours())}:${pad2(d.getMinutes())}:00`;
+}
+
+const SEOUL_OFFSET_MS = 9 * 60 * 60 * 1000;
+
+/** epoch ms → 서울 기준 "YYYY-MM-DD" */
+export function seoulDateFromMs(ms: number): string {
+  return new Date(ms + SEOUL_OFFSET_MS).toISOString().slice(0, 10);
+}

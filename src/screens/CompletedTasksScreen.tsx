@@ -9,16 +9,21 @@ import CompletedTaskRow from '../components/CompletedTaskRow';
 import Character from '../components/Character';
 import ChevronLeft from '../assets/icon/chevron-left.svg';
 import { COLORS, SPACING } from '../constants/token';
-import { completedForDate } from '../data/mockTodos';
 import { RootStackParamList } from '../navigation/types';
+import { useTodosByDate } from '../hooks/useTodosByDate';
+import { focusText } from '../api/todoApi';
+import { toDateString } from '../utils/date';
+
+const COMPLETED_ONLY = ['COMPLETED'] as const;
+const now = new Date();
 
 type Props = NativeStackScreenProps<RootStackParamList, 'CompletedTasks'>;
 
 /** 완료작업 목록 (피그마 6:8360 / 6:8422): 주간↔월간 캘린더 + 완료 리스트 / 빈 상태 */
 export default function CompletedTasksScreen({ navigation }: Props) {
   const [scrollLocked, setScrollLocked] = useState(false);
-  const [selected, setSelected] = useState<SelDate>({ y: 2026, m: 4, day: 19 });
-  const items = completedForDate(selected.y, selected.m, selected.day);
+  const [selected, setSelected] = useState<SelDate>({ y: now.getFullYear(), m: now.getMonth(), day: now.getDate() });
+  const { items } = useTodosByDate(toDateString(new Date(selected.y, selected.m, selected.day)), [...COMPLETED_ONLY]);
 
   return (
     <SafeAreaView style={styles.root} edges={['top', 'bottom']}>
@@ -41,7 +46,7 @@ export default function CompletedTasksScreen({ navigation }: Props) {
         {items.length > 0 ? (
           <View style={styles.list}>
             {items.map((it) => (
-              <CompletedTaskRow key={it.id} title={it.title} subText={it.subText} />
+              <CompletedTaskRow key={it.id} title={it.title} subText={focusText(it)} />
             ))}
           </View>
         ) : (

@@ -13,20 +13,24 @@ export interface Subtask {
 interface SubtaskListProps {
   items: Subtask[];
   onPressChip: (id: string) => void;
+  /** 이름을 눌러 수정/삭제 팝업 열기 */
+  onPressLabel?: (id: string) => void;
 }
 
 /** AI 세부 분량 리스트 (피그마 6:4523): 흰 카드 r14, 행 25h / 간격 11, 우측 '시간 입력' 칩 */
-export default function SubtaskList({ items, onPressChip }: SubtaskListProps) {
+export default function SubtaskList({ items, onPressChip, onPressLabel }: SubtaskListProps) {
   return (
     <View style={styles.card}>
       {items.map((it) => (
         <View key={it.id} style={styles.row}>
-          <AppText variant="subtaskLabel" color={COLORS.textStrong} numberOfLines={1} style={styles.label}>{it.label}</AppText>
-          <Pressable style={styles.chip} onPress={() => onPressChip(it.id)}>
-            <AppText variant="subtaskChipText" color={COLORS.primary}>
-              {it.minutes == null ? '시간 입력' : formatMinutes(it.minutes)}
-            </AppText>
-          </Pressable>
+            <Pressable style={styles.label} onPress={() => onPressLabel?.(it.id)}>
+              <AppText variant="subtaskLabel" color={COLORS.textStrong} numberOfLines={1}>{it.label}</AppText>
+            </Pressable>
+            <Pressable style={styles.chip} onPress={() => onPressChip(it.id)}>
+              <AppText variant="subtaskChipText" color={COLORS.primary}>
+                {it.minutes == null ? '시간 입력' : formatMinutes(it.minutes)}
+              </AppText>
+            </Pressable>
         </View>
       ))}
     </View>

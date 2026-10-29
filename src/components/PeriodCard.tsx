@@ -91,6 +91,7 @@ export default function PeriodCard(props: PeriodCardProps) {
     onDate: (d: Date) => void,
     onTime: (d: Date) => void,
     defaultHour: number,
+    minDate: Date,
   ) => (
     <View style={styles.card}>
       <View style={styles.row}>
@@ -114,7 +115,7 @@ export default function PeriodCard(props: PeriodCardProps) {
       {open === dKey && (
         <>
           <View style={styles.divider} />
-          <Calendar value={date} onSelect={(d) => { onDate(d); setOpen(null); }} />
+          <Calendar value={date} minDate={minDate} onSelect={(d) => { onDate(d); setOpen(null); }} />
         </>
       )}
       {open === tKey && !allDay && (
@@ -132,8 +133,8 @@ export default function PeriodCard(props: PeriodCardProps) {
         <AppText variant="formRowText" color={COLORS.textStrong}>하루 종일</AppText>
         <ToggleSwitch variant="form" value={allDay} onValueChange={onToggleAllDay} />
       </View>
-      {renderRow('시작', 'startDate', 'startTime', startDate, startTime, onChangeStartDate, onChangeStartTime, 18)}
-      {renderRow('종료', 'endDate', 'endTime', endDate, endTime, onChangeEndDate, onChangeEndTime, 19)}
+      {renderRow('시작', 'startDate', 'startTime', startDate, startTime, onChangeStartDate, onChangeStartTime, 18, new Date())}
+      {renderRow('종료', 'endDate', 'endTime', endDate, endTime, onChangeEndDate, onChangeEndTime, 19, startDate ?? new Date())}
     </View>
   );
 }
