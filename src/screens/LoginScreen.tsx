@@ -150,7 +150,7 @@ export default function LoginScreen({ navigation }: Props) {
             style={[
                 styles.container,
                 {
-                    paddingTop: 160,
+                    paddingTop: 120,
                     paddingBottom: insets.bottom + 32,
                 },
             ]}

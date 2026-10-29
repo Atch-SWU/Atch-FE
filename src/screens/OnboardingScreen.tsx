@@ -22,7 +22,7 @@ const BASE_IMAGE_WIDTH = 240.56;
 const BASE_IMAGE_HEIGHT = 523;
 
 const BASE_GRADIENT_HEIGHT = 403;
-const IMAGE_TOP_GAP = 96;
+const IMAGE_TOP_GAP = 76;
 const IMAGE_RATIO = BASE_IMAGE_WIDTH / BASE_IMAGE_HEIGHT;
 
 const onboardingData = [
@@ -71,20 +71,18 @@ export default function OnboardingScreen({ navigation }: Props) {
     const contentBottom =
         contentAreaY + contentTextY + contentTextHeight;
 
-    // 컨테이너 안에서 텍스트 아래부터 화면 하단까지 남은 높이
+    // 이미지 높이 계산
     const availableImageHeight =
         containerHeight > 0 && contentTextHeight > 0
             ? containerHeight -
-              insets.bottom -
-              contentBottom -
-              IMAGE_TOP_GAP
+            contentBottom -
+            IMAGE_TOP_GAP
             : BASE_IMAGE_HEIGHT;
 
-    // 공간이 충분하면 기존 이미지 크기 유지하고,
-    // 화면이 짧을 때만 이미지 크기를 줄임
+    // 기본 이미지 크기인 523px을 최대한 유지
     const imageHeight = Math.min(
         BASE_IMAGE_HEIGHT,
-        Math.max(0, availableImageHeight),
+        Math.max(180, availableImageHeight),
     );
 
     const imageWidth = imageHeight * IMAGE_RATIO;
