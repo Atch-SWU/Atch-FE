@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, ScrollView, Pressable, StyleSheet } from 'react-native';
+import { View, ScrollView, Pressable, Alert, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
@@ -11,7 +11,7 @@ import ChevronLeft from '../assets/icon/chevron-left.svg';
 import { COLORS, SPACING } from '../constants/token';
 import { RootStackParamList } from '../navigation/types';
 import { useTodosByDate } from '../hooks/useTodosByDate';
-import { focusText } from '../api/todoApi';
+import { focusText, getErrorMessage, reopenTodo } from '../api/todoApi';
 import { toDateString } from '../utils/date';
 
 const COMPLETED_ONLY = ['COMPLETED'] as const;
@@ -23,7 +23,17 @@ type Props = NativeStackScreenProps<RootStackParamList, 'CompletedTasks'>;
 export default function CompletedTasksScreen({ navigation }: Props) {
   const [scrollLocked, setScrollLocked] = useState(false);
   const [selected, setSelected] = useState<SelDate>({ y: now.getFullYear(), m: now.getMonth(), day: now.getDate() });
-  const { items } = useTodosByDate(toDateString(new Date(selected.y, selected.m, selected.day)), [...COMPLETED_ONLY]);
+  const { items, reload } = useTodosByDate(toDateString(new Date(selected.y, selected.m, selected.day)), [...COMPLETED_ONLY]);
+
+  // 체크를 누르면 완료 취소 → 진행했던 시간은 서버에 남아 있어 남은 시간으로 다시 목록에 올라간다
+  const onReopen = async (id: number) => {
+    try {
+      await reopenTodo(id);
+      reload();
+    } catch (e) {
+      Alert.alert('완료를 취소하지 못했어요', getErrorMessage(e));
+    }
+  };
 
   return (
     <SafeAreaView style={styles.root} edges={['top', 'bottom']}>
@@ -46,7 +56,7 @@ export default function CompletedTasksScreen({ navigation }: Props) {
         {items.length > 0 ? (
           <View style={styles.list}>
             {items.map((it) => (
-              <CompletedTaskRow key={it.id} title={it.title} subText={focusText(it)} />
+              <CompletedTaskRow key={it.id} title={it.title} subText={focusText(it)} onPressCheck={() => onReopen(it.id)} />
             ))}
           </View>
         ) : (

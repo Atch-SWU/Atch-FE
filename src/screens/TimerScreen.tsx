@@ -42,7 +42,7 @@ export default function TimerScreen({ navigation, route }: Props) {
   const today = useMemo(() => new Date(), []);
 
   const [status, setStatus] = useState<Status>('idle');
-  const [remaining, setRemaining] = useState(totalSeconds);
+  const [remaining, setRemaining] = useState(Math.max(0, totalSeconds - (task.elapsedSec ?? 0)));
   const [overtimeSec, setOvertimeSec] = useState(0);
   const [hasExtended, setHasExtended] = useState(false);
   const [pauseVisible, setPauseVisible] = useState(false);

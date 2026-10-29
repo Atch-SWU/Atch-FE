@@ -1,4 +1,4 @@
-import { View, StyleSheet } from 'react-native';
+import { View, Pressable, StyleSheet } from 'react-native';
 import AppText from './AppText';
 import CheckIcon from '../assets/icon/check.svg';
 import { COLORS } from '../constants/token';
@@ -7,15 +7,17 @@ interface CompletedTaskRowProps {
   title: string;
   /** 보조 텍스트 (예: '30분 집중') */
   subText?: string;
+  /** 체크 원을 눌러 완료 취소 */
+  onPressCheck?: () => void;
 }
 
 /** 투두리스트 '완료 작업' 행 (피그마 6:7903: 360x73, 체크 원 24) */
-export default function CompletedTaskRow({ title, subText }: CompletedTaskRowProps) {
+export default function CompletedTaskRow({ title, subText, onPressCheck }: CompletedTaskRowProps) {
   return (
     <View style={styles.row}>
-      <View style={styles.check}>
+      <Pressable style={styles.check} disabled={!onPressCheck} hitSlop={12} onPress={onPressCheck}>
         <CheckIcon width={14} height={14} color={COLORS.textInverse} />
-      </View>
+      </Pressable>
       <View style={styles.texts}>
         <AppText variant="todoItemTitleText" color={COLORS.textBody}>{title}</AppText>
         {subText ? (

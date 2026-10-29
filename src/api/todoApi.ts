@@ -100,6 +100,17 @@ export function getErrorMessage(error: unknown): string {
 /** "예상 45분" / "예상 1시간 20분" */
 export const estimateText = (t: TodoResponse) => `예상 ${formatMinutes(t.estimatedDurationMinutes)}`;
 
+/** 이미 시작한 작업인지: 진행중·일시정지, 그리고 완료 취소로 대기 상태가 됐지만 진행 기록이 남은 작업 */
+export const isStarted = (t: TodoResponse) =>
+  t.status === 'IN_PROGRESS' || t.status === 'PAUSED' || (t.status === 'PENDING' && t.actualDurationSeconds > 0);
+
+/** 목록 칩 문구: 이미 진행한 시간이 있으면(완료 취소 등) 남은 시간, 아니면 예상 시간 */
+export const chipText = (t: TodoResponse) => {
+  if (t.actualDurationSeconds <= 0) return estimateText(t);
+  const left = Math.max(0, Math.ceil((t.estimatedDurationMinutes * 60 - t.actualDurationSeconds) / 60));
+  return `남은 ${formatMinutes(left)}`;
+};
+
 /** "45분 진행" */
 export const progressText = (t: TodoResponse, seconds: number = t.actualDurationSeconds) => `${Math.floor(seconds / 60)}분 진행`;
 
