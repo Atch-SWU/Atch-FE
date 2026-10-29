@@ -22,8 +22,8 @@ export interface WeeklyReportData {
 
 export const weeklyReports: WeeklyReportData[] = [
   {
-    title: '5월 1주차',
-    dateRange: '05/01~05/07',
+    title: '10월 5주차',
+    dateRange: '10/26~10/29',
     peakFocusDay: '목요일',
     goalMinutes: 1020,
     completedGoalMinutes: 938,
@@ -75,8 +75,8 @@ export const weeklyReports: WeeklyReportData[] = [
   },
 
   {
-    title: '5월 2주차',
-    dateRange: '05/08~05/14',
+    title: '10월 3주차',
+    dateRange: '10/12~10/18',
     peakFocusDay: '화요일',
     goalMinutes: 1200,
     completedGoalMinutes: 1040,
@@ -128,8 +128,8 @@ export const weeklyReports: WeeklyReportData[] = [
   },
 
   {
-    title: '5월 3주차',
-    dateRange: '05/15~05/21',
+    title: '10월 4주차',
+    dateRange: '10/19~10/25',
     peakFocusDay: '토요일',
     goalMinutes: 900,
     completedGoalMinutes: 720,
@@ -208,8 +208,8 @@ export interface DailyReportData {
 
 export const dailyReports: DailyReportData[] = [
   {
-    date: '5월 7일',
-    dayOfWeek: '수요일',
+    date: '10월 26일',
+    dayOfWeek: '월요일',
     goalPercent: 92,
     focusTime: '4H 36M',
     completedTasks: 5,
@@ -249,8 +249,8 @@ export const dailyReports: DailyReportData[] = [
   },
 
   {
-    date: '5월 8일',
-    dayOfWeek: '목요일',
+    date: '10월 27일',
+    dayOfWeek: '화요일',
     goalPercent: 78,
     focusTime: '3H 54M',
     completedTasks: 4,
@@ -297,8 +297,8 @@ export const dailyReports: DailyReportData[] = [
   },
 
   {
-    date: '5월 9일',
-    dayOfWeek: '금요일',
+    date: '10월 28일',
+    dayOfWeek: '수요일',
     goalPercent: 96,
     focusTime: '4H 48M',
     completedTasks: 7,
@@ -366,8 +366,8 @@ export const dailyReports: DailyReportData[] = [
   },
 
   {
-    date: '5월 10일',
-    dayOfWeek: '토요일',
+    date: '10월 29일',
+    dayOfWeek: '목요일',
     goalPercent: 96,
     focusTime: '4H 48M',
     completedTasks: 0,
