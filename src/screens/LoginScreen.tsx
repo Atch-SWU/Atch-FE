@@ -17,6 +17,7 @@ import { COLORS } from '../constants/token';
 import { RootStackParamList } from '../navigation/types';
 import { BASE_URL } from '../api/config';
 import { getOrCreateDeviceId } from '../utils/deviceId';
+import AtchLogo from '../assets/icon/atch-logo.svg';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
 
@@ -149,11 +150,26 @@ export default function LoginScreen({ navigation }: Props) {
             style={[
                 styles.container,
                 {
-                    paddingTop: 310,
+                    paddingTop: 160,
                     paddingBottom: insets.bottom + 32,
                 },
             ]}
         >
+
+            {/* 로그인 상단 이미지 */}
+            <View style={styles.logoSection}>
+                <Image
+                    source={require('../assets/icon/auth-logo.png')}
+                    style={styles.topImage}
+                    resizeMode="contain"
+                />
+
+                <AtchLogo
+                    width={98}
+                    height={39}
+                />
+            </View>
+
             {/* 입력 필드 */}
             <View style={styles.form}>
                 <FormInput
@@ -352,5 +368,22 @@ const styles = StyleSheet.create({
     kakaoIcon: {
         width: 35,
         height: 35,
+    },
+
+    /* 로그인 상단 이미지 */
+    logoSection: {
+        alignItems: 'center',
+        marginBottom: 40,
+    },
+
+    topImage: {
+        width: 134,
+        height: 112,
+    },
+
+    bottomImage: {
+        width: 98,
+        height: 39,
+        marginTop: 8,
     },
 });

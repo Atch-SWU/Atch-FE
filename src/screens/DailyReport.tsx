@@ -35,7 +35,9 @@ const FOCUS_HOUR_BARS = [
 ];
 
 export default function DailyReport() {
-    const [dayIndex, setDayIndex] = useState(0);
+    const [dayIndex, setDayIndex] = useState(
+        dailyReports.length - 1,
+    );
 
     const contentOpacity = useRef(new Animated.Value(1)).current;
 

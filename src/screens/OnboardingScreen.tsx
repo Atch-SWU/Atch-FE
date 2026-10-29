@@ -22,11 +22,7 @@ const BASE_IMAGE_WIDTH = 240.56;
 const BASE_IMAGE_HEIGHT = 523;
 
 const BASE_GRADIENT_HEIGHT = 403;
-
-// 기준 화면 높이
-const BASE_SCREEN_HEIGHT = 874;
-
-// 이미지 가로/세로 비율
+const IMAGE_TOP_GAP = 96;
 const IMAGE_RATIO = BASE_IMAGE_WIDTH / BASE_IMAGE_HEIGHT;
 
 const onboardingData = [
@@ -58,27 +54,45 @@ const onboardingData = [
 
 export default function OnboardingScreen({ navigation }: Props) {
     const insets = useSafeAreaInsets();
-
-    const {
-        height: screenHeight,
-        width: screenWidth,
-    } = useWindowDimensions();
+    const { height: screenHeight } = useWindowDimensions();
 
     const [pageIndex, setPageIndex] = useState(0);
+
+    // 화면 컨테이너 높이와 실제 텍스트 위치
+    const [containerHeight, setContainerHeight] = useState(0);
+    const [contentAreaY, setContentAreaY] = useState(0);
+    const [contentTextY, setContentTextY] = useState(0);
+    const [contentTextHeight, setContentTextHeight] = useState(0);
 
     const isLastPage = pageIndex === TOTAL_PAGES - 1;
     const currentPage = onboardingData[pageIndex];
 
-    const extraHeight = Math.max(
-        0,
-        screenHeight - BASE_SCREEN_HEIGHT,
+    // 실제 설명 텍스트의 아래쪽 위치
+    const contentBottom =
+        contentAreaY + contentTextY + contentTextHeight;
+
+    // 컨테이너 안에서 텍스트 아래부터 화면 하단까지 남은 높이
+    const availableImageHeight =
+        containerHeight > 0 && contentTextHeight > 0
+            ? containerHeight -
+              insets.bottom -
+              contentBottom -
+              IMAGE_TOP_GAP
+            : BASE_IMAGE_HEIGHT;
+
+    // 공간이 충분하면 기존 이미지 크기 유지하고,
+    // 화면이 짧을 때만 이미지 크기를 줄임
+    const imageHeight = Math.min(
+        BASE_IMAGE_HEIGHT,
+        Math.max(0, availableImageHeight),
     );
 
-    const imageHeight = BASE_IMAGE_HEIGHT + extraHeight;
     const imageWidth = imageHeight * IMAGE_RATIO;
 
-    const gradientHeight =
-        BASE_GRADIENT_HEIGHT + extraHeight;
+    const gradientHeight = Math.min(
+        BASE_GRADIENT_HEIGHT,
+        imageHeight,
+    );
 
     const goNext = () => {
         if (isLastPage) {
@@ -98,6 +112,9 @@ export default function OnboardingScreen({ navigation }: Props) {
                     paddingBottom: insets.bottom,
                 },
             ]}
+            onLayout={(event) => {
+                setContainerHeight(event.nativeEvent.layout.height);
+            }}
         >
             {/* 상단 캐러셀 도트 */}
             <View style={styles.dots}>
@@ -107,8 +124,7 @@ export default function OnboardingScreen({ navigation }: Props) {
                             key={index}
                             style={[
                                 styles.dot,
-                                index === pageIndex &&
-                                    styles.activeDot,
+                                index === pageIndex && styles.activeDot,
                             ]}
                         />
                     ),
@@ -126,19 +142,41 @@ export default function OnboardingScreen({ navigation }: Props) {
                 </AppText>
             </View>
 
-            {/* 콘텐츠 텍스트 */}
-            <View style={styles.contentArea}>
-                <AppText
-                    variant="onboardingContent"
-                    color={COLORS.gray500}
-                    style={styles.contentText}
+            {/* 콘텐츠 영역 */}
+            <View
+                style={styles.contentArea}
+                onLayout={(event) => {
+                    setContentAreaY(event.nativeEvent.layout.y);
+                }}
+            >
+                {/* 실제 텍스트만 감싸서 크기 측정 */}
+                <View
+                    onLayout={(event) => {
+                        const { y, height } = event.nativeEvent.layout;
+                        setContentTextY(y);
+                        setContentTextHeight(height);
+                    }}
                 >
-                    {currentPage.content}
-                </AppText>
+                    <AppText
+                        variant="onboardingContent"
+                        color={COLORS.gray500}
+                        style={styles.contentText}
+                    >
+                        {currentPage.content}
+                    </AppText>
+                </View>
             </View>
 
-            {/* 이미지 */}
-            <View style={styles.imageArea}>
+            {/* 이미지: 하단 고정 */}
+            <View
+                pointerEvents="none"
+                style={[
+                    styles.imageArea,
+                    {
+                        height: imageHeight,
+                    },
+                ]}
+            >
                 <Image
                     source={currentPage.image}
                     style={{
@@ -149,7 +187,7 @@ export default function OnboardingScreen({ navigation }: Props) {
                 />
             </View>
 
-            {/* 그라데이션 */}
+            {/* 그라데이션: 앱 컨테이너 너비에 맞춤 */}
             <LinearGradient
                 colors={[
                     'rgba(255,255,255,0)',
@@ -162,10 +200,10 @@ export default function OnboardingScreen({ navigation }: Props) {
                 style={[
                     styles.gradient,
                     {
-                        width: screenWidth,
                         height: gradientHeight,
                     },
                 ]}
+                pointerEvents="none"
             />
 
             {/* 하단 버튼 */}
@@ -184,8 +222,10 @@ export default function OnboardingScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        width: '100%',
         backgroundColor: COLORS.white,
         paddingHorizontal: 23,
+        overflow: 'hidden',
     },
 
     /* 상단 도트 */
@@ -219,11 +259,12 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
 
-    /* 콘텐츠 텍스트 */
+    /* 콘텐츠 영역 */
     contentArea: {
         flex: 1,
         alignItems: 'center',
         width: '100%',
+        zIndex: 1,
     },
 
     contentText: {
@@ -238,6 +279,7 @@ const styles = StyleSheet.create({
         right: 0,
         bottom: 0,
         alignItems: 'center',
+        justifyContent: 'flex-end',
         zIndex: 0,
     },
 
@@ -245,6 +287,7 @@ const styles = StyleSheet.create({
     gradient: {
         position: 'absolute',
         left: 0,
+        right: 0,
         bottom: 0,
         zIndex: 5,
     },
