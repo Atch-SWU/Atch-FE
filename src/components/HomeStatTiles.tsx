@@ -7,9 +7,10 @@ interface HomeStatTilesProps {
   weekDoneCount: number | null;
   /** 0~100 정수. null = 배정이 없거나 집계 전 → '-' (0%로 바꾸지 않음) */
   completionRate: number | null;
-  grade: string;
-  /** 아이템 보상까지 진행률(%) */
-  rewardPercent: number;
+  /** null = 아직 제공되지 않음 → '-' */
+  grade: string | null;
+  /** 아이템 보상까지 진행률(%). null = 아직 제공되지 않음 → '-' */
+  rewardPercent: number | null;
   onPressWeekDone?: () => void;
 }
 
@@ -29,11 +30,11 @@ export default function HomeStatTiles({ weekDoneCount, completionRate, grade, re
       </Pressable>
       <View style={styles.tile}>
         <View>
-          <AppText variant="homeStatValue" color={COLORS.textStrong}>{grade}</AppText>
+          <AppText variant="homeStatValue" color={COLORS.textStrong}>{grade ?? '-'}</AppText>
           <AppText variant="progressMeta" color={COLORS.textWeak} style={styles.sub}>아이템 보상까지</AppText>
         </View>
         <View style={styles.right}>
-          <AppText variant="homeStatBig" color={COLORS.textStrong}>{rewardPercent}%</AppText>
+          <AppText variant="homeStatBig" color={COLORS.textStrong}>{rewardPercent == null ? '-' : `${rewardPercent}%`}</AppText>
         </View>
       </View>
     </View>

@@ -13,23 +13,37 @@ import HomeEmptyPanel from '../components/HomeEmptyPanel';
 import ActionDialog from '../components/ActionDialog';
 import CheckIcon from '../assets/icon/check.svg';
 import { COLORS, SPACING } from '../constants/token';
-import { HOME_STATS, HomeTask } from '../data/mockTodos';
 import { RootStackParamList } from '../navigation/types';
 import { formatKoreanDate, toDateString } from '../utils/date';
 import { formatMinutes } from '../utils/duration';
 import { useTodosByDate } from '../hooks/useTodosByDate';
 import { useCurrentTimer } from '../hooks/useCurrentTimer';
-import { estimateText, getErrorMessage, progressPercent, progressText, TodoResponse } from '../api/todoApi';
+import { chipText, estimateText, getErrorMessage, isStarted, progressPercent, progressText, TodoResponse } from '../api/todoApi';
 import {
   cancelSwitch, confirmSwitch, getTimerSettings, pauseTimer, requestSwitch, TimerSettings,
 } from '../api/timerApi';
 import { getWeeklyReport, WeeklyReport } from '../api/reportApi';
+
+/** 홈 카드 한 장에 필요한 작업 정보 */
+interface HomeTask {
+  id: string;
+  title: string;
+  /** 상위 작업명 (없을 수 있음) */
+  parent?: string;
+  /** 예: "예상 30분" (타이머 전달용) */
+  estimateText: string;
+  /** 카드 칩 문구: "예상 30분" 또는 진행한 적이 있으면 "남은 25분" */
+  chipText: string;
+  elapsedSec: number;
+}
 
 const toHomeTask = (t: TodoResponse): HomeTask => ({
   id: String(t.id),
   title: t.title,
   parent: t.sourceTaskName ?? undefined,
   estimateText: estimateText(t),
+  chipText: chipText(t),
+  elapsedSec: t.actualDurationSeconds,
 });
 
 /** 받침 유무에 따라 '로' / '으로' */
@@ -66,7 +80,9 @@ export default function HomeScreen() {
   const runningTodo = active.find((t) => t.status === 'IN_PROGRESS');
   const tasks = active.map(toHomeTask);
   const inProgress = runningTodo ? toHomeTask(runningTodo) : undefined;
-  const others = tasks.filter((t) => t.id !== inProgress?.id);
+  // 일시정지(또는 완료 취소로 되돌린) 작업도 진행중 영역에 카드로 보여준다
+  const pausedTodos = active.filter((t) => t.status !== 'IN_PROGRESS' && isStarted(t));
+  const others = tasks.filter((t) => t.id !== inProgress?.id && !pausedTodos.some((p) => String(p.id) === t.id));
   const hasTasks = tasks.length > 0;
   const allDone = !hasTasks && items.some((t) => t.status === 'COMPLETED');
   // 진행 시간은 실행 중인 구간까지 포함한 서버 타이머 값을 우선 사용
@@ -88,7 +104,7 @@ export default function HomeScreen() {
   const startTimerFor = (t: HomeTask) => {
     const idx = tasks.findIndex((x) => x.id === t.id);
     const next = idx >= 0 ? tasks[idx + 1] : undefined;
-    const toParam = (h: HomeTask) => ({ id: Number(h.id), title: h.title, estimateText: h.estimateText });
+    const toParam = (h: HomeTask) => ({ id: Number(h.id), title: h.title, estimateText: h.estimateText, elapsedSec: h.elapsedSec });
     navigation.navigate('Timer', { task: toParam(t), nextTask: next ? toParam(next) : null });
   };
 
@@ -219,12 +235,27 @@ export default function HomeScreen() {
                   onPlay={() => startTimerFor(inProgress)}
                 />
               )}
+              {pausedTodos.map((p) => {
+                const h = toHomeTask(p);
+                return (
+                  <ProgressCard
+                    key={p.id}
+                    badgeLabel="일시정지"
+                    parent={h.parent}
+                    title={h.title}
+                    estimateText={`예상 소요시간 ${formatMinutes(p.estimatedDurationMinutes)}`}
+                    progressText={progressText(p)}
+                    percent={progressPercent(p)}
+                    onPlay={() => onPlayOther(h)}
+                  />
+                );
+              })}
               {others.map((t) => (
                 <HomeTaskCard
                   key={t.id}
                   title={t.title}
                   parent={t.parent}
-                  estimateText={t.estimateText}
+                  estimateText={t.chipText}
                   onPressPlay={() => onPlayOther(t)}
                 />
               ))}
@@ -238,8 +269,9 @@ export default function HomeScreen() {
           <HomeStatTiles
             weekDoneCount={weekly?.completedTodoCount ?? null}
             completionRate={weekly?.completionRate == null ? null : Math.round(weekly.completionRate * 100)}
-            grade={HOME_STATS.grade}
-            rewardPercent={HOME_STATS.rewardPercent}
+            // 등급·아이템 보상 진행률은 서버 API가 아직 없어 '-'로 표시
+            grade={null}
+            rewardPercent={null}
             onPressWeekDone={() => navigation.navigate('CompletedTasks')}
           />
         </View>

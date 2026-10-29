@@ -3,6 +3,8 @@ export interface TaskParam {
   id?: number;
   title: string;
   estimateText: string;
+  /** 이미 진행한 시간(초). 완료 취소한 작업처럼 남은 시간으로 이어서 시작할 때 사용 */
+  elapsedSec?: number;
   /** 작업 정보 팝업용 메모 (없으면 '-') */
   memo?: string;
 }
