@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { View, Pressable, StyleSheet } from 'react-native';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { View, Pressable, Alert, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
@@ -13,7 +13,11 @@ import ExtendDialog from '../components/ExtendDialog';
 import TaskInfoDialog from '../components/TaskInfoDialog';
 import { COLORS, SPACING } from '../constants/token';
 import { RootStackParamList } from '../navigation/types';
-import { HOME_TASKS } from '../data/mockTodos';
+import { completeTodo, getErrorMessage } from '../api/todoApi';
+import {
+  fetchLatestSessionId, getCompletionSummary, getCurrentTimer, pauseTimer, resumeTimer, startTimer, TimerState,
+} from '../api/timerApi';
+import { formatMinutes } from '../utils/duration';
 import { formatClock, formatKoreanDate, formatKoreanTime } from '../utils/date';
 
 const EXTEND_COUNTDOWN = 10;
@@ -33,7 +37,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Timer'>;
 type Status = 'idle' | 'running' | 'overtime';
 
 export default function TimerScreen({ navigation, route }: Props) {
-  const { task } = route.params;
+  const { task, nextTask = null } = route.params;
   const totalSeconds = useMemo(() => parseEstimateSeconds(task.estimateText), [task.estimateText]);
   const today = useMemo(() => new Date(), []);
 
@@ -49,6 +53,45 @@ export default function TimerScreen({ navigation, route }: Props) {
   const [extendMode, setExtendMode] = useState<'initial' | 'resume'>('initial');
   const [infoVisible, setInfoVisible] = useState(false);
   const [startedAt, setStartedAt] = useState<Date | null>(null);
+  const [busy, setBusy] = useState(false);
+  // 서버 기준 세션 정보 (일시정지는 실행 중 sessionId, 시작/재개는 latestSessionId 를 사용)
+  const sessionRef = useRef<number | null>(null);
+  const latestRef = useRef<number | null>(null);
+  const serverPausedRef = useRef(false);
+
+  /** 서버의 타이머 상태를 화면 상태에 반영 */
+  const applyServer = (t: TimerState, mode: 'run' | 'pause') => {
+    sessionRef.current = t.sessionId;
+    latestRef.current = t.latestSessionId;
+    serverPausedRef.current = mode === 'pause';
+    if (t.sessionStartedAt) setStartedAt((prev) => prev ?? new Date(t.sessionStartedAt as string));
+    const overrun = t.estimateOverrunSeconds > 0;
+    setRemaining(t.remainingEstimatedSeconds);
+    setOvertimeSec(t.estimateOverrunSeconds);
+    setHasExtended(overrun);
+    if (mode === 'run') {
+      setPausedFrom(null);
+      setStatus(overrun ? 'overtime' : 'running');
+    } else {
+      setStatus('idle');
+      setPausedFrom(overrun ? 'overtime' : 'running');
+    }
+  };
+
+  // 화면 진입 시 서버 타이머 복원 (이미 실행/일시정지 중인 작업이면 이어서 표시)
+  useEffect(() => {
+    if (task.id == null) return;
+    let alive = true;
+    getCurrentTimer()
+      .then((t) => {
+        if (!alive || t.focusTodoId !== task.id) return;
+        if (t.state === 'RUNNING') applyServer(t, 'run');
+        else if (t.state === 'PAUSED') applyServer(t, 'pause');
+      })
+      .catch(() => {});
+    return () => { alive = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [task.id]);
 
   // 남은 시간 카운트다운
   useEffect(() => {
@@ -90,21 +133,44 @@ export default function TimerScreen({ navigation, route }: Props) {
       ? `${Math.floor(overtimeSec / 60)}분 ${overtimeSec % 60}초 연장됐어요!\n작업을 더 연장할까요?`
       : '시간을 연장할까요?';
 
-  const nextTask = useMemo(() => {
-    const idx = HOME_TASKS.findIndex((t) => t.title === task.title);
-    const n = idx >= 0 ? HOME_TASKS[idx + 1] : undefined;
-    return n ? { title: n.title, estimateText: n.estimateText } : null;
-  }, [task.title]);
+  const [completing, setCompleting] = useState(false);
 
-  const goComplete = () =>
-    navigation.replace('SessionComplete', {
+  const goComplete = async () => {
+    if (completing) return;
+    setCompleting(true);
+    let params = {
       taskTitle: task.title,
       taskDate: formatKoreanDate(today),
       elapsedSec: elapsed,
       estimateSec: totalSeconds,
       pauseCount,
       nextTask,
-    });
+    };
+    if (task.id != null) {
+      try {
+        await completeTodo(task.id);
+      } catch (e) {
+        setCompleting(false);
+        Alert.alert('작업을 완료하지 못했어요', getErrorMessage(e));
+        return;
+      }
+      // 완료 결과(집중시간·일시정지 횟수·다음 작업 후보)는 서버 값을 우선 사용
+      try {
+        const sum = await getCompletionSummary(task.id);
+        const n = sum.nextTodos[0];
+        params = {
+          ...params,
+          elapsedSec: sum.todo.actualDurationSeconds,
+          estimateSec: sum.todo.estimatedDurationMinutes * 60,
+          pauseCount: sum.pauseCount,
+          nextTask: n ? { id: n.id, title: n.title, estimateText: `예상 ${formatMinutes(n.estimatedDurationMinutes)}` } : null,
+        };
+      } catch {
+        // 요약 조회에 실패해도 완료는 끝났으므로 화면에 있던 값으로 이어간다
+      }
+    }
+    navigation.replace('SessionComplete', params);
+  };
 
   const confirmExtend = () => {
     setExtendVisible(false);
@@ -120,25 +186,51 @@ export default function TimerScreen({ navigation, route }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [extendVisible, extendCountdown]);
 
-  const onStart = () => {
+  const onStart = async () => {
+    if (busy) return;
+    const wasOvertime = pausedFrom === 'overtime';
+    if (task.id != null) {
+      setBusy(true);
+      try {
+        const res =
+          serverPausedRef.current && latestRef.current != null
+            ? await resumeTimer(task.id, latestRef.current)
+            : await startTimer(task.id, await fetchLatestSessionId(task.id));
+        applyServer(res, 'run');
+      } catch (e) {
+        Alert.alert('타이머를 시작하지 못했어요', getErrorMessage(e));
+        return;
+      } finally {
+        setBusy(false);
+      }
+    } else {
+      setStatus('running');
+      setPausedFrom(null);
+    }
     if (!startedAt) setStartedAt(new Date());
-    if (pausedFrom === 'overtime') {
+    if (wasOvertime) {
       // 초과 상태에서 재개 → 이어서 연장 확인 팝업
       setExtendMode('resume');
       setExtendVisible(true);
       setExtendCountdown(EXTEND_COUNTDOWN);
-    } else {
-      setStatus('running');
-      setPausedFrom(null);
     }
   };
   const onPausePress = () => {
     setPausedFrom(status === 'overtime' ? 'overtime' : 'running');
     setPauseVisible(true);
   };
-  const onPauseConfirm = () => {
+  const onPauseConfirm = async () => {
     setPauseVisible(false);
-    setStatus('idle');
+    if (task.id != null && sessionRef.current != null) {
+      try {
+        applyServer(await pauseTimer(task.id, sessionRef.current), 'pause');
+      } catch (e) {
+        Alert.alert('일시정지하지 못했어요', getErrorMessage(e));
+        return;
+      }
+    } else {
+      setStatus('idle');
+    }
     setPauseCount((c) => c + 1);
   };
 

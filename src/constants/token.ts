@@ -63,6 +63,7 @@ export const TYPOGRAPHY = {
   formSection: t('Bold', 15, 30, -0.3),
   formInputText: t('SemiBold', 16, 20, -0.16),
   formRowText: t('SemiBold', 15, 19),
+  formAiInput: t('Medium', 13, 16, -0.26),
   formPillText: t('Bold', 14, 17),
   subtaskLabel: t('Medium', 15, 19, -0.3),
   subtaskChipText: t('Bold', 12, 15),
@@ -237,6 +238,10 @@ export const COLORS = {
 export const SPACING = {
   screenH: 21,     // 화면 좌우 여백
   cardRadius: 20,
+  /** 칩(박스) 바로 아래 큰 제목의 글자 좌측 여백(side bearing) 보정 → 칩 왼쪽 끝과 글자 시작선을 맞춘다 */
+  glyphInset: -1,
+  /** 둥근 칩은 모서리 곡선 때문에 같은 선에 놓아도 안쪽으로 들어가 보여, 제목 글자보다 살짝 바깥으로 내어 시각적으로 맞춘다 */
+  chipInset: -1,
 } as const;
 
 // 웹 배포 시 데스크톱 브라우저에서도 모바일 폭으로 보이도록 최대 폭 고정

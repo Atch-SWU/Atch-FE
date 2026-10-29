@@ -31,25 +31,29 @@ interface AiPredictResultProps {
   predictedMinutes: number;
   baseMinutes: number;
   hasSubtasks: boolean;
+  /** AI 제안을 선택해 둔 상태 */
+  applied?: boolean;
   onDetail: () => void;
   onApply: () => void;
 }
 
 /** AI 예측 결과 (피그마 6:4837): 161h r12, 상세 확인 / 적용하기 */
-export function AiPredictResult({ predictedMinutes, baseMinutes, hasSubtasks, onDetail, onApply }: AiPredictResultProps) {
+export function AiPredictResult({ predictedMinutes, baseMinutes, hasSubtasks, applied, onDetail, onApply }: AiPredictResultProps) {
+  const diff = predictedMinutes - baseMinutes;
+  const diffText = diff > 0 ? `${formatMinutes(diff)}의 여유를 더했어요` : diff < 0 ? `${formatMinutes(-diff)}을 줄였어요` : '그대로가 좋겠어요';
   return (
     <View style={styles.result}>
       <AppText variant="aiResultLabel" color={COLORS.textMain}>AI 예측</AppText>
       <AppText variant="aiResultValue" color={COLORS.textMain} style={styles.value}>약 {formatMinutes(predictedMinutes)}</AppText>
       <AppText variant="aiResultSub" color={COLORS.textSub} style={styles.resultSub}>
-        {hasSubtasks ? '총 세부 분량' : '입력한 소요 시간'} {formatMinutes(baseMinutes)}에 30분의 여유를 더했어요
+        {hasSubtasks ? '총 세부 분량' : '입력한 소요 시간'} {formatMinutes(baseMinutes)}에 {diffText}
       </AppText>
       <View style={styles.btnRow}>
         <Pressable style={[styles.resultBtn, { backgroundColor: COLORS.fillSoft }]} onPress={onDetail}>
           <AppText variant="aiResultBtn" color={COLORS.textWeak}>상세 확인</AppText>
         </Pressable>
-        <Pressable style={[styles.resultBtn, { backgroundColor: COLORS.primary }]} onPress={onApply}>
-          <AppText variant="aiResultBtn" color={COLORS.textInverse}>적용하기</AppText>
+        <Pressable style={[styles.resultBtn, { backgroundColor: applied ? COLORS.fillDark : COLORS.primary }]} onPress={onApply}>
+          <AppText variant="aiResultBtn" color={COLORS.textInverse}>{applied ? '적용됨 (취소)' : '적용하기'}</AppText>
         </Pressable>
       </View>
     </View>

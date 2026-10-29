@@ -10,10 +10,13 @@ const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
 interface CalendarProps {
   value: Date | null;
   onSelect: (d: Date) => void;
+  /** 이 날짜(포함)보다 이전은 선택 불가 */
+  minDate?: Date;
 }
 
 /** 인라인 월 캘린더 (피그마 날짜 피커) */
-export default function Calendar({ value, onSelect }: CalendarProps) {
+export default function Calendar({ value, onSelect, minDate }: CalendarProps) {
+  const minTime = minDate ? new Date(minDate.getFullYear(), minDate.getMonth(), minDate.getDate()).getTime() : null;
   const init = value ?? new Date();
   const [viewY, setViewY] = useState(init.getFullYear());
   const [viewM, setViewM] = useState(init.getMonth());
@@ -58,8 +61,23 @@ export default function Calendar({ value, onSelect }: CalendarProps) {
         {cells.map((d, i) => (
           <View key={i} style={styles.cell}>
             {d != null ? (
-              <Pressable onPress={() => onSelect(new Date(viewY, viewM, d))} style={[styles.day, isSel(d) && styles.daySel]}>
-                <AppText variant={isSel(d) ? 'monthDaySel' : 'monthDay'} color={isSel(d) ? COLORS.textInverse : COLORS.textStrong}>{d}</AppText>
+              <Pressable
+                disabled={minTime != null && new Date(viewY, viewM, d).getTime() < minTime}
+                onPress={() => onSelect(new Date(viewY, viewM, d))}
+                style={[styles.day, isSel(d) && styles.daySel]}
+              >
+                <AppText
+                  variant={isSel(d) ? 'monthDaySel' : 'monthDay'}
+                  color={
+                    isSel(d)
+                      ? COLORS.textInverse
+                      : minTime != null && new Date(viewY, viewM, d).getTime() < minTime
+                        ? COLORS.textDisabled
+                        : COLORS.textStrong
+                  }
+                >
+                  {d}
+                </AppText>
               </Pressable>
             ) : null}
           </View>
