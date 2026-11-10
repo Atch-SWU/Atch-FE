@@ -18,11 +18,17 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Onboarding'>;
 
 const TOTAL_PAGES = 4;
 
+// 피그마 기준 디바이스
+const BASE_WIDTH = 402;
+const BASE_HEIGHT = 874;
+
+// 기존 디자인 크기
 const BASE_IMAGE_WIDTH = 240.56;
 const BASE_IMAGE_HEIGHT = 523;
 
 const BASE_GRADIENT_HEIGHT = 403;
 const IMAGE_TOP_GAP = 76;
+
 const IMAGE_RATIO = BASE_IMAGE_WIDTH / BASE_IMAGE_HEIGHT;
 
 const onboardingData = [
@@ -54,41 +60,69 @@ const onboardingData = [
 
 export default function OnboardingScreen({ navigation }: Props) {
     const insets = useSafeAreaInsets();
-    const { height: screenHeight } = useWindowDimensions();
+
+    const {
+        width: screenWidth,
+        height: screenHeight,
+    } = useWindowDimensions();
 
     const [pageIndex, setPageIndex] = useState(0);
 
-    // 화면 컨테이너 높이와 실제 텍스트 위치
     const [containerHeight, setContainerHeight] = useState(0);
     const [contentAreaY, setContentAreaY] = useState(0);
     const [contentTextY, setContentTextY] = useState(0);
     const [contentTextHeight, setContentTextHeight] = useState(0);
 
+    // 가로 / 세로 화면 비율
+    const widthRatio = screenWidth / BASE_WIDTH;
+    const heightRatio = screenHeight / BASE_HEIGHT;
+
+    // 세로 간격은 화면 높이에 맞춰 조정
+    // 지나친 확대 및 축소 방지
+    const verticalScale = Math.min(
+        1.12,
+        Math.max(0.85, heightRatio),
+    );
+
+    // 좌우 패딩은 화면 너비에 맞춰 조정
+    const horizontalPadding = Math.min(
+        28,
+        Math.max(16, 23 * widthRatio),
+    );
+
     const isLastPage = pageIndex === TOTAL_PAGES - 1;
     const currentPage = onboardingData[pageIndex];
 
-    // 실제 설명 텍스트의 아래쪽 위치
+    // 이미지 기본 크기: 화면 너비에 따라 조정
+    const desiredImageWidth = BASE_IMAGE_WIDTH * widthRatio;
+    const desiredImageHeight = desiredImageWidth / IMAGE_RATIO;
+
+    // 설명 텍스트의 실제 아래쪽 위치
     const contentBottom =
         contentAreaY + contentTextY + contentTextHeight;
 
-    // 이미지 높이 계산
+    // 이미지가 들어갈 수 있는 공간 계산
     const availableImageHeight =
         containerHeight > 0 && contentTextHeight > 0
-            ? containerHeight -
-            contentBottom -
-            IMAGE_TOP_GAP
-            : BASE_IMAGE_HEIGHT;
+            ? Math.max(
+                  0,
+                  containerHeight -
+                      contentBottom -
+                      IMAGE_TOP_GAP * verticalScale,
+              )
+            : desiredImageHeight;
 
-    // 기본 이미지 크기인 523px을 최대한 유지
+    // 이미지 크기: 가로세로 비율 유지
     const imageHeight = Math.min(
-        BASE_IMAGE_HEIGHT,
-        Math.max(180, availableImageHeight),
+        desiredImageHeight,
+        availableImageHeight,
     );
 
     const imageWidth = imageHeight * IMAGE_RATIO;
 
+    // 그라데이션도 이미지 크기에 맞춰 조정
     const gradientHeight = Math.min(
-        BASE_GRADIENT_HEIGHT,
+        BASE_GRADIENT_HEIGHT * (imageHeight / BASE_IMAGE_HEIGHT),
         imageHeight,
     );
 
@@ -108,6 +142,7 @@ export default function OnboardingScreen({ navigation }: Props) {
                 {
                     paddingTop: insets.top,
                     paddingBottom: insets.bottom,
+                    paddingHorizontal: horizontalPadding,
                 },
             ]}
             onLayout={(event) => {
@@ -115,7 +150,14 @@ export default function OnboardingScreen({ navigation }: Props) {
             }}
         >
             {/* 상단 캐러셀 도트 */}
-            <View style={styles.dots}>
+            <View
+                style={[
+                    styles.dots,
+                    {
+                        marginTop: 48 * verticalScale,
+                    },
+                ]}
+            >
                 {Array.from({ length: TOTAL_PAGES }).map(
                     (_, index) => (
                         <View
@@ -130,7 +172,14 @@ export default function OnboardingScreen({ navigation }: Props) {
             </View>
 
             {/* 타이틀 */}
-            <View style={styles.titleArea}>
+            <View
+                style={[
+                    styles.titleArea,
+                    {
+                        marginTop: 60 * verticalScale,
+                    },
+                ]}
+            >
                 <AppText
                     variant="onboardingTitle"
                     color={COLORS.black}
@@ -147,7 +196,6 @@ export default function OnboardingScreen({ navigation }: Props) {
                     setContentAreaY(event.nativeEvent.layout.y);
                 }}
             >
-                {/* 실제 텍스트만 감싸서 크기 측정 */}
                 <View
                     onLayout={(event) => {
                         const { y, height } = event.nativeEvent.layout;
@@ -158,14 +206,19 @@ export default function OnboardingScreen({ navigation }: Props) {
                     <AppText
                         variant="onboardingContent"
                         color={COLORS.gray500}
-                        style={styles.contentText}
+                        style={[
+                            styles.contentText,
+                            {
+                                marginTop: 30 * verticalScale,
+                            },
+                        ]}
                     >
                         {currentPage.content}
                     </AppText>
                 </View>
             </View>
 
-            {/* 이미지: 하단 고정 */}
+            {/* 이미지 */}
             <View
                 pointerEvents="none"
                 style={[
@@ -185,7 +238,7 @@ export default function OnboardingScreen({ navigation }: Props) {
                 />
             </View>
 
-            {/* 그라데이션: 앱 컨테이너 너비에 맞춤 */}
+            {/* 그라데이션 */}
             <LinearGradient
                 colors={[
                     'rgba(255,255,255,0)',
@@ -205,7 +258,14 @@ export default function OnboardingScreen({ navigation }: Props) {
             />
 
             {/* 하단 버튼 */}
-            <View style={styles.buttonArea}>
+            <View
+                style={[
+                    styles.buttonArea,
+                    {
+                        marginBottom: 50 * verticalScale,
+                    },
+                ]}
+            >
                 <AppButton
                     label={isLastPage ? 'Atch 시작하기' : '다음'}
                     variant="primary"
@@ -222,13 +282,10 @@ const styles = StyleSheet.create({
         flex: 1,
         width: '100%',
         backgroundColor: COLORS.white,
-        paddingHorizontal: 23,
         overflow: 'hidden',
     },
 
-    /* 상단 도트 */
     dots: {
-        marginTop: 48,
         flexDirection: 'row',
         justifyContent: 'center',
         alignItems: 'center',
@@ -246,9 +303,7 @@ const styles = StyleSheet.create({
         backgroundColor: COLORS.orange600,
     },
 
-    /* 타이틀 */
     titleArea: {
-        marginTop: 60,
         alignItems: 'center',
     },
 
@@ -257,7 +312,6 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
 
-    /* 콘텐츠 영역 */
     contentArea: {
         flex: 1,
         alignItems: 'center',
@@ -266,11 +320,9 @@ const styles = StyleSheet.create({
     },
 
     contentText: {
-        marginTop: 30,
         textAlign: 'center',
     },
 
-    /* 이미지 */
     imageArea: {
         position: 'absolute',
         left: 0,
@@ -281,7 +333,6 @@ const styles = StyleSheet.create({
         zIndex: 0,
     },
 
-    /* 그라데이션 */
     gradient: {
         position: 'absolute',
         left: 0,
@@ -290,10 +341,8 @@ const styles = StyleSheet.create({
         zIndex: 5,
     },
 
-    /* 하단 버튼 */
     buttonArea: {
         width: '100%',
-        marginBottom: 50,
         zIndex: 10,
     },
 

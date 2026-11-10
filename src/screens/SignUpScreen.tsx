@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, ScrollView, Pressable, StyleSheet, Alert } from 'react-native';
+import { View, ScrollView, Pressable, StyleSheet, Alert, useWindowDimensions, } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { BASE_URL } from '../api/config';
@@ -41,6 +41,25 @@ export default function SignUpScreen({ navigation }: Props) {
 
     // 인증번호 확인 API 요청 중인지 여부
     const [isVerifying, setIsVerifying] = useState(false);
+
+    const { width: screenWidth, height: screenHeight } =
+        useWindowDimensions();
+
+    // 피그마 기준 402 × 874
+    const widthRatio = screenWidth / 402;
+    const heightRatio = screenHeight / 874;
+
+    // 좌우 여백
+    const horizontalPadding = Math.min(
+        26,
+        Math.max(16, 21 * widthRatio),
+    );
+
+    // 상하 간격
+    const verticalScale = Math.min(
+        1.12,
+        Math.max(0.85, heightRatio),
+    );
 
     const isPasswordValid = PASSWORD_REGEX.test(password);
 
@@ -355,9 +374,25 @@ export default function SignUpScreen({ navigation }: Props) {
     };
 
     return (
-        <SafeAreaView style={styles.root} edges={['top', 'bottom']}>
+        <SafeAreaView
+            style={[
+                styles.root,
+                {
+                    paddingHorizontal: horizontalPadding,
+                },
+            ]}
+            edges={['top', 'bottom']}
+        >
             {/* Header */}
-            <View style={styles.header}>
+            <View
+                style={[
+                    styles.header,
+                    {
+                        marginTop: 17 * verticalScale,
+                        marginBottom: 8 * verticalScale,
+                    },
+                ]}
+            >
                 <Pressable
                     style={styles.backBtn}
                     onPress={() => navigation.goBack()}
@@ -384,7 +419,12 @@ export default function SignUpScreen({ navigation }: Props) {
             <ScrollView
                 style={styles.scroll}
                 showsVerticalScrollIndicator={false}
-                contentContainerStyle={styles.content}
+                contentContainerStyle={[
+                    styles.content,
+                    {
+                        paddingBottom: 24 * verticalScale,
+                    },
+                ]}
                 keyboardShouldPersistTaps="handled"
                 automaticallyAdjustKeyboardInsets
             >
@@ -392,12 +432,21 @@ export default function SignUpScreen({ navigation }: Props) {
                 <AppText
                     variant="signupFieldLabel"
                     color={COLORS.gray700}
-                    style={styles.firstLabel}
+                    style={[
+                        styles.firstLabel,
+                        { marginTop: 24 * verticalScale },
+                    ]}
                 >
                     아이디 (이메일)
                 </AppText>
 
-                <View style={styles.row}>
+                <View style={[
+                    styles.row,
+                    {
+                        marginTop: 8 * verticalScale,
+                        gap: 10 * widthRatio,
+                    },
+                ]}>
                     <View style={styles.rowField}>
                         <FormInput
                             value={email}
@@ -421,7 +470,10 @@ export default function SignUpScreen({ navigation }: Props) {
                         textVariant="signupButtonText"
                         textColor={COLORS.white}
                         onPress={handleSendAuthCode}
-                        style={styles.sendCodeBtn}
+                        style={[
+                            styles.sendCodeBtn,
+                            { width: 118 * widthRatio },
+                        ]}
                     />
                 </View>
 
@@ -431,12 +483,21 @@ export default function SignUpScreen({ navigation }: Props) {
                         <AppText
                             variant="signupFieldLabel"
                             color={COLORS.gray700}
-                            style={styles.label}
+                            style={[
+                                styles.label,
+                                { marginTop: 28 * verticalScale },
+                            ]}
                         >
                             인증번호 입력
                         </AppText>
 
-                        <View style={styles.row}>
+                        <View style={[
+                            styles.row,
+                            {
+                                marginTop: 8 * verticalScale,
+                                gap: 10 * widthRatio,
+                            },
+                        ]}>
                             <View style={styles.rowField}>
                                 <FormInput
                                     value={authCode}
@@ -460,7 +521,10 @@ export default function SignUpScreen({ navigation }: Props) {
                                 textVariant="signupButtonText"
                                 textColor={COLORS.white}
                                 onPress={handleVerifyAuthCode}
-                                style={styles.verifyBtn}
+                                style={[
+                                    styles.verifyBtn,
+                                    { width: 76 * widthRatio },
+                                ]}
                             />
                         </View>
                     </>
@@ -472,12 +536,20 @@ export default function SignUpScreen({ navigation }: Props) {
                         <AppText
                             variant="signupFieldLabel"
                             color={COLORS.gray700}
-                            style={styles.label}
+                            style={[
+                                styles.label,
+                                { marginTop: 28 * verticalScale },
+                            ]}
                         >
                             비밀번호
                         </AppText>
 
-                        <View style={styles.fieldWithBadge}>
+                        <View
+                            style={[
+                                styles.fieldWithBadge,
+                                { marginTop: 8 * verticalScale },
+                            ]}
+                        >
                             <FormInput
                                 value={password}
                                 onChangeText={setPassword}
@@ -515,12 +587,20 @@ export default function SignUpScreen({ navigation }: Props) {
                         <AppText
                             variant="signupFieldLabel"
                             color={COLORS.gray700}
-                            style={styles.label}
+                            style={[
+                                styles.label,
+                                { marginTop: 28 * verticalScale },
+                            ]}
                         >
                             비밀번호 확인
                         </AppText>
 
-                        <View style={styles.fieldWithBadge}>
+                        <View
+                            style={[
+                                styles.fieldWithBadge,
+                                { marginTop: 8 * verticalScale },
+                            ]}
+                        >
                             <FormInput
                                 value={passwordConfirm}
                                 onChangeText={setPasswordConfirm}
@@ -550,7 +630,13 @@ export default function SignUpScreen({ navigation }: Props) {
                             <AppText
                                 variant="statCaption"
                                 color={COLORS.error}
-                                style={styles.hintText}
+                                style={[
+                                    styles.hintText,
+                                    {
+                                        marginTop: 6 * verticalScale,
+                                        marginLeft: 8 * widthRatio,
+                                    },
+                                ]}
                             >
                                 비밀번호가 일치하지 않습니다.
                             </AppText>
@@ -562,12 +648,20 @@ export default function SignUpScreen({ navigation }: Props) {
                                 <AppText
                                     variant="signupFieldLabel"
                                     color={COLORS.gray700}
-                                    style={styles.label}
+                                    style={[
+                                        styles.label,
+                                        { marginTop: 28 * verticalScale },
+                                    ]}
                                 >
                                     닉네임
                                 </AppText>
 
-                                <View style={styles.nicknameInput}>
+                                <View
+                                    style={[
+                                        styles.nicknameInput,
+                                        { marginTop: 8 * verticalScale },
+                                    ]}
+                                >
                                     <FormInput
                                         value={nickname}
                                         onChangeText={setNickname}
@@ -584,7 +678,15 @@ export default function SignUpScreen({ navigation }: Props) {
             </ScrollView>
 
             {/* 회원가입 버튼 */}
-            <View style={styles.bottomBar}>
+            <View
+                style={[
+                    styles.bottomBar,
+                    {
+                        paddingTop: 10 * verticalScale,
+                        paddingBottom: 6 * verticalScale,
+                    },
+                ]}
+            >
                 <AppButton
                     label="회원 가입"
                     variant="primary"
