@@ -13,7 +13,11 @@ import CheckIcon from '../assets/icon/check.svg';
 import { COLORS, SPACING } from '../constants/token';
 import { RootStackParamList } from '../navigation/types';
 import { getOrCreateDeviceId } from '../utils/deviceId';
-import { saveTokens } from '../api/tokenStorage';
+import { saveTokens, saveUserEmail } from '../api/tokenStorage';
+import useCountdown from '../hooks/useCountdown';
+import NoticeModal from '../components/NoticeModal';
+
+const SEND_COOLDOWN_SECONDS = 60;
 
 type Props = NativeStackScreenProps<RootStackParamList, 'SignUp'>;
 
@@ -29,6 +33,15 @@ export default function SignUpScreen({ navigation }: Props) {
     const [nickname, setNickname] = useState('');
 
     const [termsVisible, setTermsVisible] = useState(false);
+
+    // 60초 안에 다시 전송을 누르면 띄우는 안내 팝업
+    const [cooldownNoticeVisible, setCooldownNoticeVisible] = useState(false);
+
+    // 인증번호 재전송 대기(60초)
+    const { remaining: sendCooldown, start: startSendCooldown } = useCountdown();
+
+    // 인증번호 전송 요청 중 (누르는 즉시 버튼·이메일 입력창 잠금)
+    const [isSending, setIsSending] = useState(false);
 
     // 인증번호 전송 완료 여부
     const [authCodeSent, setAuthCodeSent] = useState(false);
@@ -82,7 +95,17 @@ export default function SignUpScreen({ navigation }: Props) {
 
 
     const handleSendAuthCode = async () => {
+        if (isSending || authVerified) return;
+
+        // 60초가 지나기 전에는 전송하지 않고 안내 팝업만 표시
+        if (sendCooldown > 0) {
+            setCooldownNoticeVisible(true);
+            return;
+        }
+
         const trimmedEmail = email.trim();
+
+        setIsSending(true);
 
         try {
             const response = await fetch(
@@ -103,6 +126,7 @@ export default function SignUpScreen({ navigation }: Props) {
                 setAuthCodeSent(true);
                 setAuthCode('');
                 setAuthVerified(false);
+                startSendCooldown(SEND_COOLDOWN_SECONDS);
                 return;
             }
 
@@ -127,6 +151,8 @@ export default function SignUpScreen({ navigation }: Props) {
                 '네트워크 오류',
                 '서버에 연결할 수 없어요. 네트워크를 확인해 주세요.',
             );
+        } finally {
+            setIsSending(false);
         }
     };
 
@@ -295,6 +321,9 @@ export default function SignUpScreen({ navigation }: Props) {
 
                 try {
                     await saveTokens(accessToken, refreshToken);
+
+                    // 내 정보 화면에 표시할 이메일 저장 (실패해도 가입 흐름은 진행)
+                    await saveUserEmail(email.trim()).catch(() => {});
                 } catch {
                     Alert.alert(
                         '회원가입 완료',
@@ -457,6 +486,7 @@ export default function SignUpScreen({ navigation }: Props) {
                                 setAuthCode('');
                             }}
                             placeholder="이메일 주소"
+                            editable={!authCodeSent && !isSending}
                             variant="filled"
                             placeholderColor={COLORS.gray400}
                             keyboardType="email-address"
@@ -465,7 +495,9 @@ export default function SignUpScreen({ navigation }: Props) {
                     </View>
 
                     <AppButton
-                        label="인증번호 전송"
+                        label={isSending ? '전송 중...' : '인증번호 전송'}
+                        disabled={isSending}
+                        locked={authVerified}
                         variant="primary"
                         textVariant="signupButtonText"
                         textColor={COLORS.white}
@@ -509,6 +541,7 @@ export default function SignUpScreen({ navigation }: Props) {
                                         )
                                     }
                                     placeholder="6자리"
+                                    editable={!authVerified}
                                     variant="filled"
                                     placeholderColor={COLORS.gray400}
                                     keyboardType="number-pad"
@@ -517,6 +550,7 @@ export default function SignUpScreen({ navigation }: Props) {
 
                             <AppButton
                                 label="확인"
+                                locked={authVerified}
                                 variant="primary"
                                 textVariant="signupButtonText"
                                 textColor={COLORS.white}
@@ -699,6 +733,12 @@ export default function SignUpScreen({ navigation }: Props) {
                     ]}
                 />
             </View>
+
+            <NoticeModal
+                visible={cooldownNoticeVisible}
+                message="인증번호 재전송은 60초 이후에 할 수 있어요."
+                onClose={() => setCooldownNoticeVisible(false)}
+            />
 
             {/* 약관 동의 */}
             {termsVisible && (

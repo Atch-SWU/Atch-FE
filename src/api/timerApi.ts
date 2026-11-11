@@ -126,3 +126,7 @@ export const confirmSwitch = (switchId: string) =>
 export const cancelSwitch = (switchId: string) => apiClient.delete<void>(`${TIMER}/switches/${switchId}`);
 
 export const getTimerSettings = () => apiClient.get<TimerSettings>('/api/v1/settings/timer');
+
+// 생략(undefined)한 필드는 서버에서 기존 값을 유지한다. 최소 한 개 필드는 필요.
+export const updateTimerSettings = (body: Partial<TimerSettings>) =>
+    apiClient.patch<TimerSettings>('/api/v1/settings/timer', body);

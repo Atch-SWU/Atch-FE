@@ -1,25 +1,43 @@
+import { useEffect, useState } from 'react';
 import { Modal, View, Pressable, StyleSheet } from 'react-native';
 
 import AppText from './AppText';
+import FormInput from './FormInput';
 import { COLORS } from '../constants/token';
 
 type Props = {
     visible: boolean;
     onCancel: () => void;
-    onConfirm: () => void;
+    /** 입력한 현재 비밀번호와 함께 호출 */
+    onConfirm: (currentPassword: string) => void;
+    /** 탈퇴 요청 진행 중 */
+    isSubmitting?: boolean;
+    /** 탈퇴 실패 안내 문구 */
+    errorMessage?: string | null;
 };
 
 export default function WithdrawModal({
     visible,
     onCancel,
     onConfirm,
+    isSubmitting = false,
+    errorMessage = null,
 }: Props) {
+    const [password, setPassword] = useState('');
+
+    // 팝업이 닫히면 입력값 초기화
+    useEffect(() => {
+        if (!visible) setPassword('');
+    }, [visible]);
+
+    const canConfirm = password.length > 0 && !isSubmitting;
+
     return (
         <Modal
             visible={visible}
             transparent
             animationType="fade"
-            onRequestClose={onCancel}
+            onRequestClose={isSubmitting ? undefined : onCancel}
         >
             <View style={styles.overlay}>
                 <View style={styles.modal}>
@@ -41,11 +59,34 @@ export default function WithdrawModal({
                         탈퇴 시 데이터는 영구 삭제됩니다.
                     </AppText>
 
+                    {/* 본인 확인용 현재 비밀번호 */}
+                    <View style={styles.passwordField}>
+                        <FormInput
+                            value={password}
+                            onChangeText={setPassword}
+                            placeholder="현재 비밀번호"
+                            variant="filled"
+                            secureTextEntry
+                            autoCapitalize="none"
+                        />
+                    </View>
+
+                    {errorMessage && (
+                        <AppText
+                            variant="statCaption"
+                            color={COLORS.primary}
+                            style={styles.errorText}
+                        >
+                            {errorMessage}
+                        </AppText>
+                    )}
+
                     {/* 버튼 */}
                     <View style={styles.buttons}>
                         <Pressable
                             style={styles.cancelButton}
                             onPress={onCancel}
+                            disabled={isSubmitting}
                         >
                             <AppText
                                 variant="settingsRowLabel"
@@ -57,15 +98,19 @@ export default function WithdrawModal({
                         </Pressable>
 
                         <Pressable
-                            style={styles.confirmButton}
-                            onPress={onConfirm}
+                            style={[
+                                styles.confirmButton,
+                                !canConfirm && styles.confirmButtonDisabled,
+                            ]}
+                            onPress={() => onConfirm(password)}
+                            disabled={!canConfirm}
                         >
                             <AppText
                                 variant="settingsRowLabel"
                                 color={COLORS.white}
                                 style={styles.confirmText}
                             >
-                                탈퇴할게요
+                                {isSubmitting ? '탈퇴 중...' : '탈퇴할게요'}
                             </AppText>
                         </Pressable>
                     </View>
@@ -109,6 +154,15 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
 
+    passwordField: {
+        marginTop: 18,
+    },
+
+    errorText: {
+        marginTop: 8,
+        marginLeft: 4,
+    },
+
     buttons: {
         flexDirection: 'row',
         gap: 10,
@@ -131,6 +185,10 @@ const styles = StyleSheet.create({
         backgroundColor: COLORS.black,
         alignItems: 'center',
         justifyContent: 'center',
+    },
+
+    confirmButtonDisabled: {
+        backgroundColor: COLORS.gray300,
     },
 
     cancelText: {

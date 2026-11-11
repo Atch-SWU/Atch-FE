@@ -6,7 +6,6 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
@@ -21,7 +20,6 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "permissions": [
         "android.permission.RECORD_AUDIO"
@@ -36,7 +34,9 @@
           "photosPermission": "프로필 사진을 변경하기 위해 사진 보관함 접근 권한이 필요해요."
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-status-bar",
+      "expo-splash-screen"
     ],
     "extra": {
       "eas": {

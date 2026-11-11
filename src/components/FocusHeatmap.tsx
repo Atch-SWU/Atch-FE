@@ -80,7 +80,7 @@ export default function FocusHeatmap({
                 variant="reportChartTime"
                 style={styles.dayLabel}
               >
-                {WEEK_LABELS[rowIndex] ?? row.label}
+                {row.label ?? WEEK_LABELS[rowIndex]}
               </AppText>
             </View>
           )}

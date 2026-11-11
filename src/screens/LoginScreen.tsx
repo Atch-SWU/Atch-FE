@@ -6,7 +6,7 @@ import {
     Image,
     Alert,
 } from 'react-native';
-import { saveTokens } from '../api/tokenStorage';
+import { saveTokens, saveUserEmail } from '../api/tokenStorage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
@@ -97,6 +97,9 @@ export default function LoginScreen({ navigation }: Props) {
 
                     return;
                 }
+
+                // 내 정보 화면에 표시할 이메일 저장 (실패해도 로그인은 진행)
+                await saveUserEmail(email).catch(() => {});
 
                 // 토큰 저장 성공 후 메인 화면으로 이동
                 navigation.replace('Main');
