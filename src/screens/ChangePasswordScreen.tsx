@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, ScrollView, Pressable, StyleSheet } from 'react-native';
+import { View, ScrollView, Pressable, StyleSheet, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
@@ -10,20 +10,23 @@ import ChevronLeft from '../assets/icon/chevron-left.svg';
 import CheckIcon from '../assets/icon/check.svg';
 import { COLORS, SPACING } from '../constants/token';
 import { RootStackParamList } from '../navigation/types';
+import { ApiError } from '../api/apiClient';
+import { TokenRefreshError } from '../api/tokenRefresh';
+import { changePassword } from '../api/accountApi';
+import { clearTokens } from '../api/tokenStorage';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ChangePassword'>;
 
 // 영어 대소문자 + 특수문자(!@#$%*) 각 하나 이상, 8~16자 — 회원가입/비밀번호 찾기 화면과 동일한 규칙.
 const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%*])[A-Za-z0-9!@#$%*]{8,16}$/;
 
-// TODO: 실제로는 서버에 현재 비밀번호를 검증 요청해야 함 — 지금은 목업 값과 비교.
-const MOCK_CURRENT_PASSWORD = 'Password1!';
-
 export default function ChangePasswordScreen({ navigation }: Props) {
     const [currentPassword, setCurrentPassword] = useState('');
     const [currentPasswordError, setCurrentPasswordError] = useState(false);
     const [newPassword, setNewPassword] = useState('');
     const [newPasswordConfirm, setNewPasswordConfirm] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [submitError, setSubmitError] = useState<string | null>(null);
 
     const isNewPasswordValid = PASSWORD_REGEX.test(newPassword);
     const isNewPasswordConfirmed = newPasswordConfirm.length > 0 && newPasswordConfirm === newPassword;
@@ -33,24 +36,56 @@ export default function ChangePasswordScreen({ navigation }: Props) {
     // 체크 배지는 입력 여부 + 이전 제출에서 틀리지 않았는지로만 활성화됨.
     const isCurrentPasswordChecked = currentPassword.length > 0 && !currentPasswordError;
 
+    // 세 필드를 모두 조건에 맞게 채웠을 때만 변경하기 버튼 활성화
+    // (현재 비밀번호: 입력됨 / 새 비밀번호: 규칙 충족 / 새 비밀번호 확인: 일치)
+    const canSubmit =
+        currentPassword.length > 0 &&
+        isNewPasswordValid &&
+        isNewPasswordConfirmed &&
+        !isSubmitting;
+
     const handleChangeCurrentPassword = (text: string) => {
         setCurrentPassword(text);
         if (currentPasswordError) setCurrentPasswordError(false);
     };
 
-    const handleFindPassword = () => {
-        navigation.navigate('FindPassword');
+    // 로그인 정보를 정리하고 로그인 화면으로 이동
+    const goToLogin = async () => {
+        await clearTokens();
+        navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
     };
 
-    const handleSubmit = () => {
-        if (currentPassword !== MOCK_CURRENT_PASSWORD) {
-            setCurrentPasswordError(true);
-            return;
-        }
-        if (!isNewPasswordValid || !isNewPasswordConfirmed) return;
+    const handleSubmit = async () => {
+        if (!canSubmit) return;
 
-        // TODO: 비밀번호 변경 API 연동.
-        navigation.goBack();
+        setIsSubmitting(true);
+        setSubmitError(null);
+        setCurrentPasswordError(false);
+
+        try {
+            await changePassword(currentPassword, newPassword);
+
+            // 변경 성공(204): 모든 기기에서 다시 로그인해야 하므로 토큰을 지우고 로그인 화면으로 이동
+            await goToLogin();
+            Alert.alert('비밀번호가 변경되었어요', '새 비밀번호로 다시 로그인해 주세요.');
+        } catch (error) {
+            if (error instanceof ApiError && error.status === 403) {
+                // 현재 비밀번호 불일치
+                setCurrentPasswordError(true);
+            } else if (
+                (error instanceof ApiError && error.status === 401) ||
+                (error instanceof TokenRefreshError && error.status === 401)
+            ) {
+                // 로그인 정보가 만료됨
+                await goToLogin();
+            } else if (error instanceof Error) {
+                setSubmitError(error.message);
+            } else {
+                setSubmitError('비밀번호를 변경하지 못했어요. 다시 시도해 주세요.');
+            }
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -115,7 +150,7 @@ export default function ChangePasswordScreen({ navigation }: Props) {
                         <CheckIcon width={12} height={12} color={COLORS.white} />
                     </View>
                 </View>
-                <AppText variant="statCaption" color={COLORS.primary} style={styles.hintText}>
+                <AppText variant="statCaption" color={COLORS.gray500} style={styles.hintText}>
                     영어 대소문자/특수문자 (!@#$%*) 각 하나 이상인 8-16자
                 </AppText>
 
@@ -141,22 +176,22 @@ export default function ChangePasswordScreen({ navigation }: Props) {
                         비밀번호가 일치하지 않습니다.
                     </AppText>
                 )}
+
+                {/* 서버 오류 등 변경 실패 안내 */}
+                {submitError && (
+                    <AppText variant="statCaption" color={COLORS.primary} style={styles.hintText}>
+                        {submitError}
+                    </AppText>
+                )}
             </ScrollView>
 
             <View style={styles.bottomBar}>
-                <AppButton
-                    label="비밀번호 찾기"
-                    variant="soft"
-                    textVariant="authButtonText"
-                    textColor={COLORS.textInverse}
-                    onPress={handleFindPassword}
-                    style={[styles.findPasswordBtn, styles.findPasswordBtnBg]}
-                />
                 <AppButton
                     label="변경하기"
                     variant="primary"
                     textVariant="authButtonText"
                     onPress={handleSubmit}
+                    disabled={!canSubmit}
                     style={styles.submitBtn}
                 />
             </View>
@@ -215,10 +250,8 @@ const styles = StyleSheet.create({
 
     hintText: { marginTop: 6, marginLeft: 8 },
 
-    // 두 버튼은 화면 크기와 무관하게 항상 하단에 붙어야 하므로 ScrollView 밖의
+    // 변경하기 버튼은 화면 크기와 무관하게 항상 하단에 붙어야 하므로 ScrollView 밖의
     // 고정 영역(bottomBar)에 배치 — SafeAreaView가 flex 컬럼이라 자동으로 하단에 고정됨.
-    bottomBar: { paddingTop: 10, paddingBottom: 6, gap: 16 },
-    findPasswordBtn: { height: 52, borderRadius: 16 },
-    findPasswordBtnBg: { backgroundColor: COLORS.mutedBtnBg },
+    bottomBar: { paddingTop: 10, paddingBottom: 6 },
     submitBtn: { height: 52, borderRadius: 16 },
 });

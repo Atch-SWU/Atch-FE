@@ -11,6 +11,10 @@ interface AppButtonProps {
   textColor?: string;
   onPress?: () => void;
   style?: StyleProp<ViewStyle>;
+  /** true면 눌리지 않고 gray300 배경 + 흰색 글자로 표시 */
+  disabled?: boolean;
+  /** true면 모양은 그대로 두고 눌리기만 막는다 */
+  locked?: boolean;
 }
 
 const VARIANT = {
@@ -27,6 +31,8 @@ export default function AppButton({
   textColor,
   onPress,
   style,
+  disabled = false,
+  locked = false,
 }: AppButtonProps) {
   const v = VARIANT[variant];
   const defaultText: TypographyToken = variant === 'soft' ? 'subtleBtn' : 'primaryBtn';
@@ -34,15 +40,22 @@ export default function AppButton({
   return (
     <Pressable
       onPress={onPress}
+      disabled={disabled || locked}
       style={({ pressed }: { pressed: boolean }) => [
         styles.base,
         variant === 'soft' && styles.soft,
         { backgroundColor: v.bg },
-        pressed && styles.pressed,
+        pressed && !disabled && !locked && styles.pressed,
         style,
+        disabled && { backgroundColor: COLORS.gray300 },
       ]}
     >
-      <AppText variant={textVariant ?? defaultText} color={textColor ?? v.text}>{label}</AppText>
+      <AppText
+        variant={textVariant ?? defaultText}
+        color={disabled ? COLORS.white : textColor ?? v.text}
+      >
+        {label}
+      </AppText>
     </Pressable>
   );
 }

@@ -22,16 +22,16 @@ const PAUSE_GAP = 6;
 export default function FocusSessionList({
   sessions,
 }: FocusSessionListProps) {
-  // API 연결 전 임시 처리:
   // 집중 시간이 가장 긴 세션을 가장 집중한 세션으로 표시
   const maxDuration = Math.max(
-    ...sessions.map((session) => session.durationMinutes),
+    ...sessions.map((session) => session.durationMinutes ?? 0),
   );
 
   return (
     <View style={styles.list}>
       {sessions.map((session, index) => {
         const isMostFocused =
+          maxDuration > 0 &&
           session.durationMinutes === maxDuration;
 
         return (
@@ -66,13 +66,15 @@ export default function FocusSessionList({
                   {session.title}
                 </AppText>
 
-                <AppText
-                  variant="reportSessionPause"
-                  color={COLORS.gray500}
-                  style={styles.pauseText}
-                >
-                  일시정지 {session.interruptions}회
-                </AppText>
+                {session.interruptions !== undefined && (
+                  <AppText
+                    variant="reportSessionPause"
+                    color={COLORS.gray500}
+                    style={styles.pauseText}
+                  >
+                    일시정지 {session.interruptions}회
+                  </AppText>
+                )}
 
               </View>
 
@@ -82,15 +84,17 @@ export default function FocusSessionList({
                   variant="reportSessionDurationValue"
                   color={COLORS.gray800}
                 >
-                  {session.durationMinutes}
+                  {session.durationMinutes ?? '-'}
                 </AppText>
 
-                <AppText
-                  variant="reportSessionDurationUnit"
-                  color={COLORS.gray400}
-                >
-                  M
-                </AppText>
+                {session.durationMinutes !== null && (
+                  <AppText
+                    variant="reportSessionDurationUnit"
+                    color={COLORS.gray400}
+                  >
+                    M
+                  </AppText>
+                )}
               </View>
 
             </View>

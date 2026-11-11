@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { View, Pressable, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -9,19 +9,85 @@ import ChevronLeft from '../assets/icon/chevron-left-bold.svg';
 import ChevronRight from '../assets/icon/chevron-right-bold.svg';
 import { COLORS } from '../constants/token';
 import { RootStackParamList } from '../navigation/types';
+import { ApiError } from '../api/apiClient';
+import { TokenRefreshError } from '../api/tokenRefresh';
+import { withdrawAccount } from '../api/accountApi';
+import { clearTokens, getUserEmail } from '../api/tokenStorage';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'MyInfo'>;
 
-// TODO: 추후 API에서 실제 유저 이메일을 받아오도록 변경
-const USER_EMAIL = 'swu1234@gmail.com';
-
 export default function MyInfoScreen({ navigation }: Props) {
+    // 로그인·회원가입 때 저장해 둔 사용자 이메일 (없으면 '-')
+    const [userEmail, setUserEmail] = useState<string | null>(null);
+
+    useEffect(() => {
+        let isActive = true;
+
+        getUserEmail()
+            .then((email) => {
+                if (isActive) setUserEmail(email);
+            })
+            .catch(() => {});
+
+        return () => {
+            isActive = false;
+        };
+    }, []);
+
     const [snsOneEnabled, setSnsOneEnabled] = useState(true);
     const [snsTwoEnabled, setSnsTwoEnabled] = useState(false);
     const [snsThreeEnabled, setSnsThreeEnabled] = useState(false);
 
     // 회원 탈퇴 모달
     const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+    const [isWithdrawing, setIsWithdrawing] = useState(false);
+    const [withdrawError, setWithdrawError] = useState<string | null>(null);
+
+    // 로그인 정보를 정리하고 로그인 화면으로 이동
+    const goToLogin = async () => {
+        await clearTokens();
+        setShowWithdrawModal(false);
+        navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
+    };
+
+    // 탈퇴하기: 현재 비밀번호로 본인 확인 후 계정 삭제
+    const handleWithdraw = async (currentPassword: string) => {
+        if (isWithdrawing) return;
+
+        setIsWithdrawing(true);
+        setWithdrawError(null);
+
+        try {
+            await withdrawAccount(currentPassword);
+
+            // 탈퇴 완료(204): 저장된 토큰을 지우고 로그인 화면으로 이동
+            await goToLogin();
+        } catch (error) {
+            if (error instanceof ApiError && error.status === 403) {
+                // 현재 비밀번호 불일치
+                setWithdrawError('비밀번호가 일치하지 않습니다.');
+            } else if (
+                (error instanceof ApiError && error.status === 401) ||
+                (error instanceof TokenRefreshError && error.status === 401)
+            ) {
+                // 로그인 정보가 만료되었거나 이미 삭제된 계정
+                await goToLogin();
+            } else if (error instanceof Error) {
+                setWithdrawError(error.message);
+            } else {
+                setWithdrawError(
+                    '탈퇴 처리 중 오류가 발생했습니다. 다시 시도해 주세요.',
+                );
+            }
+        } finally {
+            setIsWithdrawing(false);
+        }
+    };
+
+    const closeWithdrawModal = () => {
+        setShowWithdrawModal(false);
+        setWithdrawError(null);
+    };
 
     return (
         <SafeAreaView style={styles.root} edges={['top', 'bottom']}>
@@ -73,7 +139,7 @@ export default function MyInfoScreen({ navigation }: Props) {
                         color={COLORS.gray400}
                         style={styles.email}
                     >
-                        {USER_EMAIL}
+                        {userEmail ?? '-'}
                     </AppText>
                 </View>
 
@@ -100,7 +166,10 @@ export default function MyInfoScreen({ navigation }: Props) {
                 {/* 회원 탈퇴 */}
                 <Pressable
                     style={styles.infoCardSpacing}
-                    onPress={() => setShowWithdrawModal(true)}
+                    onPress={() => {
+                        setWithdrawError(null);
+                        setShowWithdrawModal(true);
+                    }}
                 >
                     <AppText
                         variant="settingsRowLabel"
@@ -231,8 +300,10 @@ export default function MyInfoScreen({ navigation }: Props) {
             {/* 회원 탈퇴 모달 */}
             <WithdrawModal
                 visible={showWithdrawModal}
-                onCancel={() => setShowWithdrawModal(false)}
-                onConfirm={() => setShowWithdrawModal(false)}
+                onCancel={closeWithdrawModal}
+                onConfirm={handleWithdraw}
+                isSubmitting={isWithdrawing}
+                errorMessage={withdrawError}
             />
         </SafeAreaView>
     );

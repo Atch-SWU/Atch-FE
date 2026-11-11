@@ -24,6 +24,8 @@ interface FormInputProps {
   textColor?: string;
   focusBorderColor?: string;
   boxStyle?: StyleProp<ViewStyle>;
+  /** false면 수정할 수 없다 */
+  editable?: boolean;
 }
 
 export default function FormInput({
@@ -39,6 +41,7 @@ export default function FormInput({
   textColor = COLORS.gray800,
   focusBorderColor = COLORS.gray400,
   boxStyle,
+  editable = true,
 }: FormInputProps) {
   const [focused, setFocused] = useState(false);
 
@@ -65,6 +68,7 @@ export default function FormInput({
         secureTextEntry={secureTextEntry}
         keyboardType={keyboardType}
         autoCapitalize={autoCapitalize}
+        editable={editable}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
         style={styles.input}

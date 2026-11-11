@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, ScrollView, Pressable, StyleSheet } from 'react-native';
+import { View, ScrollView, Pressable, StyleSheet, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
@@ -10,6 +10,16 @@ import ChevronLeft from '../assets/icon/chevron-left.svg';
 import CheckIcon from '../assets/icon/check.svg';
 import { COLORS, SPACING } from '../constants/token';
 import { RootStackParamList } from '../navigation/types';
+import {
+    requestPasswordResetCode,
+    verifyPasswordResetCode,
+    resetPassword,
+    PasswordResetError,
+} from '../api/passwordResetApi';
+import useCountdown from '../hooks/useCountdown';
+import NoticeModal from '../components/NoticeModal';
+
+const SEND_COOLDOWN_SECONDS = 60;
 
 type Props = NativeStackScreenProps<RootStackParamList, 'FindPassword'>;
 
@@ -23,6 +33,34 @@ export default function FindPasswordScreen({ navigation }: Props) {
     const [password, setPassword] = useState('');
     const [passwordConfirm, setPasswordConfirm] = useState('');
 
+    // 60초 안에 다시 전송을 누르면 띄우는 안내 팝업
+    const [cooldownNoticeVisible, setCooldownNoticeVisible] = useState(false);
+
+    // 인증번호 재전송 대기(60초)
+    const { remaining: sendCooldown, start: startSendCooldown } = useCountdown();
+
+    // 인증 진행 상태
+    const [codeSent, setCodeSent] = useState(false);
+    const [isSending, setIsSending] = useState(false);
+    const [isVerifying, setIsVerifying] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [verified, setVerified] = useState(false);
+    const [resetToken, setResetToken] = useState<string | null>(null);
+
+    // 인증 영역 / 제출 영역 안내 문구 (웹에서는 Alert가 보이지 않아 인라인으로 표시)
+    const [authMessage, setAuthMessage] = useState<{ text: string; error: boolean } | null>(null);
+    const [submitError, setSubmitError] = useState<string | null>(null);
+
+    // 이메일을 바꾸면 기존 인증은 무효
+    const handleEmailChange = (text: string) => {
+        setEmail(text);
+        setCodeSent(false);
+        setVerified(false);
+        setResetToken(null);
+        setAuthCode('');
+        setAuthMessage(null);
+    };
+
     const isPasswordValid = PASSWORD_REGEX.test(password);
 
     const isPasswordConfirmed =
@@ -35,22 +73,128 @@ export default function FindPasswordScreen({ navigation }: Props) {
 
     const canSubmit =
         email.trim() !== '' &&
-        authCode.trim() !== '' &&
+        verified &&
+        resetToken !== null &&
         isPasswordValid &&
-        isPasswordConfirmed;
+        isPasswordConfirmed &&
+        !isSubmitting;
 
-    const handleSendAuthCode = () => {
-        // TODO: 이메일 인증번호 전송 API 연동.
+    const handleSendAuthCode = async () => {
+        const trimmedEmail = email.trim();
+
+        if (!trimmedEmail) {
+            setAuthMessage({ text: '이메일을 입력해 주세요.', error: true });
+            return;
+        }
+        if (isSending || verified) return;
+
+        // 60초가 지나기 전에는 전송하지 않고 안내 팝업만 표시
+        if (sendCooldown > 0) {
+            setCooldownNoticeVisible(true);
+            return;
+        }
+
+        setIsSending(true);
+        setAuthMessage(null);
+
+        try {
+            await requestPasswordResetCode(trimmedEmail);
+
+            setCodeSent(true);
+            setVerified(false);
+            setResetToken(null);
+            setAuthCode('');
+            startSendCooldown(SEND_COOLDOWN_SECONDS);
+            setAuthMessage({
+                text: '인증번호를 보냈어요. 메일이 오지 않으면 60초 뒤에 다시 요청해 주세요.',
+                error: false,
+            });
+        } catch (error) {
+            const message =
+                error instanceof PasswordResetError && error.status === 429
+                    ? error.message || '인증번호 재전송은 60초 후에 가능해요.'
+                    : error instanceof Error
+                        ? error.message
+                        : '인증번호 전송에 실패했어요.';
+
+            setAuthMessage({ text: message, error: true });
+        } finally {
+            setIsSending(false);
+        }
     };
 
-    const handleVerifyAuthCode = () => {
-        // TODO: 인증번호 확인 API 연동.
+    const handleVerifyAuthCode = async () => {
+        const trimmedCode = authCode.trim();
+
+        if (!codeSent) {
+            setAuthMessage({ text: '먼저 인증번호를 전송해 주세요.', error: true });
+            return;
+        }
+        if (!/^\d{6}$/.test(trimmedCode)) {
+            setAuthMessage({ text: '인증번호 6자리를 입력해 주세요.', error: true });
+            return;
+        }
+        if (isVerifying) return;
+
+        setIsVerifying(true);
+        setAuthMessage(null);
+
+        try {
+            const token = await verifyPasswordResetCode(email.trim(), trimmedCode);
+
+            setResetToken(token);
+            setVerified(true);
+            setAuthMessage({ text: '인증이 완료되었어요.', error: false });
+        } catch (error) {
+            setVerified(false);
+            setResetToken(null);
+
+            const message =
+                error instanceof PasswordResetError && error.status === 429
+                    ? '인증번호 입력 횟수를 초과했어요. 인증번호를 다시 요청해 주세요.'
+                    : error instanceof PasswordResetError && error.status === 400
+                        ? error.message || '인증번호가 올바르지 않거나 만료되었어요.'
+                        : error instanceof Error
+                            ? error.message
+                            : '인증번호 확인에 실패했어요.';
+
+            setAuthMessage({ text: message, error: true });
+        } finally {
+            setIsVerifying(false);
+        }
     };
 
-    const handleResetPassword = () => {
-        // TODO: 비밀번호 재설정 API 연동.
-        if (!canSubmit) return;
-        navigation.replace('Login');
+    const handleResetPassword = async () => {
+        if (!canSubmit || !resetToken) return;
+
+        setIsSubmitting(true);
+        setSubmitError(null);
+
+        try {
+            await resetPassword(email.trim(), resetToken, password);
+
+            Alert.alert('비밀번호 재설정 완료', '새 비밀번호로 로그인해 주세요.');
+            navigation.replace('Login');
+        } catch (error) {
+            // 인증 증명은 1회용이라 실패하면 이메일 인증부터 다시 진행
+            if (error instanceof PasswordResetError && error.status === 400) {
+                setVerified(false);
+                setResetToken(null);
+                setCodeSent(false);
+                setAuthCode('');
+                setSubmitError(
+                    `${error.message} 이메일 인증을 다시 진행해 주세요.`,
+                );
+            } else {
+                setSubmitError(
+                    error instanceof Error
+                        ? error.message
+                        : '비밀번호를 재설정하지 못했어요. 다시 시도해 주세요.',
+                );
+            }
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -99,8 +243,9 @@ export default function FindPasswordScreen({ navigation }: Props) {
                     <View style={styles.rowField}>
                         <FormInput
                             value={email}
-                            onChangeText={setEmail}
+                            onChangeText={handleEmailChange}
                             placeholder="이메일 주소"
+                            editable={!codeSent && !isSending}
                             variant="filled"
                             placeholderColor={COLORS.gray400}
                             keyboardType="email-address"
@@ -109,12 +254,14 @@ export default function FindPasswordScreen({ navigation }: Props) {
                     </View>
 
                     <AppButton
-                        label="인증번호 전송"
+                        label={isSending ? '전송 중...' : '인증번호 전송'}
                         variant="primary"
                         textVariant="signupButtonText"
                         textColor={COLORS.white}
                         onPress={handleSendAuthCode}
                         style={styles.sendCodeBtn}
+                        disabled={isSending}
+                        locked={verified}
                     />
                 </View>
 
@@ -137,6 +284,7 @@ export default function FindPasswordScreen({ navigation }: Props) {
                                 )
                             }
                             placeholder="6자리"
+                            editable={!verified}
                             variant="filled"
                             placeholderColor={COLORS.gray400}
                             keyboardType="number-pad"
@@ -150,8 +298,20 @@ export default function FindPasswordScreen({ navigation }: Props) {
                         textColor={COLORS.white}
                         onPress={handleVerifyAuthCode}
                         style={styles.verifyBtn}
+                        disabled={isVerifying}
+                        locked={verified}
                     />
                 </View>
+
+                {authMessage && (
+                    <AppText
+                        variant="statCaption"
+                        color={authMessage.error ? COLORS.error : COLORS.gray600}
+                        style={styles.hintText}
+                    >
+                        {authMessage.text}
+                    </AppText>
+                )}
 
                 {/* 비밀번호 재설정 */}
                 <AppText
@@ -240,6 +400,16 @@ export default function FindPasswordScreen({ navigation }: Props) {
                         비밀번호가 일치하지 않습니다.
                     </AppText>
                 )}
+
+                {submitError && (
+                    <AppText
+                        variant="statCaption"
+                        color={COLORS.error}
+                        style={styles.hintText}
+                    >
+                        {submitError}
+                    </AppText>
+                )}
             </ScrollView>
 
             <View style={styles.bottomBar}>
@@ -255,6 +425,12 @@ export default function FindPasswordScreen({ navigation }: Props) {
                     ]}
                 />
             </View>
+
+            <NoticeModal
+                visible={cooldownNoticeVisible}
+                message="인증번호 재전송은 60초 이후에 할 수 있어요."
+                onClose={() => setCooldownNoticeVisible(false)}
+            />
         </SafeAreaView>
     );
 }

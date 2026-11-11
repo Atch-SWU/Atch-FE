@@ -147,3 +147,4 @@ vite.config.ts.timestamp-*
 .expo/
 
 .env
+.eas.json
