@@ -16,10 +16,12 @@ export default function HomeTaskCard({ title, parent, estimateText, onPressPlay 
   return (
     <View style={styles.card}>
       <View style={styles.texts}>
-        <View style={styles.chip}>
-          <AppText variant="todoChipText" color={COLORS.primary}>{estimateText}</AppText>
-        </View>
-        <AppText variant="homeCardTitle" color={COLORS.textMain} numberOfLines={1} style={styles.title}>{title}</AppText>
+        {estimateText ? (
+          <View style={styles.chip}>
+            <AppText variant="todoChipText" color={COLORS.primary}>{estimateText}</AppText>
+          </View>
+        ) : null}
+        <AppText variant="homeCardTitle" color={COLORS.textMain} numberOfLines={1} style={estimateText ? styles.title : styles.titleNoChip}>{title}</AppText>
         {parent ? <AppText variant="homeCardParent" color={COLORS.textWeak} style={styles.parent}>{parent}</AppText> : null}
       </View>
       <Pressable style={styles.play} onPress={onPressPlay} hitSlop={6}>
@@ -38,6 +40,7 @@ const styles = StyleSheet.create({
   texts: { flex: 1, marginRight: 12, alignItems: 'flex-start' },
   chip: { marginLeft: SPACING.chipInset, height: 25, paddingHorizontal: 8, borderRadius: 10, backgroundColor: COLORS.primaryTint, alignItems: 'center', justifyContent: 'center' },
   title: { marginTop: 8, marginLeft: SPACING.glyphInset },
+  titleNoChip: { marginLeft: SPACING.glyphInset },
   parent: { marginTop: 6 },
   play: { width: 45, height: 45, borderRadius: 22.5, backgroundColor: COLORS.fillMuted, alignItems: 'center', justifyContent: 'center' },
 });

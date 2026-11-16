@@ -38,16 +38,24 @@ interface Prediction {
   baseMinutes: number;
   token: string;
   at: number;
+  /** batch = 세부 분량 묶음 예측, single = 단일 작업 예측 (저장 시 같은 종류로만 선택 가능) */
+  kind: 'batch' | 'single';
   /** 상세 확인 팝업에 보여줄 작업별 AI 제안시간 */
   items: Subtask[];
 }
 
+/** 서버가 한 번에 저장할 수 있는 세부 작업 최대 개수 */
+const MAX_STEPS = 10;
+
 const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({ title, right, children }: { title: string; right?: React.ReactNode; children: React.ReactNode }) {
   return (
     <View style={styles.section}>
-      <AppText variant="formSection" color={COLORS.textBody}>{title}</AppText>
+      <View style={styles.sectionHeader}>
+        <AppText variant="formSection" color={COLORS.textBody}>{title}</AppText>
+        {right}
+      </View>
       <View style={styles.sectionBody}>{children}</View>
     </View>
   );
@@ -63,6 +71,7 @@ export default function TaskCreateScreen({ navigation }: Props) {
 
   const [aiSplit, setAiSplit] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
+  const [addingStep, setAddingStep] = useState(false);
   const [aiPrompt, setAiPrompt] = useState('');
   const [subtasks, setSubtasks] = useState<Subtask[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -83,31 +92,50 @@ export default function TaskCreateScreen({ navigation }: Props) {
   const draftId = useRef<string | null>(null);
   // 세부 분량 나누기 결과의 원본 초안 ID / 원본 태스크명
   const decomp = useRef<{ id: string; sourceName: string } | null>(null);
+  // 마지막으로 세부 분량을 나눌 때의 입력값. 껐다 켰을 때 같은 입력이면 저장해 둔 결과를 다시 보여준다.
+  const decompKey = useRef<string | null>(null);
 
   const durationMin = (parseInt(hours || '0', 10) || 0) * 60 + (parseInt(minutes || '0', 10) || 0);
-  const allTimed = subtasks.length > 0 && subtasks.every((s) => s.minutes != null);
+  const timedSubtasks = subtasks.filter((s) => s.minutes != null);
+  const anyTimed = timedSubtasks.length > 0;
+  const allTimed = subtasks.length > 0 && timedSubtasks.length === subtasks.length;
   const subtaskTotal = subtasks.reduce((sum, s) => sum + (s.minutes ?? 0), 0);
   const baseMin = allTimed ? subtaskTotal : durationMin;
   // 필수: 태스크 이름 / 기간 설정(시작·종료, 종료가 시작보다 빠르면 안 됨) / 예상 소요 시간
-  const periodFilled =
-    startDate != null && endDate != null && (allDay || (startTime != null && endTime != null));
+  // 시간은 선택: 날짜만 입력하면 시작은 00:00, 종료는 23:59로 본다 (같은 날이면 하루 종일)
+  const periodFilled = startDate != null && endDate != null;
+  const sameDay = periodFilled && startOfDay(endDate!) === startOfDay(startDate!);
+  const noTimes = allDay || (startTime == null && endTime == null);
+  const secOf = (d: Date) => d.getHours() * 3600 + d.getMinutes() * 60;
+  const startSec = allDay || !startTime ? 0 : secOf(startTime);
+  const endSec = allDay || !endTime ? 24 * 3600 - 1 : secOf(endTime);
   const periodValid =
-    periodFilled &&
-    (startOfDay(endDate!) > startOfDay(startDate!) ||
-      (startOfDay(endDate!) === startOfDay(startDate!) &&
-        (allDay || endTime!.getHours() * 60 + endTime!.getMinutes() >= startTime!.getHours() * 60 + startTime!.getMinutes())));
+    periodFilled && (startOfDay(endDate!) > startOfDay(startDate!) || (sameDay && (noTimes || endSec > startSec)));
   const hasSubtasks = aiSplit && subtasks.length > 0;
-  // 세부 분량이 있으면 각 분량의 시간이 모두 입력되어야 하고, 없으면 직접 입력한 소요 시간이 필요
-  const canCreate = name.trim().length > 0 && periodValid && (hasSubtasks ? allTimed : durationMin > 0);
+  // 예상 작업 소요 시간은 항상 필수. 세부 분량별 시간은 선택(입력한 분량만 예상 시간이 저장된다)
+  // 단, 세부 분량의 시간으로 AI 예측을 이미 받았다면 직접 입력한 총 소요 시간이 비어 있어도 저장할 수 있다
+  const estimated = durationMin > 0 || (hasSubtasks && prediction?.kind === 'batch');
+  const canCreate = name.trim().length > 0 && periodValid && estimated;
 
   /** 서버에 보낼 일정 (서울 기준). 기간이 유효할 때만 호출 */
-  const schedule = (): Schedule => ({
-    startDate: toDateString(startDate!),
-    startTime: allDay || !startTime ? null : toTimeString(startTime),
-    dueDate: toDateString(endDate!),
-    dueTime: allDay || !endTime ? null : toTimeString(endTime),
-    allDay,
-  });
+  const schedule = (): Schedule => {
+    // 서버의 하루 종일은 시작·마감이 같은 날일 때만 가능하다. 여러 날을 시간 없이 고르면 00:00 ~ 23:59:59 로 보낸다.
+    const asAllDay = noTimes && sameDay;
+    return {
+      startDate: toDateString(startDate!),
+      startTime: asAllDay ? null : allDay || !startTime ? '00:00:00' : toTimeString(startTime),
+      dueDate: toDateString(endDate!),
+      dueTime: asAllDay ? null : allDay || !endTime ? '23:59:59' : toTimeString(endTime),
+      allDay: asAllDay,
+    };
+  };
+  const resetPeriod = () => {
+    setAllDay(false);
+    setStartDate(null);
+    setStartTime(null);
+    setEndDate(null);
+    setEndTime(null);
+  };
   const ensureDraft = async () => {
     if (!draftId.current) draftId.current = (await createDraft()).draftId;
     return draftId.current;
@@ -142,7 +170,7 @@ export default function TaskCreateScreen({ navigation }: Props) {
     setSubmitting(true);
     try {
       let choice: { draftId: string; selectedEstimateType: 'USER' | 'AI'; predictionToken?: string } | undefined;
-      if (prediction) {
+      if (prediction && prediction.kind === (hasSubtasks ? 'batch' : 'single')) {
         choice = {
           draftId: hasSubtasks ? decomp.current!.id : draftId.current!,
           selectedEstimateType: aiApplied ? 'AI' : 'USER',
@@ -156,7 +184,11 @@ export default function TaskCreateScreen({ navigation }: Props) {
           sourceTaskName: decomp.current.sourceName,
           memo: memo.trim() || null,
           ...schedule(),
-          tasks: subtasks.map((st) => ({ draftId: st.id, title: st.label, userEstimatedDurationMinutes: st.minutes ?? 0 })),
+          tasks: subtasks.map((st) => ({
+            draftId: st.id,
+            title: st.label,
+            ...(st.minutes != null ? { userEstimatedDurationMinutes: st.minutes } : {}),
+          })),
           estimateChoice: choice,
         });
       } else {
@@ -182,14 +214,23 @@ export default function TaskCreateScreen({ navigation }: Props) {
   const onToggleAi = async (v: boolean) => {
     setPrediction(null);
     setAiApplied(false);
-    if (!v) { setAiSplit(false); setSubtasks([]); return; }
+    // 끌 때는 나눠 둔 분량을 지우지 않고 숨기기만 한다 (서버는 한 작업당 한 번만 나눠 주므로)
+    if (!v) { setAiSplit(false); return; }
     if (!name.trim() || !periodValid) {
       Alert.alert('AI 세부 분량 나누기', '태스크 이름과 기간을 먼저 입력해 주세요.');
+      return;
+    }
+    const key = JSON.stringify([name.trim(), aiPrompt.trim(), memo.trim(), schedule()]);
+    const cached = decomp.current != null && subtasks.length > 0;
+    if (cached && decompKey.current === key) {
+      setAiSplit(true);
       return;
     }
     setAiSplit(true);
     setAiLoading(true);
     try {
+      // 입력이 바뀌었으면 새 초안으로 다시 나눈다
+      if (cached) { draftId.current = null; decomp.current = null; }
       const draft = await ensureDraft();
       const res = await decomposeTask({
         draftId: draft,
@@ -199,10 +240,13 @@ export default function TaskCreateScreen({ navigation }: Props) {
         ...schedule(),
       });
       decomp.current = { id: res.decompositionDraftId, sourceName: res.sourceTaskName ?? name.trim() };
+      decompKey.current = key;
       setSubtasks(res.steps.map((st) => ({ id: st.draftId, label: st.title, minutes: null })));
     } catch (e) {
       setAiSplit(false);
       setSubtasks([]);
+      decomp.current = null;
+      decompKey.current = null;
       Alert.alert('세부 분량을 나누지 못했어요', getErrorMessage(e));
     } finally {
       setAiLoading(false);
@@ -211,18 +255,20 @@ export default function TaskCreateScreen({ navigation }: Props) {
 
   /** AI 시간 예측: 세부 분량이 있으면 묶음 예측, 없으면 단건 예측 */
   const requestPrediction = async (): Promise<Prediction> => {
-    if (hasSubtasks && allTimed && decomp.current) {
+    if (hasSubtasks && anyTimed && decomp.current) {
+      // 예상 시간을 입력한 세부 작업만 보정을 요청한다 (저장 요청의 시간 입력 항목과 일치해야 함)
       const res = await predictTimeBatch({
         decompositionDraftId: decomp.current.id,
         sourceTaskName: decomp.current.sourceName,
         memo: memo.trim() || null,
-        tasks: subtasks.map((st) => ({ draftId: st.id, title: st.label, userEstimatedDurationMinutes: st.minutes ?? 0 })),
+        tasks: timedSubtasks.map((st) => ({ draftId: st.id, title: st.label, userEstimatedDurationMinutes: st.minutes ?? 0 })),
       });
       return {
         minutes: res.totalAiEstimatedDurationMinutes,
         baseMinutes: res.totalUserEstimatedDurationMinutes,
         token: res.predictionToken,
         at: Date.now(),
+        kind: 'batch',
         items: res.predictions.map((p) => ({
           id: p.draftId,
           label: subtasks.find((st) => st.id === p.draftId)?.label ?? '',
@@ -242,6 +288,7 @@ export default function TaskCreateScreen({ navigation }: Props) {
       baseMinutes: durationMin,
       token: res.predictionToken,
       at: Date.now(),
+      kind: 'single',
       items: [{ id: 'single', label: name.trim(), minutes: res.prediction.aiEstimatedDurationMinutes }],
     };
   };
@@ -262,6 +309,11 @@ export default function TaskCreateScreen({ navigation }: Props) {
 
   // 세부 분량을 고치면 이전 AI 예측은 더 이상 맞지 않으므로 버린다
   const resetPrediction = () => { setPrediction(null); setAiApplied(false); };
+  // 묶음 제안 토큰은 예측 때 보낸 메모와 같은 메모로만 저장할 수 있어, 메모가 바뀌면 제안을 다시 받게 한다
+  const onChangeMemo = (v: string) => {
+    setMemo(v);
+    if (prediction?.kind === 'batch') resetPrediction();
+  };
 
   const renameStep = (label: string) => {
     setSubtasks((prev) => prev.map((s) => (s.id === renamingId ? { ...s, label } : s)));
@@ -274,6 +326,22 @@ export default function TaskCreateScreen({ navigation }: Props) {
     resetPrediction();
     // 다 지우면 AI 세부 분량 나누기를 끈 상태로 돌아간다 (저장에는 최소 1개가 필요)
     if (rest.length === 0) setAiSplit(false);
+  };
+
+  /** 세부 분량 직접 추가: 서버에서 자식 초안을 받아 목록 끝에 넣고 이름 입력창을 연다 */
+  const addStep = async () => {
+    if (!decomp.current || addingStep || subtasks.length >= MAX_STEPS) return;
+    setAddingStep(true);
+    try {
+      const d = await createDraft(decomp.current.id);
+      setSubtasks((prev) => [...prev, { id: d.draftId, label: '새 세부 분량', minutes: null }]);
+      setRenamingId(d.draftId);
+      resetPrediction();
+    } catch (e) {
+      Alert.alert('세부 분량을 추가하지 못했어요', getErrorMessage(e));
+    } finally {
+      setAddingStep(false);
+    }
   };
 
   const editing = subtasks.find((s) => s.id === editingId);
@@ -311,7 +379,14 @@ export default function TaskCreateScreen({ navigation }: Props) {
           <FormField value={name} onChangeText={setName} placeholder="태스크 이름을 입력해 주세요." />
         </Section>
 
-        <Section title="기간 설정">
+        <Section
+          title="기간 설정"
+          right={
+            <Pressable style={styles.resetBtn} onPress={resetPeriod} hitSlop={8}>
+              <AppText variant="formResetText" color={COLORS.textBody}>초기화</AppText>
+            </Pressable>
+          }
+        >
           <PeriodCard
             allDay={allDay}
             onToggleAllDay={onToggleAllDay}
@@ -334,15 +409,25 @@ export default function TaskCreateScreen({ navigation }: Props) {
             </View>
             <TextInput
               value={aiPrompt}
-              onChangeText={setAiPrompt}
+              onChangeText={(v) => setAiPrompt(v.replace(/[\r\n]+/g, ' '))}
               placeholder="작업 내용을 입력해주세요"
               placeholderTextColor={COLORS.textPlaceholder}
+              multiline
+              submitBehavior="blurAndSubmit"
+              maxLength={200}
+              textAlignVertical="top"
               style={styles.aiInput}
             />
           </View>
           {aiSplit && subtasks.length > 0 && (
             <View style={styles.stack}>
-              <SubtaskList items={subtasks} onPressChip={setEditingId} onPressLabel={setRenamingId} />
+              <SubtaskList
+                items={subtasks}
+                onPressChip={setEditingId}
+                onPressLabel={setRenamingId}
+                onAdd={subtasks.length < MAX_STEPS ? addStep : undefined}
+                adding={addingStep}
+              />
               {allTimed && <TotalSummaryCard totalMinutes={subtaskTotal} stepCount={subtasks.length} />}
             </View>
           )}
@@ -352,12 +437,12 @@ export default function TaskCreateScreen({ navigation }: Props) {
           <View style={styles.stack4}>
             <DurationInput hours={hours} minutes={minutes} onChangeHours={setHours} onChangeMinutes={setMinutes} />
             {prediction == null ? (
-              <AiPredictPrompt enabled={(hasSubtasks ? allTimed : durationMin > 0) && !predicting} onPredict={onPredict} />
+              <AiPredictPrompt enabled={(hasSubtasks ? anyTimed : durationMin > 0) && !predicting} onPredict={onPredict} />
             ) : (
               <AiPredictResult
                 predictedMinutes={prediction.minutes}
                 baseMinutes={prediction.baseMinutes}
-                hasSubtasks={allTimed}
+                hasSubtasks={hasSubtasks}
                 applied={aiApplied}
                 onDetail={() => setDetailOpen(true)}
                 onApply={applyPrediction}
@@ -367,7 +452,7 @@ export default function TaskCreateScreen({ navigation }: Props) {
         </Section>
 
         <Section title="메모">
-          <FormField value={memo} onChangeText={setMemo} placeholder="메모를 입력해 주세요." multiline height={110} />
+          <FormField value={memo} onChangeText={onChangeMemo} placeholder="메모를 입력해 주세요." multiline height={110} />
         </Section>
       </ScrollView>
 
@@ -415,6 +500,8 @@ const styles = StyleSheet.create({
   content: { paddingHorizontal: SPACING.screenH, paddingBottom: 24 },
   section: { marginBottom: 21 },
   sectionBody: { marginTop: 4 },
+  sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  resetBtn: { height: 24, paddingHorizontal: 9, borderRadius: 12, backgroundColor: COLORS.surface, borderWidth: 1, borderColor: COLORS.border, alignItems: 'center', justifyContent: 'center' },
   // 피그마 344:3088: 카드 360x123, 패딩 21/19, 토글 행 29h, 간격 12, 입력창 44h r9 (배경 gray100)
   aiCard: {
     borderWidth: 1, borderColor: COLORS.border, borderRadius: 12, backgroundColor: COLORS.surface,
@@ -422,8 +509,8 @@ const styles = StyleSheet.create({
   },
   aiRow: { height: 29, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   aiInput: {
-    ...TYPOGRAPHY.formAiInput, height: 44, borderRadius: 9, backgroundColor: COLORS.fillSoft,
-    paddingHorizontal: 14, paddingVertical: 0, color: COLORS.textStrong,
+    ...TYPOGRAPHY.formAiInput, minHeight: 44, borderRadius: 9, backgroundColor: COLORS.fillSoft,
+    paddingHorizontal: 14, paddingTop: 14, paddingBottom: 14, color: COLORS.textStrong,
   },
   stack: { marginTop: 6, gap: 6 },
   stack4: { gap: 4 },

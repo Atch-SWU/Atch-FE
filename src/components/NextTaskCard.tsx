@@ -15,9 +15,11 @@ export default function NextTaskCard({ title, estimateText, onPressPlay }: NextT
   return (
     <View style={styles.card}>
       <View style={styles.texts}>
-        <View style={styles.chip}>
-          <AppText variant="todoChipText" color={COLORS.primary}>{estimateText}</AppText>
-        </View>
+        {estimateText ? (
+          <View style={styles.chip}>
+            <AppText variant="todoChipText" color={COLORS.primary}>{estimateText}</AppText>
+          </View>
+        ) : null}
         <AppText variant="nextCardTitle" color={COLORS.textMain} numberOfLines={1} style={styles.title}>{title}</AppText>
       </View>
       <Pressable style={styles.play} onPress={onPressPlay}>

@@ -29,8 +29,10 @@ export interface TimerState {
   currentSessionElapsedSeconds: number;
   /** 종료 구간 합계 + 실행 중 경과 */
   totalDurationSeconds: number;
-  remainingEstimatedSeconds: number;
-  estimateOverrunSeconds: number;
+  /** 최종 적용 예상시간(분). 예상시간이 없는 작업이면 null (남은 시간 필드는 서버에서 제거됨) */
+  estimatedDurationMinutes: number | null;
+  /** 예상시간 초과 집중시간(초). 예상시간이 없으면 null */
+  estimateOverrunSeconds: number | null;
   pendingSwitch: SwitchWait | null;
   serverTime: string;
 }
@@ -56,7 +58,7 @@ export interface NextTodo {
   title: string;
   currentScheduleDate: string;
   dueAt: string;
-  estimatedDurationMinutes: number;
+  estimatedDurationMinutes: number | null;
 }
 
 export interface CompletionSummary {
@@ -65,7 +67,8 @@ export interface CompletionSummary {
   resumeCount: number;
   switchCount: number;
   deadlineOverrunSeconds: number;
-  estimateOverrunSeconds: number;
+  /** 예상시간이 없는 작업은 null */
+  estimateOverrunSeconds: number | null;
   nextTodos: NextTodo[];
 }
 

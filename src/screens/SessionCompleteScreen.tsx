@@ -15,6 +15,8 @@ type Props = NativeStackScreenProps<RootStackParamList, 'SessionComplete'>;
 
 /** 집중시간 = 실제 − 예상 (분 단위, 반올림) */
 function focusDiff(elapsedSec: number, estimateSec: number) {
+  // 예상 시간이 없는 작업은 비교할 기준이 없어 집중한 시간만 보여준다
+  if (estimateSec <= 0) return { value: `${Math.round(elapsedSec / 60)}분`, hint: '집중한 시간' };
   const diffMin = Math.round((elapsedSec - estimateSec) / 60);
   if (diffMin > 0) return { value: `+${diffMin}분`, hint: '예상보다 더 집중' };
   if (diffMin < 0) return { value: `${diffMin}분`, hint: '예상보다 빠르게 완료' };
