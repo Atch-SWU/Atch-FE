@@ -28,9 +28,11 @@ export default function TaskListItem({ title, parent, estimateText, onPress, onD
             {title}
           </AppText>
         </View>
-        <View style={styles.chip}>
-          <AppText variant="todoChipText" color={COLORS.textSub}>{estimateText}</AppText>
-        </View>
+        {estimateText ? (
+          <View style={styles.chip}>
+            <AppText variant="todoChipText" color={COLORS.textSub}>{estimateText}</AppText>
+          </View>
+        ) : null}
       </Pressable>
     </SwipeDeleteRow>
   );

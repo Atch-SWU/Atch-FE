@@ -24,13 +24,16 @@ const EXTEND_COUNTDOWN = 10;
 const MSG_READY = '멧치는 준비됐어요! 시작해볼까요?';
 const MSG_FOCUS = '멧치랑 같이 집중해봐요! 멧멧!';
 
+/** "예상 1시간 20분" → 4800. 예상 시간이 없으면(0분 등) 0 */
 function parseEstimateSeconds(text: string): number {
+  const hour = text.match(/(\d+)\s*시간/);
   const min = text.match(/(\d+)\s*분/);
   const sec = text.match(/(\d+)\s*초/);
   let total = 0;
+  if (hour) total += parseInt(hour[1], 10) * 3600;
   if (min) total += parseInt(min[1], 10) * 60;
   if (sec) total += parseInt(sec[1], 10);
-  return total > 0 ? total : 25 * 60;
+  return total;
 }
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Timer'>;
@@ -39,6 +42,8 @@ type Status = 'idle' | 'running' | 'overtime';
 export default function TimerScreen({ navigation, route }: Props) {
   const { task, nextTask = null } = route.params;
   const totalSeconds = useMemo(() => parseEstimateSeconds(task.estimateText), [task.estimateText]);
+  // 예상 시간 없이 만든 작업은 카운트다운·진행바 없이 경과 시간만 올라간다
+  const hasEstimate = totalSeconds > 0;
   const today = useMemo(() => new Date(), []);
 
   const [status, setStatus] = useState<Status>('idle');
@@ -65,9 +70,11 @@ export default function TimerScreen({ navigation, route }: Props) {
     latestRef.current = t.latestSessionId;
     serverPausedRef.current = mode === 'pause';
     if (t.sessionStartedAt) setStartedAt((prev) => prev ?? new Date(t.sessionStartedAt as string));
-    const overrun = t.estimateOverrunSeconds > 0;
-    setRemaining(t.remainingEstimatedSeconds);
-    setOvertimeSec(t.estimateOverrunSeconds);
+    // 남은/초과 시간은 서버가 준 누적 집중 시간(종료 구간 + 실행 중 경과)과 예상 시간으로 직접 계산한다
+    const spent = t.totalDurationSeconds;
+    const overrun = hasEstimate && spent > totalSeconds;
+    setRemaining(hasEstimate ? Math.max(0, totalSeconds - spent) : 0);
+    setOvertimeSec(hasEstimate ? Math.max(0, spent - totalSeconds) : spent);
     setHasExtended(overrun);
     if (mode === 'run') {
       setPausedFrom(null);
@@ -95,14 +102,14 @@ export default function TimerScreen({ navigation, route }: Props) {
 
   // 남은 시간 카운트다운
   useEffect(() => {
-    if (status !== 'running') return;
+    if (status !== 'running' || !hasEstimate) return;
     const id = setInterval(() => setRemaining((s) => Math.max(0, s - 1)), 1000);
     return () => clearInterval(id);
   }, [status]);
 
   // 0초 도달 → 최초 연장 팝업
   useEffect(() => {
-    if (status === 'running' && remaining === 0) {
+    if (hasEstimate && status === 'running' && remaining === 0) {
       setExtendMode('initial');
       setExtendVisible(true);
       setExtendCountdown(EXTEND_COUNTDOWN);
@@ -118,15 +125,16 @@ export default function TimerScreen({ navigation, route }: Props) {
 
   // 초과 카운트업
   useEffect(() => {
-    if (status !== 'overtime') return;
+    if (status !== 'overtime' && !(status === 'running' && !hasEstimate)) return;
     const id = setInterval(() => setOvertimeSec((s) => s + 1), 1000);
     return () => clearInterval(id);
   }, [status]);
 
-  const elapsed = totalSeconds - remaining + overtimeSec;
-  const progress = hasExtended ? 1 : totalSeconds > 0 ? (totalSeconds - remaining) / totalSeconds : 0;
+  const elapsed = hasEstimate ? totalSeconds - remaining + overtimeSec : overtimeSec;
+  const progress = hasExtended ? 1 : hasEstimate ? (totalSeconds - remaining) / totalSeconds : 0;
   const estimateLabel = task.estimateText.replace('예상 ', '');
-  const timeText = hasExtended ? `+${formatClock(overtimeSec)}` : formatClock(remaining);
+  // 예상 시간 유무와 상관없이 00:00부터 경과 시간이 올라간다 (예상 시간을 넘기면 +초과 시간)
+  const timeText = !hasEstimate ? formatClock(overtimeSec) : hasExtended ? `+${formatClock(overtimeSec)}` : formatClock(totalSeconds - remaining);
   const timeColor = hasExtended ? COLORS.primary : COLORS.textMain;
   const extendTitle =
     extendMode === 'resume'
@@ -161,9 +169,9 @@ export default function TimerScreen({ navigation, route }: Props) {
         params = {
           ...params,
           elapsedSec: sum.todo.actualDurationSeconds,
-          estimateSec: sum.todo.estimatedDurationMinutes * 60,
+          estimateSec: (sum.todo.estimatedDurationMinutes ?? 0) * 60,
           pauseCount: sum.pauseCount,
-          nextTask: n ? { id: n.id, title: n.title, estimateText: `예상 ${formatMinutes(n.estimatedDurationMinutes)}` } : null,
+          nextTask: n ? { id: n.id, title: n.title, estimateText: n.estimatedDurationMinutes ? `예상 ${formatMinutes(n.estimatedDurationMinutes)}` : '' } : null,
         };
       } catch {
         // 요약 조회에 실패해도 완료는 끝났으므로 화면에 있던 값으로 이어간다
@@ -253,7 +261,7 @@ export default function TimerScreen({ navigation, route }: Props) {
       </View>
 
       <View style={styles.bottom}>
-        <TimerProgressCard estimateLabel={estimateLabel} progress={progress} onPressInfo={() => setInfoVisible(true)} />
+        <TimerProgressCard estimateLabel={estimateLabel} progress={progress} showProgress={hasEstimate} onPressInfo={() => setInfoVisible(true)} />
         {running ? (
           <View style={styles.actionRow}>
             <Pressable style={[styles.actionBtn, { backgroundColor: COLORS.fillMuted }]} onPress={onPausePress}>
@@ -285,7 +293,7 @@ export default function TimerScreen({ navigation, route }: Props) {
       <TaskInfoDialog
         visible={infoVisible}
         startText={formatKoreanTime(start)}
-        endText={formatKoreanTime(end)}
+        endText={hasEstimate ? formatKoreanTime(end) : '-'}
         memo={task.memo?.trim() ? task.memo : '-'}
         onClose={() => setInfoVisible(false)}
       />

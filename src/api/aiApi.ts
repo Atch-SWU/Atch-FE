@@ -53,7 +53,8 @@ export interface TimePredictionBatch {
 export interface DecomposedTaskInput {
   draftId: string;
   title: string;
-  userEstimatedDurationMinutes: number;
+  /** 시간을 입력하지 않은 세부 작업은 생략 */
+  userEstimatedDurationMinutes?: number;
 }
 
 export interface EstimateChoice {
@@ -80,7 +81,9 @@ interface DecomposedCreateResponse {
 const AI = '/api/v1/ai';
 
 /** 저장 전 새 작업의 AI 초안 발급 */
-export const createDraft = () => apiClient.post<AiDraft>(`${AI}/drafts`, {});
+/** parentDraftId 를 주면 분해 후 사용자가 직접 추가한 세부 작업의 초안을 발급 */
+export const createDraft = (parentDraftId?: string) =>
+  apiClient.post<AiDraft>(`${AI}/drafts`, parentDraftId ? { parentDraftId } : {});
 
 export const decomposeTask = (input: Schedule & {
   draftId: string;

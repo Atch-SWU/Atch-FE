@@ -15,10 +15,13 @@ interface SubtaskListProps {
   onPressChip: (id: string) => void;
   /** 이름을 눌러 수정/삭제 팝업 열기 */
   onPressLabel?: (id: string) => void;
+  /** 세부 분량 직접 추가 (없으면 버튼을 그리지 않음) */
+  onAdd?: () => void;
+  adding?: boolean;
 }
 
 /** AI 세부 분량 리스트 (피그마 6:4523): 흰 카드 r14, 행 25h / 간격 11, 우측 '시간 입력' 칩 */
-export default function SubtaskList({ items, onPressChip, onPressLabel }: SubtaskListProps) {
+export default function SubtaskList({ items, onPressChip, onPressLabel, onAdd, adding }: SubtaskListProps) {
   return (
     <View style={styles.card}>
       {items.map((it) => (
@@ -33,6 +36,11 @@ export default function SubtaskList({ items, onPressChip, onPressLabel }: Subtas
             </Pressable>
         </View>
       ))}
+      {onAdd ? (
+        <Pressable style={styles.addRow} disabled={adding} onPress={onAdd} hitSlop={6}>
+          <AppText variant="subtaskChipText" color={COLORS.textWeak}>{adding ? '추가하는 중...' : '+ 세부 분량 추가'}</AppText>
+        </Pressable>
+      ) : null}
     </View>
   );
 }
@@ -41,5 +49,6 @@ const styles = StyleSheet.create({
   card: { backgroundColor: COLORS.surface, borderRadius: 14, paddingVertical: 20, paddingHorizontal: 21, gap: 11 },
   row: { height: 25, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   label: { flex: 1, marginRight: 12 },
+  addRow: { height: 25, alignItems: 'center', justifyContent: 'center' },
   chip: { minWidth: 60, height: 25, paddingHorizontal: 10, borderRadius: 10, backgroundColor: COLORS.primaryTint, alignItems: 'center', justifyContent: 'center' },
 });

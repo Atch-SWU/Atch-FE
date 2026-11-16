@@ -15,7 +15,7 @@ import { COLORS, SPACING } from '../constants/token';
 import { RootStackParamList } from '../navigation/types';
 import { useTodosByDate } from '../hooks/useTodosByDate';
 import { useCurrentTimer } from '../hooks/useCurrentTimer';
-import { chipText, deleteTodo, estimateText, focusText, isStarted, reopenTodo, getErrorMessage, isDueToday, progressPercent, progressText, TodoResponse } from '../api/todoApi';
+import { chipText, deleteTodo, estimateLine, estimateText, focusText, isStarted, reopenTodo, getErrorMessage, isDueToday, progressText, TodoResponse } from '../api/todoApi';
 import { toDateString } from '../utils/date';
 
 const now = new Date();
@@ -103,9 +103,8 @@ export default function ToDoListScreen() {
                   badgeLabel={isDueToday(t, todayStr) ? '오늘 마감!' : t.status === 'IN_PROGRESS' ? '진행중' : '일시정지'}
                   parent={t.sourceTaskName ?? undefined}
                   title={t.title}
-                  estimateText={`예상 소요시간 ${estimateText(t).replace('예상 ', '')}`}
+                  estimateText={estimateLine(t)}
                   progressText={progressText(t, secondsOf(t))}
-                  percent={progressPercent(t, secondsOf(t))}
                   onPlay={() =>
                     navigation.navigate('Timer', {
                       task: { id: t.id, title: t.title, estimateText: estimateText(t), elapsedSec: t.actualDurationSeconds },

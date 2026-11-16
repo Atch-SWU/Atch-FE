@@ -18,7 +18,7 @@ import { formatKoreanDate, toDateString } from '../utils/date';
 import { formatMinutes } from '../utils/duration';
 import { useTodosByDate } from '../hooks/useTodosByDate';
 import { useCurrentTimer } from '../hooks/useCurrentTimer';
-import { chipText, estimateText, getErrorMessage, isStarted, progressPercent, progressText, TodoResponse } from '../api/todoApi';
+import { chipText, estimateLine, estimateText, getErrorMessage, isStarted, progressText, TodoResponse } from '../api/todoApi';
 import {
   cancelSwitch, confirmSwitch, getTimerSettings, pauseTimer, requestSwitch, TimerSettings,
 } from '../api/timerApi';
@@ -229,9 +229,8 @@ export default function HomeScreen() {
                   badgeLabel="진행중"
                   parent={inProgress.parent}
                   title={inProgress.title}
-                  estimateText={`예상 소요시간 ${formatMinutes(runningTodo.estimatedDurationMinutes)}`}
+                  estimateText={estimateLine(runningTodo)}
                   progressText={progressText(runningTodo, runningSeconds)}
-                  percent={progressPercent(runningTodo, runningSeconds)}
                   onPlay={() => startTimerFor(inProgress)}
                 />
               )}
@@ -243,9 +242,8 @@ export default function HomeScreen() {
                     badgeLabel="일시정지"
                     parent={h.parent}
                     title={h.title}
-                    estimateText={`예상 소요시간 ${formatMinutes(p.estimatedDurationMinutes)}`}
+                    estimateText={estimateLine(p)}
                     progressText={progressText(p)}
-                    percent={progressPercent(p)}
                     onPlay={() => onPlayOther(h)}
                   />
                 );

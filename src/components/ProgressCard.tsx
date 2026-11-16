@@ -10,17 +10,13 @@ interface ProgressCardProps {
   parent?: string;
   estimateText: string;
   progressText: string;
-  /** 0~100 */
-  percent: number;
   onPlay?: () => void;
 }
 
-/** 투두리스트 '진행중' 카드 (피그마 6:7883: 360x134, r16) */
+/** 투두리스트 '진행중' 카드 (피그마 6:7883, 디자이너 코멘트 반영: 진행바 제거) */
 export default function ProgressCard({
-  badgeLabel, title, parent, estimateText, progressText, percent, onPlay,
+  badgeLabel, title, parent, estimateText, progressText, onPlay,
 }: ProgressCardProps) {
-  const pct = Math.min(Math.max(percent, 0), 100);
-
   return (
     <View style={styles.card}>
       <View style={styles.top}>
@@ -42,17 +38,13 @@ export default function ProgressCard({
         <AppText variant="progressMeta" color={COLORS.textSub}>{estimateText}</AppText>
         <AppText variant="progressMetaBold" color={COLORS.textSub}>{progressText}</AppText>
       </View>
-
-      <View style={styles.track}>
-        <View style={[styles.fill, { width: `${pct}%` }]} />
-      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    height: 134,
+    height: 118,
     borderRadius: 16,
     backgroundColor: COLORS.fillMuted,
     borderWidth: 1,
@@ -91,12 +83,4 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  track: {
-    marginTop: 8,
-    height: 8,
-    borderRadius: 10,
-    overflow: 'hidden',
-    backgroundColor: COLORS.surface,
-  },
-  fill: { height: 8, borderRadius: 10, backgroundColor: COLORS.primaryBright },
 });

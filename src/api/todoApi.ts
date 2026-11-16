@@ -20,7 +20,8 @@ export interface TodoResponse {
   userEstimatedDurationMinutes: number;
   aiEstimatedDurationMinutes: number | null;
   /** 최종 적용되는 예상 시간(분) */
-  estimatedDurationMinutes: number;
+  /** 예상 시간을 입력하지 않은 작업은 null/0 */
+  estimatedDurationMinutes: number | null;
   /** 종료된 세션의 실제 소요 초 합계 */
   actualDurationSeconds: number;
   overdue: boolean;
@@ -97,8 +98,15 @@ export function getErrorMessage(error: unknown): string {
 
 // ===== 화면 표시용 변환 =====
 
-/** "예상 45분" / "예상 1시간 20분" */
-export const estimateText = (t: TodoResponse) => `예상 ${formatMinutes(t.estimatedDurationMinutes)}`;
+/** 예상 시간이 입력된 작업인지 */
+export const hasEstimate = (t: TodoResponse) => (t.estimatedDurationMinutes ?? 0) > 0;
+
+/** "예상 45분" / "예상 1시간 20분" — 예상 시간이 없으면 빈 문자열(칩을 그리지 않음) */
+export const estimateText = (t: TodoResponse) => (hasEstimate(t) ? `예상 ${formatMinutes(t.estimatedDurationMinutes!)}` : '');
+
+/** 진행중 카드 문구: "예상 소요시간 45분" — 예상 시간이 없으면 빈 문자열 */
+export const estimateLine = (t: TodoResponse) =>
+  hasEstimate(t) ? `예상 소요시간 ${formatMinutes(t.estimatedDurationMinutes!)}` : '';
 
 /** 이미 시작한 작업인지: 진행중·일시정지, 그리고 완료 취소로 대기 상태가 됐지만 진행 기록이 남은 작업 */
 export const isStarted = (t: TodoResponse) =>
@@ -106,8 +114,8 @@ export const isStarted = (t: TodoResponse) =>
 
 /** 목록 칩 문구: 이미 진행한 시간이 있으면(완료 취소 등) 남은 시간, 아니면 예상 시간 */
 export const chipText = (t: TodoResponse) => {
-  if (t.actualDurationSeconds <= 0) return estimateText(t);
-  const left = Math.max(0, Math.ceil((t.estimatedDurationMinutes * 60 - t.actualDurationSeconds) / 60));
+  if (!hasEstimate(t) || t.actualDurationSeconds <= 0) return estimateText(t);
+  const left = Math.max(0, Math.ceil((t.estimatedDurationMinutes! * 60 - t.actualDurationSeconds) / 60));
   return `남은 ${formatMinutes(left)}`;
 };
 
@@ -116,9 +124,7 @@ export const progressText = (t: TodoResponse, seconds: number = t.actualDuration
 
 /** 예상 시간 대비 진행률 0~100 */
 export const progressPercent = (t: TodoResponse, seconds: number = t.actualDurationSeconds) =>
-  t.estimatedDurationMinutes > 0
-    ? Math.min(100, Math.round((seconds / 60 / t.estimatedDurationMinutes) * 100))
-    : 0;
+  hasEstimate(t) ? Math.min(100, Math.round((seconds / 60 / t.estimatedDurationMinutes!) * 100)) : 0;
 
 /** "30분 집중" */
 export const focusText = (t: TodoResponse) => `${Math.round(t.actualDurationSeconds / 60)}분 집중`;

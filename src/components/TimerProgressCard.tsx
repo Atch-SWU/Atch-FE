@@ -8,14 +8,17 @@ interface TimerProgressCardProps {
   estimateLabel: string;
   /** 0~1 */
   progress: number;
+  /** 예상 시간이 없는 작업은 진행바 카드를 통째로 숨긴다 */
+  showProgress?: boolean;
   onPressInfo: () => void;
 }
 
 /** 예상 소요시간 진행 카드(70h) + 작업 정보 보기 행(48h) — 피그마 6:5444 */
-export default function TimerProgressCard({ estimateLabel, progress, onPressInfo }: TimerProgressCardProps) {
+export default function TimerProgressCard({ estimateLabel, progress, showProgress = true, onPressInfo }: TimerProgressCardProps) {
   const pct = Math.round(Math.min(Math.max(progress, 0), 1) * 100);
   return (
     <View style={styles.wrap}>
+      {showProgress ? (
       <View style={styles.card}>
         <View style={styles.row}>
           <AppText variant="progressMetaBold" color={COLORS.textWeak}>예상 소요시간 {estimateLabel}</AppText>
@@ -25,6 +28,7 @@ export default function TimerProgressCard({ estimateLabel, progress, onPressInfo
           <View style={[styles.fill, { width: `${pct}%` }]} />
         </View>
       </View>
+      ) : null}
       <Pressable style={styles.infoRow} onPress={onPressInfo}>
         <AppText variant="progressMetaBold" color={COLORS.textWeak}>작업 정보 보기</AppText>
         <ChevronRight width={16} height={16} color={COLORS.iconWeak} />

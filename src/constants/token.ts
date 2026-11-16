@@ -42,6 +42,8 @@ export const TYPOGRAPHY = {
   todoParent: t('Medium', 12, 15, -0.24),
   todoItemTitleText: t('Bold', 16, 20, -0.32),
   todoChipText: t('Bold', 12, 15, -0.24),
+  /** 기간 설정 '초기화' 버튼 (사용자 요청으로 최소 12pt 규칙의 예외: 11pt) */
+  formResetText: t('Bold', 11, 14, -0.22),
   todoTime: t('SemiBold', 12, 14),
   wheelSelected: t('Bold', 24, 30),
   wheelIdle: t('Medium', 22, 28),
