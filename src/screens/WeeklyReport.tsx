@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useState } from 'react';
 import {
     View,
@@ -21,11 +22,7 @@ import StatCardGrid from '../components/StatCardGrid';
 
 import {
     getWeeklyReport,
-    getFocusPatterns,
-    getTimeComparisons,
     type WeeklyReportResponse,
-    type FocusPatternsResponse,
-    type TimeComparisonResponse,
 } from '../api/report';
 
 // 날짜를 YYYY-MM-DD 형식으로 변환
@@ -121,30 +118,6 @@ const WEEKDAY_FULL_LABELS: Record<string, string> = {
     SUNDAY: '일요일',
 };
 
-// 집중 시간이 가장 긴 요일 (모든 값이 0이면 null)
-function getPeakWeekday(
-    focusPatterns: FocusPatternsResponse | null,
-): string | null {
-    if (!focusPatterns || !Array.isArray(focusPatterns.weekdays)) {
-        return null;
-    }
-
-    let peakDay: string | null = null;
-    let peakSeconds = 0;
-
-    focusPatterns.weekdays.forEach((item) => {
-        if (
-            typeof item.totalDurationSeconds === 'number' &&
-            item.totalDurationSeconds > peakSeconds
-        ) {
-            peakSeconds = item.totalDurationSeconds;
-            peakDay = item.dayOfWeek;
-        }
-    });
-
-    return peakDay;
-}
-
 // 월~일 순서
 const WEEKDAY_ORDER = [
     'MONDAY',
@@ -156,79 +129,67 @@ const WEEKDAY_ORDER = [
     'SUNDAY',
 ];
 
-// API 요일별 데이터를 차트 형식으로 변환
-// 응답에 없는 요일이나 값이 없는 요일은 0분으로 채워 항상 월~일 7개를 반환
-function convertWeekdayData(
-    focusPatterns: FocusPatternsResponse,
-): { day: string; minutes: number }[] {
-    const secondsByDay = new Map<string, number>();
+// 날짜 문자열에서 요일 가져오기
+function getWeekdayFromDate(date: string): string {
+    const dayIndex = new Date(`${date}T00:00:00`).getDay();
 
-    if (Array.isArray(focusPatterns.weekdays)) {
-        focusPatterns.weekdays.forEach((item) => {
-            secondsByDay.set(
-                item.dayOfWeek,
-                typeof item.totalDurationSeconds === 'number'
-                    ? item.totalDurationSeconds
-                    : 0,
-            );
-        });
-    }
+    const weekdays = [
+        'SUNDAY',
+        'MONDAY',
+        'TUESDAY',
+        'WEDNESDAY',
+        'THURSDAY',
+        'FRIDAY',
+        'SATURDAY',
+    ];
 
-    return WEEKDAY_ORDER.map((dayOfWeek) => ({
-        day: WEEKDAY_LABELS[dayOfWeek],
-        minutes: (secondsByDay.get(dayOfWeek) ?? 0) / 60,
-    }));
+    return weekdays[dayIndex];
 }
 
-// 히트맵 한 줄의 칸 수 (2시간 단위 12칸: 0~2시, 2~4시, ... 22~24시)
+// 가장 집중한 날짜를 요일로 변환
+function getPeakWeekday(
+    report: WeeklyReportResponse | null,
+): string | null {
+    if (!report?.peakFocusDate) {
+        return null;
+    }
+
+    return getWeekdayFromDate(report.peakFocusDate);
+}
+
+// API 날짜별 데이터를 요일별 차트 형식으로 변환
+// 응답에 없는 미래 날짜는 0분으로 채움
+function convertWeekdayData(
+    report: WeeklyReportResponse,
+): { day: string; minutes: number }[] {
+    const secondsByDate = new Map<string, number>();
+
+    report.days.forEach((item) => {
+        secondsByDate.set(
+            item.date,
+            (item.closedFocusDurationSeconds ?? 0) +
+                (item.liveFocusDurationSeconds ?? 0),
+        );
+    });
+
+    const weekStart = new Date(`${report.weekStart}T00:00:00`);
+
+    return WEEKDAY_ORDER.map((dayOfWeek, index) => {
+        const date = formatDate(addDays(weekStart, index));
+        const seconds = secondsByDate.get(date) ?? 0;
+
+        return {
+            day: WEEKDAY_LABELS[dayOfWeek],
+            minutes: seconds / 60,
+        };
+    });
+}
+
+// 히트맵 한 줄의 칸 수 (2시간 단위 12칸)
 const HEATMAP_BUCKET_HOURS = 2;
 const HEATMAP_BUCKET_COUNT = 24 / HEATMAP_BUCKET_HOURS;
 
-// 시간 예측 정확도(%) 계산
-// 완료한 작업마다 최종 선택된 예상시간(직접 입력/AI) 대비 실제시간 오차 비율을 구하고,
-// 100%에서 평균 오차 비율(최대 100%)을 뺀 값. 계산할 수 있는 작업이 없으면 null
-function calcPredictionAccuracy(
-    comparisons: TimeComparisonResponse | null,
-): number | null {
-    const items = comparisons?.items ?? [];
-    const errorRatios: number[] = [];
-
-    items.forEach((item) => {
-        const useAi = item.selectedEstimateType === 'AI';
-
-        const estimatedMinutes = useAi
-            ? item.aiEstimatedDurationMinutes
-            : item.userEstimatedDurationMinutes;
-
-        const errorSeconds = useAi
-            ? item.aiErrorSeconds
-            : item.userErrorSeconds;
-
-        if (
-            typeof estimatedMinutes === 'number' &&
-            estimatedMinutes > 0 &&
-            typeof errorSeconds === 'number'
-        ) {
-            errorRatios.push(
-                Math.min(
-                    Math.abs(errorSeconds) / (estimatedMinutes * 60),
-                    1,
-                ),
-            );
-        }
-    });
-
-    if (errorRatios.length === 0) return null;
-
-    const meanRatio =
-        errorRatios.reduce((sum, ratio) => sum + ratio, 0) /
-        errorRatios.length;
-
-    return Math.round((1 - meanRatio) * 100);
-}
-
 // 집중 시간(초)을 히트맵 농도(0~4)로 변환
-// 이번 주 가장 집중한 칸 대비 비율로 단계를 나눔. 값이 없거나 0이면 0(빈 칸)
 function toHeatmapLevel(seconds: number, maxSeconds: number): number {
     if (seconds <= 0 || maxSeconds <= 0) return 0;
 
@@ -241,19 +202,36 @@ function toHeatmapLevel(seconds: number, maxSeconds: number): number {
     return 4;
 }
 
-// 월~일 요일별 시간대 집중 패턴을 히트맵 행(월~일 7줄 x 12칸)으로 변환
-// 응답이 없거나(null) 조회하지 않은 날은 빈 칸으로 채움
+// 주간 리포트의 days[].focusBuckets를 히트맵 행으로 변환
+// 월~일 7줄 x 12칸
+// API 응답에 없는 미래 날짜는 빈 칸으로 표시
 function buildHeatmapRows(
-    patternsByDay: (FocusPatternsResponse | null)[],
+    report: WeeklyReportResponse,
 ): { label: string; values: number[] }[] {
-    const secondsByDay = WEEKDAY_ORDER.map((_, dayIndex) => {
-        const buckets = new Array<number>(HEATMAP_BUCKET_COUNT).fill(0);
-        const patterns = patternsByDay[dayIndex];
+    const weekStart = new Date(`${report.weekStart}T00:00:00`);
 
-        if (patterns && Array.isArray(patterns.hours)) {
-            patterns.hours.forEach((item) => {
-                if (item.hour >= 0 && item.hour < 24) {
-                    buckets[Math.floor(item.hour / HEATMAP_BUCKET_HOURS)] +=
+    const secondsByDay = WEEKDAY_ORDER.map((_, dayIndex) => {
+        const date = formatDate(addDays(weekStart, dayIndex));
+
+        const dayData = report.days.find(
+            (item) => item.date === date,
+        );
+
+        const buckets = new Array<number>(
+            HEATMAP_BUCKET_COUNT,
+        ).fill(0);
+
+        if (dayData && Array.isArray(dayData.focusBuckets)) {
+            dayData.focusBuckets.forEach((item) => {
+                if (
+                    item.startHour >= 0 &&
+                    item.startHour < 24
+                ) {
+                    const bucketIndex = Math.floor(
+                        item.startHour / HEATMAP_BUCKET_HOURS,
+                    );
+
+                    buckets[bucketIndex] +=
                         (item.closedDurationSeconds ?? 0) +
                         (item.liveDurationSeconds ?? 0);
                 }
@@ -283,19 +261,6 @@ export default function WeeklyReport() {
     const [apiReport, setApiReport] =
         useState<WeeklyReportResponse | null>(null);
 
-    // 집중 패턴 API 응답
-    const [apiFocusPatterns, setApiFocusPatterns] =
-        useState<FocusPatternsResponse | null>(null);
-
-    // 소요 시간 비교 API 응답 (시간 예측 정확도 계산용)
-    const [apiComparisons, setApiComparisons] =
-        useState<TimeComparisonResponse | null>(null);
-
-    // 요일별(월~일) 시간대 집중 패턴 — 히트맵용. 조회하지 않았거나 실패한 날은 null
-    const [apiDailyPatterns, setApiDailyPatterns] = useState<
-        (FocusPatternsResponse | null)[]
-    >([]);
-
     // 첫 화면부터 로딩 상태로 시작
     const [isLoading, setIsLoading] = useState(true);
 
@@ -307,7 +272,7 @@ export default function WeeklyReport() {
         new Animated.Value(1),
     ).current;
 
-    // 날짜가 바뀔 때마다 API 조회
+    // 날짜가 바뀔 때마다 주간 리포트 API 조회
     useEffect(() => {
         let isActive = true;
 
@@ -317,82 +282,28 @@ export default function WeeklyReport() {
 
             // 이전 주 데이터 즉시 제거
             setApiReport(null);
-            setApiFocusPatterns(null);
-            setApiDailyPatterns([]);
-            setApiComparisons(null);
 
-            const weekStart = getWeekStart(selectedDate);
-            const weekEnd = addDays(weekStart, 6);
+            try {
+                const result = await getWeeklyReport(
+                    formatDate(selectedDate),
+                );
 
-            // 집중 패턴 API는 미래 날짜를 허용하지 않으므로 오늘까지로 제한
-            const today = new Date();
-            const from = formatDate(weekStart);
-            const to = formatDate(weekEnd > today ? today : weekEnd);
+                if (!isActive) return;
 
-            // 히트맵용: 월~일 각 날짜의 시간대별 집중 패턴 (미래 날짜는 조회하지 않음)
-            const dayDates = WEEKDAY_ORDER.map((_, index) =>
-                addDays(weekStart, index),
-            );
+                setApiReport(result);
+            } catch (error) {
+                if (!isActive) return;
 
-            // 주간 리포트·집중 패턴·요일별 집중 패턴을 독립적으로 조회
-            const [
-                [weeklyResult, focusResult, comparisonResult],
-                dailyResults,
-            ] = await Promise.all([
-                    Promise.allSettled([
-                        getWeeklyReport(formatDate(selectedDate)),
-                        getFocusPatterns(from, to),
-                        getTimeComparisons(from, to, 0, 100),
-                    ]),
-                    Promise.allSettled(
-                        dayDates.map((dayDate) =>
-                            dayDate > today
-                                ? Promise.resolve<FocusPatternsResponse | null>(
-                                      null,
-                                  )
-                                : getFocusPatterns(
-                                      formatDate(dayDate),
-                                      formatDate(dayDate),
-                                  ),
-                        ),
-                    ),
-                ]);
-
-            if (!isActive) return;
-
-            // 주간 리포트 API 결과
-            if (weeklyResult.status === 'fulfilled') {
-                setApiReport(weeklyResult.value);
-            } else {
                 setErrorMessage(
-                    weeklyResult.reason instanceof Error
-                        ? weeklyResult.reason.message
+                    error instanceof Error
+                        ? error.message
                         : '주간 리포트를 불러오지 못했습니다.',
                 );
+            } finally {
+                if (isActive) {
+                    setIsLoading(false);
+                }
             }
-
-            // 집중 패턴 API 결과
-            if (focusResult.status === 'fulfilled') {
-                setApiFocusPatterns(focusResult.value);
-            } else {
-                setApiFocusPatterns(null);
-            }
-
-            // 소요 시간 비교 결과 (실패하면 시간 예측 정확도는 '-'로 표시)
-            setApiComparisons(
-                comparisonResult.status === 'fulfilled'
-                    ? comparisonResult.value
-                    : null,
-            );
-
-            // 요일별 집중 패턴 결과 (실패한 날은 빈 칸으로 표시)
-            setApiDailyPatterns(
-                dailyResults.map((result) =>
-                    result.status === 'fulfilled' ? result.value : null,
-                ),
-            );
-
-            setIsLoading(false);
         }
 
         fetchWeeklyReport();
@@ -417,10 +328,7 @@ export default function WeeklyReport() {
               formatDate(currentWeekEnd),
           );
 
-    // 시간 예측 정확도 (계산할 데이터가 없으면 null)
-    const predictionAccuracy = calcPredictionAccuracy(apiComparisons);
-
-    // 주간 리포트를 받아왔다면 값이 0(또는 null)이어도 통계 카드는 0으로 표시
+    // 주간 통계 카드
     const statItems: { label: string; value: string }[] = apiReport
         ? [
               {
@@ -434,23 +342,23 @@ export default function WeeklyReport() {
                   value: `${apiReport.completedTodoCount ?? 0}개`,
               },
               {
-                  // 연속 기록은 서버 API가 아직 없어 '-'로 표시
                   label: '연속 기록',
-                  value: '-',
+                  value: `${apiReport.focusStreakDays ?? 0}일`,
               },
               {
                   label: '시간 예측 정확도',
                   value:
-                      predictionAccuracy === null
+                      apiReport.aiPrediction?.closenessRate == null
                           ? '-'
-                          : `${predictionAccuracy}%`,
+                          : `${Math.round(
+                                apiReport.aiPrediction.closenessRate * 100,
+                            )}%`,
               },
           ]
         : [];
 
     // 주간 목표 달성률
-    // completionRate는 0~1 비율이므로 100을 곱해 퍼센트로 변환
-    // 배정이 없거나 미확정(null)이어도 리포트를 받아왔다면 0%로 표시
+    // completionRate는 0~1 비율
     const hasGoalPercent = apiReport !== null;
 
     const goalPercent = Math.round(
@@ -458,24 +366,25 @@ export default function WeeklyReport() {
     );
 
     // 요일별 집중 시간 데이터
-    const taskDuration = apiFocusPatterns
-        ? convertWeekdayData(apiFocusPatterns)
+    const taskDuration = apiReport
+        ? convertWeekdayData(apiReport)
         : [];
 
-    // 히트맵 데이터 (값이 없으면 빈 칸)
-    const heatmapRows = buildHeatmapRows(apiDailyPatterns);
+    // 히트맵 데이터
+    const heatmapRows = apiReport
+        ? buildHeatmapRows(apiReport)
+        : [];
 
     // 가장 집중한 요일 (말풍선용)
-    const peakWeekday = getPeakWeekday(apiFocusPatterns);
+    const peakWeekday = getPeakWeekday(apiReport);
 
     // 보고 있는 주가 이번 주인지 여부
     const isCurrentWeek =
         getWeekStart(selectedDate).getTime() ===
         getWeekStart(new Date()).getTime();
 
-    // 요일 데이터가 하나라도 있으면 표시
-    // 모든 값이 0이어도 차트 표시
-    const hasTaskDuration = taskDuration.length > 0;
+    // 주간 리포트가 있으면 요일별 차트 표시
+    const hasTaskDuration = apiReport !== null;
 
     // 최근 3년보다 오래된 날짜로는 이동하지 않음
     const minimumDate = new Date();
@@ -505,19 +414,13 @@ export default function WeeklyReport() {
         if (direction === 1 && isLastWeek) return;
 
         // 콘텐츠를 먼저 페이드아웃
-        // (애니메이션 대상 뷰가 사라지기 전에 끝나도록 로딩 상태는 그 이후에 변경)
         Animated.timing(contentOpacity, {
             toValue: 0,
             duration: 100,
             useNativeDriver: true,
         }).start(() => {
-            // 애니메이션 완료 여부와 관계없이 반드시 날짜를 이동
             setIsLoading(true);
-
             setApiReport(null);
-            setApiFocusPatterns(null);
-            setApiDailyPatterns([]);
-            setApiComparisons(null);
             setErrorMessage(null);
 
             setSelectedDate(nextDate);
@@ -665,7 +568,7 @@ export default function WeeklyReport() {
                         <StatCardGrid items={statItems} />
                     )}
 
-                    {/* 시간대별 집중도 히트맵 (데이터가 없으면 빈 칸으로 표시) */}
+                    {/* 시간대별 집중도 히트맵 */}
                     {apiReport && (
                         <View style={styles.heatmapSection}>
                             <FocusHeatmap rows={heatmapRows} responsive />
