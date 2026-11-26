@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback, useRef } from 'react';
 import {
     View,
@@ -112,12 +113,13 @@ function convertCatalogItem(
     };
 }
 
-// 한 줄 4개, 좌우 여백 21, 박스 간격 20
+// 아이템 그리드 설정
 const GRID_COLUMNS = 4;
 const SHEET_SIDE_PADDING = 21;
 const GRID_GAP = 20;
 
-const MAX_ITEM_SIZE = 90;
+// 기준 화면 크기
+const BASE_SCREEN_WIDTH = 402;
 
 // 플로팅 하단 네비 높이 + 아래 여백 + 여유
 const NAV_SPACE = 70 + 16 + 24;
@@ -161,6 +163,7 @@ export default function ShopScreen({
     const sheetTranslateY = useRef(
         new Animated.Value(height),
     ).current;
+
     const [selectedItem, setSelectedItem] =
         useState<CharacterItem | null>(null);
 
@@ -312,10 +315,8 @@ export default function ShopScreen({
 
     // 바텀시트 닫기
     const handleCloseDetail = () => {
-        // 배경은 먼저 즉시 사라지게 함
         setIsBackdropVisible(false);
 
-        // 바텀시트만 아래로 내려감
         Animated.timing(sheetTranslateY, {
             toValue: height,
             duration: 300,
@@ -332,24 +333,24 @@ export default function ShopScreen({
     };
 
     // 홈 화면으로 이동
-const handleGoHome = () => {
-    setIsBackdropVisible(false);
+    const handleGoHome = () => {
+        setIsBackdropVisible(false);
 
-    Animated.timing(sheetTranslateY, {
-        toValue: height,
-        duration: 300,
-        easing: Easing.in(Easing.cubic),
-        useNativeDriver: true,
-    }).start(() => {
-        setIsDetailVisible(false);
-        setSelectedItem(null);
-        setSelectedDetail(null);
-        setDetailError(null);
+        Animated.timing(sheetTranslateY, {
+            toValue: height,
+            duration: 300,
+            easing: Easing.in(Easing.cubic),
+            useNativeDriver: true,
+        }).start(() => {
+            setIsDetailVisible(false);
+            setSelectedItem(null);
+            setSelectedDetail(null);
+            setDetailError(null);
 
-        // MainScreen의 홈 탭으로 이동
-        onGoHome();
-    });
-};
+            // MainScreen의 홈 탭으로 이동
+            onGoHome();
+        });
+    };
 
     // 최초 진입 시 카탈로그와 캐릭터 정보 조회
     useEffect(() => {
@@ -357,15 +358,31 @@ const handleGoHome = () => {
         void loadCharacter();
     }, [loadItems, loadCharacter]);
 
-    const calculatedBoxSize = Math.floor(
-        (
-            width -
-            SHEET_SIDE_PADDING * 2 -
-            GRID_GAP * (GRID_COLUMNS - 1)
-        ) / GRID_COLUMNS,
+    // ----------------------------------------
+    // 반응형 아이템 그리드 크기 계산
+    // ----------------------------------------
+
+    // 좌우 여백을 제외한 실제 사용 가능 너비
+    const availableGridWidth =
+        width - SHEET_SIDE_PADDING * 2;
+
+    // 기준 화면보다 작으면 간격도 함께 줄임
+    // 기준 화면보다 크면 간격은 20px 유지
+    const gridGap = Math.max(
+        4,
+        Math.min(
+            GRID_GAP,
+            Math.floor(GRID_GAP * (width / BASE_SCREEN_WIDTH)),
+        ),
     );
 
-    const boxSize = Math.min(calculatedBoxSize, MAX_ITEM_SIZE);
+    // 남은 너비를 4개 박스에 균등하게 배분
+    const boxSize = Math.floor(
+        (
+            availableGridWidth -
+            gridGap * (GRID_COLUMNS - 1)
+        ) / GRID_COLUMNS,
+    );
 
     // 선택한 카테고리에 따라 아이템 필터링
     const visibleItems =
@@ -537,6 +554,7 @@ const handleGoHome = () => {
                     contentContainerStyle={[
                         styles.grid,
                         {
+                            columnGap: gridGap,
                             paddingBottom:
                                 NAV_SPACE + insets.bottom,
                         },
@@ -774,7 +792,7 @@ const handleGoHome = () => {
                     </Animated.View>
                 </View>
             </Modal>
-        </View >
+        </View>
     );
 }
 
@@ -886,7 +904,8 @@ const styles = StyleSheet.create({
         width: '100%',
         flexDirection: 'row',
         flexWrap: 'wrap',
-        columnGap: GRID_GAP,
+        alignContent: 'flex-start',
+        justifyContent: 'flex-start',
         rowGap: 20,
         marginTop: 25,
     },
