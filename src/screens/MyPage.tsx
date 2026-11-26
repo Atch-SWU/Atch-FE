@@ -116,6 +116,7 @@ function convertCatalogItem(
 const GRID_COLUMNS = 4;
 const SHEET_SIDE_PADDING = 20;
 const GRID_GAP = 20;
+const MAX_SHEET_WIDTH = 430;
 
 // 402px 화면에서 실제 그리드 기준 너비
 const BASE_GRID_WIDTH = 360;
@@ -647,6 +648,7 @@ export default function ShopScreen({
                         style={[
                             styles.detailSheet,
                             {
+                                width: Math.min(width, MAX_SHEET_WIDTH),
                                 paddingBottom: Math.max(
                                     insets.bottom,
                                     20,
@@ -943,6 +945,7 @@ const styles = StyleSheet.create({
     modalRoot: {
         flex: 1,
         justifyContent: 'flex-end',
+        alignItems: 'center',
     },
 
     modalBackdrop: {
