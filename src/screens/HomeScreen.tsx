@@ -64,14 +64,18 @@ export default function HomeScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const today = useMemo(() => new Date(), []);
 
-  const { items, reload: reloadTodos } = useTodosByDate(toDateString(today));
+  const {
+    items,
+    loading: todosLoading,
+    reload: reloadTodos,
+  } = useTodosByDate(toDateString(today));
   const { timer, reload: reloadTimer } = useCurrentTimer();
   const [settings, setSettings] = useState<TimerSettings>(DEFAULT_SETTINGS);
   const [weekly, setWeekly] = useState<WeeklyReport | null>(null);
 
   useFocusEffect(
     useCallback(() => {
-      getTimerSettings().then(setSettings).catch(() => {});
+      getTimerSettings().then(setSettings).catch(() => { });
       getWeeklyReport().then(setWeekly).catch(() => setWeekly(null));
     }, []),
   );
@@ -222,7 +226,10 @@ export default function HomeScreen() {
         contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 120 }]}
       >
         <View style={styles.body}>
-          {hasTasks ? (
+          {todosLoading ? (
+            // API 데이터를 불러오는 동안 빈 상태 화면을 표시하지 않음
+            <View />
+          ) : hasTasks ? (
             <View style={styles.list}>
               {inProgress && runningTodo && (
                 <ProgressCard
@@ -234,6 +241,7 @@ export default function HomeScreen() {
                   onPlay={() => startTimerFor(inProgress)}
                 />
               )}
+
               {pausedTodos.map((p) => {
                 const h = toHomeTask(p);
                 return (
@@ -248,6 +256,7 @@ export default function HomeScreen() {
                   />
                 );
               })}
+
               {others.map((t) => (
                 <HomeTaskCard
                   key={t.id}
@@ -259,7 +268,13 @@ export default function HomeScreen() {
               ))}
             </View>
           ) : (
-            <HomeEmptyPanel bubbleText={allDone ? '할 일을 모두 끝냈어요! 정말 대단해요!' : '멧치랑 같이 집중해봐요! 멧멧!'} />
+            <HomeEmptyPanel
+              bubbleText={
+                allDone
+                  ? '할 일을 모두 끝냈어요! 정말 대단해요!'
+                  : '멧치랑 같이 집중해봐요! 멧멧!'
+              }
+            />
           )}
         </View>
 

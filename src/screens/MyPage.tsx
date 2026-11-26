@@ -1,5 +1,4 @@
-
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
     View,
     StyleSheet,
@@ -9,6 +8,9 @@ import {
     useWindowDimensions,
     ImageSourcePropType,
     Alert,
+    Modal,
+    Animated,
+    Easing,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -22,6 +24,7 @@ import { RootStackParamList } from '../navigation/types';
 
 import {
     getCharacterItemCatalog,
+    getCharacterItemDetail,
     getCharacter,
     equipCharacterItem,
     unequipCharacterItem,
@@ -90,13 +93,11 @@ function convertCatalogItem(
 ): CharacterItem {
     const item = catalogItem.item;
 
-    // 아이템 목록: 서버 이미지 사용
     const image: ImageSourcePropType | undefined =
         item.assetUrl
             ? { uri: item.assetUrl }
             : undefined;
 
-    // 캐릭터 착용: 매칭된 로컬 PNG 사용
     const layerImage = ITEM_IMAGES[item.id];
 
     return {
@@ -119,9 +120,25 @@ const GRID_GAP = 20;
 // 플로팅 하단 네비 높이 + 아래 여백 + 여유
 const NAV_SPACE = 70 + 16 + 24;
 
-export default function ShopScreen() {
+interface ShopScreenProps {
+    onGoHome: () => void;
+}
+
+export default function ShopScreen({
+    onGoHome,
+}: ShopScreenProps) {
+    console.log('MyPage 렌더링:', typeof onGoHome);
+
     const insets = useSafeAreaInsets();
     const { width, height } = useWindowDimensions();
+
+    const detailScale = Math.max(
+        0.9,
+        Math.min(1.1, Math.min(width / 402, height / 874)),
+    );
+
+    const navigation =
+        useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
     const [category, setCategory] = useState<Category>('전체');
 
@@ -133,6 +150,25 @@ export default function ShopScreen() {
     // 현재 캐릭터 장착 정보
     const [character, setCharacter] =
         useState<CharacterResponse | null>(null);
+
+    // 아이템 상세 바텀시트
+    const [isDetailVisible, setIsDetailVisible] = useState(false);
+    const [isBackdropVisible, setIsBackdropVisible] = useState(false);
+
+    // 바텀시트 이동 애니메이션
+    const sheetTranslateY = useRef(
+        new Animated.Value(height),
+    ).current;
+    const [selectedItem, setSelectedItem] =
+        useState<CharacterItem | null>(null);
+
+    const [selectedDetail, setSelectedDetail] =
+        useState<Awaited<ReturnType<typeof getCharacterItemDetail>> | null>(
+            null,
+        );
+
+    const [isDetailLoading, setIsDetailLoading] = useState(false);
+    const [detailError, setDetailError] = useState<string | null>(null);
 
     // 전체 아이템 카탈로그 조회
     const loadItems = useCallback(async () => {
@@ -169,70 +205,149 @@ export default function ShopScreen() {
         }
     }, []);
 
-    // 아이템 장착
-    
-// 아이템 장착 및 해제
-const handleEquipItem = useCallback(
-    async (item: CharacterItem) => {
-        // 보유하지 않은 아이템은 장착할 수 없음
-        if (!item.owned) {
-            return;
-        }
+    // 아이템 장착 및 해제
+    const handleEquipItem = useCallback(
+        async (item: CharacterItem) => {
+            if (!item.owned) {
+                return;
+            }
 
-        // 카테고리가 없는 아이템은 장착할 수 없음
-        if (!item.category) {
-            Alert.alert(
-                '장착할 수 없어요',
-                '아이템 카테고리를 확인할 수 없어요.',
-            );
-            return;
-        }
+            if (!item.category) {
+                Alert.alert(
+                    '장착할 수 없어요',
+                    '아이템 카테고리를 확인할 수 없어요.',
+                );
+                return;
+            }
 
-        // 서버에서 사용할 카테고리
-        const apiCategory = CATEGORY_API_MAP[item.category];
+            const apiCategory = CATEGORY_API_MAP[item.category];
 
-        try {
-            console.log('아이템 선택:', {
-                id: item.id,
-                name: item.name,
-                category: apiCategory,
-                equipped: item.equipped,
-            });
+            try {
+                console.log('아이템 선택:', {
+                    id: item.id,
+                    name: item.name,
+                    category: apiCategory,
+                    equipped: item.equipped,
+                });
 
-            if (item.equipped) {
-                // 이미 장착된 아이템을 다시 누르면 해제
-                await unequipCharacterItem(apiCategory);
+                if (item.equipped) {
+                    await unequipCharacterItem(apiCategory);
+                    console.log('아이템 장착 해제 성공');
+                } else {
+                    await equipCharacterItem(
+                        apiCategory,
+                        Number(item.id),
+                    );
+                    console.log('아이템 장착 성공');
+                }
 
-                console.log('아이템 장착 해제 성공');
-            } else {
-                // 장착되지 않은 아이템이면 장착
-                await equipCharacterItem(
-                    apiCategory,
+                await Promise.all([
+                    loadItems(),
+                    loadCharacter(),
+                ]);
+            } catch (error) {
+                console.log('아이템 장착/해제 실패:', error);
+
+                const message =
+                    error instanceof CharacterItemError
+                        ? error.message
+                        : '아이템 처리에 실패했어요.';
+
+                Alert.alert('아이템 처리 실패', message);
+            }
+        },
+        [loadItems, loadCharacter],
+    );
+
+    // 미보유 아이템 상세 바텀시트 열기
+    const handleOpenItemDetail = useCallback(
+        async (item: CharacterItem) => {
+            setSelectedItem(item);
+            setSelectedDetail(null);
+            setDetailError(null);
+            setIsBackdropVisible(true);
+            setIsDetailVisible(true);
+            setIsDetailLoading(true);
+
+            try {
+                const response = await getCharacterItemDetail(
                     Number(item.id),
                 );
 
-                console.log('아이템 장착 성공');
+                setSelectedDetail(response);
+
+                console.log('아이템 상세 조회 성공:', response);
+            } catch (error) {
+                console.log('아이템 상세 조회 실패:', error);
+
+                setDetailError(
+                    error instanceof CharacterItemError
+                        ? error.message
+                        : '아이템 정보를 불러오지 못했어요.',
+                );
+            } finally {
+                setIsDetailLoading(false);
             }
+        },
+        [],
+    );
 
-            // 성공 후 카탈로그와 캐릭터 정보 모두 갱신
-            await Promise.all([
-                loadItems(),
-                loadCharacter(),
-            ]);
-        } catch (error) {
-            console.log('아이템 장착/해제 실패:', error);
-
-            const message =
-                error instanceof CharacterItemError
-                    ? error.message
-                    : '아이템 처리에 실패했어요.';
-
-            Alert.alert('아이템 처리 실패', message);
+    // 바텀시트가 열릴 때 아래에서 위로 부드럽게 이동
+    useEffect(() => {
+        if (!isDetailVisible) {
+            return;
         }
-    },
-    [loadItems, loadCharacter],
-);
 
+        sheetTranslateY.setValue(height);
+
+        Animated.timing(sheetTranslateY, {
+            toValue: 0,
+            duration: 400,
+            easing: Easing.out(Easing.cubic),
+            useNativeDriver: true,
+        }).start();
+    }, [isDetailVisible, height, sheetTranslateY]);
+
+    // 바텀시트 닫기
+    const handleCloseDetail = () => {
+        // 배경은 먼저 즉시 사라지게 함
+        setIsBackdropVisible(false);
+
+        // 바텀시트만 아래로 내려감
+        Animated.timing(sheetTranslateY, {
+            toValue: height,
+            duration: 300,
+            easing: Easing.in(Easing.cubic),
+            useNativeDriver: true,
+        }).start(({ finished }) => {
+            if (finished) {
+                setIsDetailVisible(false);
+                setSelectedItem(null);
+                setSelectedDetail(null);
+                setDetailError(null);
+            }
+        });
+    };
+
+    // 홈 화면으로 이동
+const handleGoHome = () => {
+    setIsBackdropVisible(false);
+
+    Animated.timing(sheetTranslateY, {
+        toValue: height,
+        duration: 300,
+        easing: Easing.in(Easing.cubic),
+        useNativeDriver: true,
+    }).start(() => {
+        setIsDetailVisible(false);
+        setSelectedItem(null);
+        setSelectedDetail(null);
+        setDetailError(null);
+
+        // MainScreen의 홈 탭으로 이동
+        onGoHome();
+    });
+};
 
     // 최초 진입 시 카탈로그와 캐릭터 정보 조회
     useEffect(() => {
@@ -256,18 +371,13 @@ const handleEquipItem = useCallback(
 
     // 실제 캐릭터 장착 슬롯을 기준으로 착용 이미지 구성
     const equippedItems = (character?.slots ?? []).flatMap((slot) => {
-        // 비어 있는 슬롯은 제외
         if (!slot.item) {
             return [];
         }
 
-        // 서버 아이템 ID에 연결된 로컬 PNG 가져오기
         const layerImage = ITEM_IMAGES[slot.item.id];
-
-        // 서버 카테고리를 화면 카테고리로 변환
         const convertedCategory = convertCategory(slot.category);
 
-        // 로컬 이미지 또는 카테고리가 없으면 표시하지 않음
         if (!layerImage || !convertedCategory) {
             return [];
         }
@@ -281,8 +391,23 @@ const handleEquipItem = useCallback(
         ];
     });
 
-    const navigation =
-        useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+    // 상세 아이템 이미지
+    // 상세 API 이미지가 없으면 카탈로그 이미지,
+    // 그것도 없으면 로컬 아이템 이미지 사용
+    const detailImage: ImageSourcePropType | undefined =
+        selectedDetail?.assetUrl
+            ? { uri: selectedDetail.assetUrl }
+            : selectedItem?.image ??
+            (selectedDetail?.id
+                ? ITEM_IMAGES[selectedDetail.id]
+                : undefined);
+
+    const detailName =
+        selectedDetail?.name ?? selectedItem?.name ?? '';
+
+    const detailGrade = selectedDetail?.grade ?? '';
+
+    const detailBoxSize = 90 * detailScale;
 
     return (
         <View style={styles.root}>
@@ -303,7 +428,6 @@ const handleEquipItem = useCallback(
                     마이페이지
                 </AppText>
 
-                {/* 오른쪽 설정 아이콘 */}
                 <Pressable
                     hitSlop={10}
                     style={styles.settingsButton}
@@ -316,7 +440,6 @@ const handleEquipItem = useCallback(
             {/* 캐릭터 이미지 및 장착 아이템 레이어 */}
             <View style={styles.characterArea}>
                 <View style={styles.characterStack}>
-
                     {/* 배경 아이템 */}
                     {equippedItems
                         .filter((item) => item.category === '배경')
@@ -454,13 +577,200 @@ const handleEquipItem = useCallback(
                                 image={item.image}
                                 owned={item.owned}
                                 equipped={item.equipped}
-                                onPress={() => handleEquipItem(item)}
+                                onPress={() => {
+                                    if (!item.owned) {
+                                        void handleOpenItemDetail(item);
+                                    } else {
+                                        void handleEquipItem(item);
+                                    }
+                                }}
                             />
                         ))
                     )}
                 </ScrollView>
             </View>
-        </View>
+
+            {/* 미보유 아이템 상세 바텀시트 */}
+            <Modal
+                transparent
+                animationType="none"
+                statusBarTranslucent
+                visible={isDetailVisible}
+                onRequestClose={handleCloseDetail}
+            >
+                <View style={styles.modalRoot}>
+                    {/* 어두운 배경: 즉시 표시 및 제거 */}
+                    {isBackdropVisible && (
+                        <Pressable
+                            style={styles.modalBackdrop}
+                            onPress={handleCloseDetail}
+                        />
+                    )}
+
+                    {/* 바텀시트: 아래에서 위로 부드럽게 이동 */}
+                    <Animated.View
+                        style={[
+                            styles.detailSheet,
+                            {
+                                paddingBottom: Math.max(
+                                    insets.bottom,
+                                    20,
+                                ),
+                                transform: [
+                                    {
+                                        translateY: sheetTranslateY,
+                                    },
+                                ],
+                            },
+                        ]}
+                    >
+                        {isDetailLoading ? (
+                            <View style={styles.detailLoading}>
+                                <AppText
+                                    variant="shopTitle"
+                                    color={COLORS.gray700}
+                                >
+                                    아이템 정보를 불러오는 중이에요.
+                                </AppText>
+                            </View>
+                        ) : detailError ? (
+                            <View style={styles.detailLoading}>
+                                <AppText
+                                    variant="shopTitle"
+                                    color={COLORS.gray700}
+                                >
+                                    {detailError}
+                                </AppText>
+
+                                <Pressable
+                                    onPress={handleCloseDetail}
+                                    style={styles.closeTextButton}
+                                >
+                                    <AppText
+                                        variant="shopTitle"
+                                        color={COLORS.gray400}
+                                        style={styles.closeText}
+                                    >
+                                        닫기
+                                    </AppText>
+                                </Pressable>
+                            </View>
+                        ) : (
+                            <>
+                                {/* 아이템 이미지 + 잠금 아이콘 */}
+                                <View style={styles.detailItemBox}>
+                                    <CharacterItemCell
+                                        size={detailBoxSize}
+                                        name=""
+                                        image={detailImage}
+                                        owned={false}
+                                        showName={false}
+                                        showLockedOverlay={false}
+                                        lockPosition="bottom"
+                                    />
+                                </View>
+
+                                {/* 아이템 이름 + 등급 */}
+                                <View
+                                    style={[
+                                        styles.detailNameRow,
+                                        {
+                                            gap: 8 * detailScale,
+                                            marginTop: 20 * detailScale,
+                                        },
+                                    ]}
+                                >
+                                    <AppText
+                                        variant="shopTitle"
+                                        color={COLORS.black}
+                                        style={[
+                                            styles.detailName,
+                                            { fontSize: 18 * detailScale },
+                                        ]}
+                                    >
+                                        {detailName}
+                                    </AppText>
+
+                                    {!!detailGrade && (
+                                        <View
+                                            style={[
+                                                styles.gradeBadge,
+                                                {
+                                                    width: 23 * detailScale,
+                                                    height: 23 * detailScale,
+                                                    borderRadius: 9 * detailScale,
+                                                },
+                                            ]}
+                                        >
+                                            <AppText
+                                                variant="shopTitle"
+                                                color={COLORS.white}
+                                                style={[
+                                                    styles.gradeText,
+                                                    { fontSize: 15 * detailScale },
+                                                ]}
+                                            >
+                                                {detailGrade}
+                                            </AppText>
+                                        </View>
+                                    )}
+                                </View>
+
+                                {/* 아이템 획득 안내 */}
+                                <AppText
+                                    variant="shopTitle"
+                                    color={COLORS.gray700}
+                                    style={[
+                                        styles.detailDescription,
+                                        { fontSize: 12 * detailScale },
+                                    ]}
+                                >
+                                    오늘 할 일을 다하면 랜덤으로 지급돼요.
+                                </AppText>
+
+                                {/* 홈 이동 버튼 */}
+                                <Pressable
+                                    style={[
+                                        styles.startButton,
+                                        {
+                                            height: 52 * detailScale,
+                                            marginTop: 26 * detailScale,
+                                            borderRadius: 12 * detailScale,
+                                        },
+                                    ]}
+                                    onPress={handleGoHome}
+                                >
+                                    <AppText
+                                        variant="shopTitle"
+                                        color={COLORS.white}
+                                        style={[
+                                            styles.startButtonText,
+                                            { fontSize: 16 * detailScale },
+                                        ]}
+                                    >
+                                        집중하러 가기
+                                    </AppText>
+                                </Pressable>
+
+                                {/* 바텀시트 닫기 */}
+                                <Pressable
+                                    onPress={handleCloseDetail}
+                                    style={styles.closeTextButton}
+                                >
+                                    <AppText
+                                        variant="shopTitle"
+                                        color={COLORS.gray400}
+                                        style={styles.closeText}
+                                    >
+                                        나중에 할게요
+                                    </AppText>
+                                </Pressable>
+                            </>
+                        )}
+                    </Animated.View>
+                </View>
+            </Modal>
+        </View >
     );
 }
 
@@ -588,6 +898,124 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontFamily: 'SUIT-Medium',
         lineHeight: 22,
+        textAlign: 'center',
+    },
+
+    // 바텀시트 배경
+    modalRoot: {
+        flex: 1,
+        justifyContent: 'flex-end',
+    },
+
+    modalBackdrop: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.35)',
+    },
+
+    // 상세 바텀시트
+    detailSheet: {
+        width: '100%',
+        backgroundColor: COLORS.white,
+        borderTopLeftRadius: 28,
+        borderTopRightRadius: 28,
+        paddingTop: 70,
+        paddingHorizontal: 21,
+        alignItems: 'center',
+    },
+
+    detailLoading: {
+        width: '100%',
+        minHeight: 300,
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 20,
+    },
+
+    detailItemBox: {
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+
+    // 아이템 이름과 등급
+    detailNameRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 8,
+        marginTop: 20,
+    },
+
+    detailName: {
+        fontFamily: 'SUIT-Bold',
+        fontSize: 18,
+        lineHeight: 24,
+        color: COLORS.black,
+        textAlign: 'center',
+    },
+
+    gradeBadge: {
+        width: 23,
+        height: 23,
+        borderRadius: 9,
+        backgroundColor: COLORS.orange600,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+
+    gradeText: {
+        fontFamily: 'SUIT-Bold',
+        fontSize: 15,
+        lineHeight: 19,
+        color: COLORS.white,
+        textAlign: 'center',
+    },
+
+    // 아이템 획득 안내 문구
+    detailDescription: {
+        marginTop: 6,
+        fontFamily: 'SUIT-Medium',
+        fontSize: 12,
+        lineHeight: 18,
+        color: COLORS.gray700,
+        textAlign: 'center',
+    },
+
+    // 홈 이동 버튼
+    startButton: {
+        width: '100%',
+        height: 52,
+        marginTop: 26,
+        backgroundColor: COLORS.black,
+        borderRadius: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+
+    startButtonText: {
+        fontFamily: 'SUIT-SemiBold',
+        fontSize: 16,
+        lineHeight: 22,
+        color: COLORS.white,
+        textAlign: 'center',
+    },
+
+    // 닫기 텍스트
+    closeTextButton: {
+        marginTop: 14,
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 4,
+    },
+
+    closeText: {
+        fontFamily: 'SUIT-Medium',
+        fontSize: 12,
+        lineHeight: 18,
+        color: COLORS.gray400,
         textAlign: 'center',
     },
 });

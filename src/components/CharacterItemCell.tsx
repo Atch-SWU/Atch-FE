@@ -9,16 +9,14 @@ import AppText from './AppText';
 import { COLORS } from '../constants/token';
 
 interface CharacterItemCellProps {
-    /** 박스 한 변의 길이 */
     size: number;
-    /** 아이템 이름 */
     name: string;
-    /** 아이템 이미지 */
     image?: ImageSourcePropType | null;
-    /** 보유 여부 */
     owned?: boolean;
-    /** 장착 여부 */
     equipped?: boolean;
+    showName?: boolean;
+    showLockedOverlay?: boolean;
+    lockPosition?: 'center' | 'bottom';
     onPress?: () => void;
 }
 
@@ -32,7 +30,6 @@ function LockGlyph({ badgeSize }: { badgeSize: number }) {
 
     return (
         <View style={{ alignItems: 'center' }}>
-            {/* 고리 */}
             <View
                 style={{
                     width: shackleW,
@@ -45,7 +42,6 @@ function LockGlyph({ badgeSize }: { badgeSize: number }) {
                 }}
             />
 
-            {/* 몸통 */}
             <View
                 style={{
                     width: bodyW,
@@ -65,6 +61,9 @@ export default function CharacterItemCell({
     image,
     owned = true,
     equipped = false,
+    showName = true,
+    showLockedOverlay = true,
+    lockPosition = 'center',
     onPress,
 }: CharacterItemCellProps) {
     const badgeSize = size * 0.28;
@@ -89,20 +88,20 @@ export default function CharacterItemCell({
                     />
                 ) : null}
 
-                {/* 미보유 아이템: 뿌연 효과 */}
-                {!owned && (
+                {!owned && showLockedOverlay && (
                     <View
                         pointerEvents="none"
                         style={styles.lockedOverlay}
                     />
                 )}
 
-                {/* 미보유 아이템 자물쇠 */}
                 {!owned && (
                     <View
                         pointerEvents="none"
                         style={[
                             styles.lockBadge,
+                            lockPosition === 'bottom' &&
+                            styles.lockBadgeBottom,
                             {
                                 width: badgeSize,
                                 height: badgeSize,
@@ -115,18 +114,19 @@ export default function CharacterItemCell({
                 )}
             </View>
 
-            {/* 아이템 이름 */}
-            <AppText
-                variant="shopTitle"
-                color={COLORS.gray700}
-                style={[
-                    styles.name,
-                    !owned && styles.lockedName,
-                ]}
-                numberOfLines={1}
-            >
-                {name}
-            </AppText>
+            {showName && (
+                <AppText
+                    variant="shopTitle"
+                    color={COLORS.gray700}
+                    style={[
+                        styles.name,
+                        !owned && styles.lockedName,
+                    ]}
+                    numberOfLines={1}
+                >
+                    {name}
+                </AppText>
+            )}
         </Pressable>
     );
 }
@@ -146,14 +146,12 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
     },
 
-    // 장착 중인 아이템
     equippedBox: {
         backgroundColor: COLORS.orange100,
         borderColor: COLORS.orange600,
         borderWidth: 2,
     },
 
-    // 잠긴 아이템을 뿌옇게 만드는 흰색 레이어
     lockedOverlay: {
         position: 'absolute',
         top: 0,
@@ -163,7 +161,6 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(255, 255, 255, 0.45)',
     },
 
-    // 기존 검은색 둥근 자물쇠 배경
     lockBadge: {
         position: 'absolute',
         alignSelf: 'center',
@@ -171,6 +168,12 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         backgroundColor: '#111111',
         borderRadius: 10,
+    },
+
+    // 바텀시트에서 사용하는 하단 중앙 위치
+    lockBadgeBottom: {
+        top: undefined,
+        bottom: 8,
     },
 
     name: {
@@ -183,6 +186,6 @@ const styles = StyleSheet.create({
     },
 
     lockedName: {
-        opacity: 0.55,
+        opacity: 1,
     },
 });
