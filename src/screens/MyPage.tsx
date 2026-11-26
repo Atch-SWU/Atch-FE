@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useRef } from 'react';
 import {
     View,
@@ -115,11 +114,11 @@ function convertCatalogItem(
 
 // 아이템 그리드 설정
 const GRID_COLUMNS = 4;
-const SHEET_SIDE_PADDING = 21;
+const SHEET_SIDE_PADDING = 20;
 const GRID_GAP = 20;
 
-// 기준 화면 크기
-const BASE_SCREEN_WIDTH = 402;
+// 402px 화면에서 실제 그리드 기준 너비
+const BASE_GRID_WIDTH = 360;
 
 // 플로팅 하단 네비 높이 + 아래 여백 + 여유
 const NAV_SPACE = 70 + 16 + 24;
@@ -154,6 +153,9 @@ export default function ShopScreen({
     // 현재 캐릭터 장착 정보
     const [character, setCharacter] =
         useState<CharacterResponse | null>(null);
+
+    // 실제 아이템 그리드 너비
+    const [gridWidth, setGridWidth] = useState(0);
 
     // 아이템 상세 바텀시트
     const [isDetailVisible, setIsDetailVisible] = useState(false);
@@ -359,30 +361,29 @@ export default function ShopScreen({
     }, [loadItems, loadCharacter]);
 
     // ----------------------------------------
-    // 반응형 아이템 그리드 크기 계산
+    // 실제 그리드 너비 기준 반응형 크기 계산
     // ----------------------------------------
 
-    // 좌우 여백을 제외한 실제 사용 가능 너비
-    const availableGridWidth =
-        width - SHEET_SIDE_PADDING * 2;
+    // 실제 그리드 너비가 측정되기 전에는 기본값 사용
+    const gridGap = gridWidth > 0
+        ? Math.max(
+            4,
+            Math.min(
+                GRID_GAP,
+                GRID_GAP * (gridWidth / BASE_GRID_WIDTH),
+            ),
+        )
+        : GRID_GAP;
 
-    // 기준 화면보다 작으면 간격도 함께 줄임
-    // 기준 화면보다 크면 간격은 20px 유지
-    const gridGap = Math.max(
-        4,
-        Math.min(
-            GRID_GAP,
-            Math.floor(GRID_GAP * (width / BASE_SCREEN_WIDTH)),
-        ),
-    );
-
-    // 남은 너비를 4개 박스에 균등하게 배분
-    const boxSize = Math.floor(
-        (
-            availableGridWidth -
-            gridGap * (GRID_COLUMNS - 1)
-        ) / GRID_COLUMNS,
-    );
+    // 실제 그리드 너비 안에 4개가 들어가도록 계산
+    const boxSize = gridWidth > 0
+        ? Math.floor(
+            (
+                gridWidth -
+                gridGap * (GRID_COLUMNS - 1)
+            ) / GRID_COLUMNS,
+        )
+        : 75;
 
     // 선택한 카테고리에 따라 아이템 필터링
     const visibleItems =
@@ -550,6 +551,18 @@ export default function ShopScreen({
                 {/* 아이템 그리드 */}
                 <ScrollView
                     style={styles.gridScroll}
+                    onLayout={(event) => {
+                        const measuredWidth =
+                            event.nativeEvent.layout.width;
+
+                        setGridWidth((previousWidth) => {
+                            return Math.abs(
+                                previousWidth - measuredWidth,
+                            ) > 0.5
+                                ? measuredWidth
+                                : previousWidth;
+                        });
+                    }}
                     showsVerticalScrollIndicator={false}
                     contentContainerStyle={[
                         styles.grid,
@@ -898,6 +911,7 @@ const styles = StyleSheet.create({
 
     gridScroll: {
         flex: 1,
+        minWidth: 0,
     },
 
     grid: {
