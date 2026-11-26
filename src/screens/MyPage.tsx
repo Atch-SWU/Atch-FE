@@ -117,6 +117,8 @@ const GRID_COLUMNS = 4;
 const SHEET_SIDE_PADDING = 21;
 const GRID_GAP = 20;
 
+const MAX_ITEM_SIZE = 90;
+
 // 플로팅 하단 네비 높이 + 아래 여백 + 여유
 const NAV_SPACE = 70 + 16 + 24;
 
@@ -355,13 +357,15 @@ const handleGoHome = () => {
         void loadCharacter();
     }, [loadItems, loadCharacter]);
 
-    const boxSize = Math.floor(
+    const calculatedBoxSize = Math.floor(
         (
             width -
             SHEET_SIDE_PADDING * 2 -
             GRID_GAP * (GRID_COLUMNS - 1)
         ) / GRID_COLUMNS,
     );
+
+    const boxSize = Math.min(calculatedBoxSize, MAX_ITEM_SIZE);
 
     // 선택한 카테고리에 따라 아이템 필터링
     const visibleItems =
@@ -879,6 +883,7 @@ const styles = StyleSheet.create({
     },
 
     grid: {
+        width: '100%',
         flexDirection: 'row',
         flexWrap: 'wrap',
         columnGap: GRID_GAP,
