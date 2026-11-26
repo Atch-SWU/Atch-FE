@@ -54,7 +54,7 @@ const onboardingData = [
         title: '꾸준한 습관으로,',
         content:
             '새로운 보상을 받고\n멧치를 나만의 스타일로 꾸며보세요',
-        image: require('../assets/onboarding/onboarding3.png'),
+        image: require('../assets/onboarding/onboarding-4.png'),
     },
 ];
 

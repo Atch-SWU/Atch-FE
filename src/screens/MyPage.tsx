@@ -1,4 +1,5 @@
-import { useState } from 'react';
+
+import { useState, useEffect, useCallback } from 'react';
 import {
     View,
     StyleSheet,
@@ -7,6 +8,7 @@ import {
     ScrollView,
     useWindowDimensions,
     ImageSourcePropType,
+    Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -15,46 +17,106 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import AppText from '../components/AppText';
 import CharacterItemCell from '../components/CharacterItemCell';
 import SettingsIcon from '../assets/icon/settings.svg';
-import { COLORS, SPACING } from '../constants/token';
+import { COLORS } from '../constants/token';
 import { RootStackParamList } from '../navigation/types';
+
+import {
+    getCharacterItemCatalog,
+    getCharacter,
+    equipCharacterItem,
+    unequipCharacterItem,
+    CharacterItemError,
+    CharacterItemCategory,
+    CatalogItem,
+    CharacterResponse,
+} from '../api/characterItemApi';
 
 // 아이템 카테고리 탭
 const CATEGORIES = ['전체', '색상', '배경', '눈', '악세서리'] as const;
 type Category = (typeof CATEGORIES)[number];
 
+// 화면 카테고리와 서버 카테고리 연결
+const CATEGORY_API_MAP: Record<
+    Exclude<Category, '전체'>,
+    CharacterItemCategory
+> = {
+    색상: 'COLOR',
+    배경: 'BACKGROUND',
+    눈: 'EYES',
+    악세서리: 'ACCESSORY',
+};
+
+// 화면에서 사용할 아이템 데이터
 interface CharacterItem {
     id: string;
-    category: Exclude<Category, '전체'>;
-    /** 박스 아래에 표시되는 아이템 이름 */
+    category: Exclude<Category, '전체'> | null;
     name: string;
-    /** 박스 중앙에 표시되는 아이템 이미지 (예: require('../assets/items/xxx.png')). 없으면 빈 박스 */
     image?: ImageSourcePropType;
+    layerImage?: ImageSourcePropType;
+    assetKey: string;
+    owned: boolean;
+    equipped: boolean;
 }
 
-// TODO: 캐릭터 아이템 API(GET /character/items) 연동 전까지 쓰는 임시 데이터
-// 아이템을 추가할 때는 name 과 image 만 채우면 된다.
-const ITEMS: CharacterItem[] = [
-    { id: 'color-1', category: '색상', name: '기본' },
-    { id: 'color-2', category: '색상', name: '기본' },
-    { id: 'bg-1', category: '배경', name: '기본' },
-    { id: 'bg-2', category: '배경', name: '기본' },
-    { id: 'eye-1', category: '눈', name: '기본' },
-    { id: 'eye-2', category: '눈', name: '기본' },
-    {
-        id: 'strawberry-cream',
-        category: '악세서리',
-        name: '딸기 크림',
-        image: require('../assets/items/strawberry_cream.png'),
-    },
-    { id: 'acc-1', category: '악세서리', name: '기본' },
-    { id: 'acc-2', category: '악세서리', name: '기본' },
-];
+// 서버 아이템 ID와 캐릭터 착용용 로컬 PNG 연결
+const ITEM_IMAGES: Record<number, ImageSourcePropType> = {
+    1: require('../assets/items/accessory/cook.png'),
+    2: require('../assets/items/accessory/cream.png'),
+    3: require('../assets/items/accessory/towel.png'),
+    4: require('../assets/items/accessory/towel.png'),
+};
 
-// 한 줄 4개, 좌우 여백 21, 박스 간격 20 (기준 w402에서 박스 75x75)
+// 백엔드 category 값을 화면 카테고리로 변환
+function convertCategory(
+    value: string,
+): Exclude<Category, '전체'> | null {
+    switch (value.toUpperCase()) {
+        case 'COLOR':
+            return '색상';
+        case 'BACKGROUND':
+            return '배경';
+        case 'EYES':
+            return '눈';
+        case 'ACCESSORY':
+            return '악세서리';
+        default:
+            return null;
+    }
+}
+
+// 카탈로그 API 응답을 화면 데이터로 변환
+function convertCatalogItem(
+    catalogItem: CatalogItem,
+): CharacterItem {
+    const item = catalogItem.item;
+
+    // 아이템 목록: 서버 이미지 사용
+    const image: ImageSourcePropType | undefined =
+        item.assetUrl
+            ? { uri: item.assetUrl }
+            : undefined;
+
+    // 캐릭터 착용: 매칭된 로컬 PNG 사용
+    const layerImage = ITEM_IMAGES[item.id];
+
+    return {
+        id: String(item.id),
+        category: convertCategory(item.category),
+        name: item.name,
+        image,
+        layerImage,
+        assetKey: item.assetKey,
+        owned: catalogItem.owned,
+        equipped: catalogItem.equipped,
+    };
+}
+
+// 한 줄 4개, 좌우 여백 21, 박스 간격 20
 const GRID_COLUMNS = 4;
 const SHEET_SIDE_PADDING = 21;
 const GRID_GAP = 20;
-// 플로팅 하단 네비 높이(70) + 아래 여백(16) + 여유
+
+// 플로팅 하단 네비 높이 + 아래 여백 + 여유
 const NAV_SPACE = 70 + 16 + 24;
 
 export default function ShopScreen() {
@@ -63,15 +125,161 @@ export default function ShopScreen() {
 
     const [category, setCategory] = useState<Category>('전체');
 
-    const visibleItems =
-        category === '전체'
-            ? ITEMS
-            : ITEMS.filter((item) => item.category === category);
+    // 카탈로그 아이템 데이터
+    const [items, setItems] = useState<CharacterItem[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [loadError, setLoadError] = useState<string | null>(null);
+
+    // 현재 캐릭터 장착 정보
+    const [character, setCharacter] =
+        useState<CharacterResponse | null>(null);
+
+    // 전체 아이템 카탈로그 조회
+    const loadItems = useCallback(async () => {
+        setIsLoading(true);
+        setLoadError(null);
+
+        try {
+            const response = await getCharacterItemCatalog({
+                page: 0,
+                size: 100,
+            });
+
+            setItems(response.items.map(convertCatalogItem));
+        } catch (error) {
+            setLoadError(
+                error instanceof CharacterItemError
+                    ? error.message
+                    : '아이템 목록을 불러오지 못했어요.',
+            );
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
+
+    // 현재 캐릭터 장착 정보 조회
+    const loadCharacter = useCallback(async () => {
+        try {
+            const response = await getCharacter();
+            setCharacter(response);
+
+            console.log('캐릭터 조회 성공:', response);
+        } catch (error) {
+            console.log('캐릭터 조회 실패:', error);
+        }
+    }, []);
+
+    // 아이템 장착
+    
+// 아이템 장착 및 해제
+const handleEquipItem = useCallback(
+    async (item: CharacterItem) => {
+        // 보유하지 않은 아이템은 장착할 수 없음
+        if (!item.owned) {
+            return;
+        }
+
+        // 카테고리가 없는 아이템은 장착할 수 없음
+        if (!item.category) {
+            Alert.alert(
+                '장착할 수 없어요',
+                '아이템 카테고리를 확인할 수 없어요.',
+            );
+            return;
+        }
+
+        // 서버에서 사용할 카테고리
+        const apiCategory = CATEGORY_API_MAP[item.category];
+
+        try {
+            console.log('아이템 선택:', {
+                id: item.id,
+                name: item.name,
+                category: apiCategory,
+                equipped: item.equipped,
+            });
+
+            if (item.equipped) {
+                // 이미 장착된 아이템을 다시 누르면 해제
+                await unequipCharacterItem(apiCategory);
+
+                console.log('아이템 장착 해제 성공');
+            } else {
+                // 장착되지 않은 아이템이면 장착
+                await equipCharacterItem(
+                    apiCategory,
+                    Number(item.id),
+                );
+
+                console.log('아이템 장착 성공');
+            }
+
+            // 성공 후 카탈로그와 캐릭터 정보 모두 갱신
+            await Promise.all([
+                loadItems(),
+                loadCharacter(),
+            ]);
+        } catch (error) {
+            console.log('아이템 장착/해제 실패:', error);
+
+            const message =
+                error instanceof CharacterItemError
+                    ? error.message
+                    : '아이템 처리에 실패했어요.';
+
+            Alert.alert('아이템 처리 실패', message);
+        }
+    },
+    [loadItems, loadCharacter],
+);
+
+
+    // 최초 진입 시 카탈로그와 캐릭터 정보 조회
+    useEffect(() => {
+        void loadItems();
+        void loadCharacter();
+    }, [loadItems, loadCharacter]);
 
     const boxSize = Math.floor(
-        (width - SHEET_SIDE_PADDING * 2 - GRID_GAP * (GRID_COLUMNS - 1)) /
-            GRID_COLUMNS,
+        (
+            width -
+            SHEET_SIDE_PADDING * 2 -
+            GRID_GAP * (GRID_COLUMNS - 1)
+        ) / GRID_COLUMNS,
     );
+
+    // 선택한 카테고리에 따라 아이템 필터링
+    const visibleItems =
+        category === '전체'
+            ? items
+            : items.filter((item) => item.category === category);
+
+    // 실제 캐릭터 장착 슬롯을 기준으로 착용 이미지 구성
+    const equippedItems = (character?.slots ?? []).flatMap((slot) => {
+        // 비어 있는 슬롯은 제외
+        if (!slot.item) {
+            return [];
+        }
+
+        // 서버 아이템 ID에 연결된 로컬 PNG 가져오기
+        const layerImage = ITEM_IMAGES[slot.item.id];
+
+        // 서버 카테고리를 화면 카테고리로 변환
+        const convertedCategory = convertCategory(slot.category);
+
+        // 로컬 이미지 또는 카테고리가 없으면 표시하지 않음
+        if (!layerImage || !convertedCategory) {
+            return [];
+        }
+
+        return [
+            {
+                id: String(slot.item.id),
+                category: convertedCategory,
+                layerImage,
+            },
+        ];
+    });
 
     const navigation =
         useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -87,7 +295,6 @@ export default function ShopScreen() {
                     },
                 ]}
             >
-                {/* 화면 중앙의 마이페이지 제목 */}
                 <AppText
                     variant="shopTitle"
                     color={COLORS.black}
@@ -102,20 +309,51 @@ export default function ShopScreen() {
                     style={styles.settingsButton}
                     onPress={() => navigation.navigate('Settings')}
                 >
-                    <SettingsIcon
-                        width={26}
-                        height={26}
-                    />
+                    <SettingsIcon width={26} height={26} />
                 </Pressable>
             </View>
 
-            {/* 캐릭터 이미지 (시트 위 남는 영역의 가운데) */}
+            {/* 캐릭터 이미지 및 장착 아이템 레이어 */}
             <View style={styles.characterArea}>
-                <Image
-                    source={require('../assets/icon/auth-logo.png')}
-                    style={styles.character}
-                    resizeMode="contain"
-                />
+                <View style={styles.characterStack}>
+
+                    {/* 배경 아이템 */}
+                    {equippedItems
+                        .filter((item) => item.category === '배경')
+                        .map((item) => (
+                            <Image
+                                key={item.id}
+                                source={item.layerImage}
+                                style={styles.characterLayer}
+                                resizeMode="contain"
+                            />
+                        ))}
+
+                    {/* 기본 캐릭터 */}
+                    <Image
+                        source={require('../assets/items/metch.png')}
+                        style={styles.characterLayer}
+                        resizeMode="contain"
+                    />
+
+                    {/* 색상, 눈, 악세서리 아이템 */}
+                    {(['색상', '눈', '악세서리'] as const).map(
+                        (categoryName) =>
+                            equippedItems
+                                .filter(
+                                    (item) =>
+                                        item.category === categoryName,
+                                )
+                                .map((item) => (
+                                    <Image
+                                        key={item.id}
+                                        source={item.layerImage}
+                                        style={styles.characterLayer}
+                                        resizeMode="contain"
+                                    />
+                                )),
+                    )}
+                </View>
             </View>
 
             {/* 아이템 시트 */}
@@ -143,13 +381,19 @@ export default function ShopScreen() {
                                 key={name}
                                 style={[
                                     styles.chip,
-                                    active ? styles.chipActive : styles.chipInactive,
+                                    active
+                                        ? styles.chipActive
+                                        : styles.chipInactive,
                                 ]}
                                 onPress={() => setCategory(name)}
                             >
                                 <AppText
                                     variant="shopTitle"
-                                    color={active ? COLORS.white : COLORS.gray800}
+                                    color={
+                                        active
+                                            ? COLORS.white
+                                            : COLORS.gray800
+                                    }
                                     style={styles.chipText}
                                 >
                                     {name}
@@ -165,17 +409,55 @@ export default function ShopScreen() {
                     showsVerticalScrollIndicator={false}
                     contentContainerStyle={[
                         styles.grid,
-                        { paddingBottom: NAV_SPACE + insets.bottom },
+                        {
+                            paddingBottom:
+                                NAV_SPACE + insets.bottom,
+                        },
                     ]}
                 >
-                    {visibleItems.map((item) => (
-                        <CharacterItemCell
-                            key={item.id}
-                            size={boxSize}
-                            name={item.name}
-                            image={item.image}
-                        />
-                    ))}
+                    {isLoading ? (
+                        <View style={styles.emptyContainer} />
+                    ) : loadError ? (
+                        <View style={styles.emptyContainer}>
+                            <AppText
+                                variant="shopTitle"
+                                color={COLORS.gray800}
+                            >
+                                {loadError}
+                            </AppText>
+
+                            <Pressable onPress={loadItems}>
+                                <AppText
+                                    variant="shopTitle"
+                                    color={COLORS.gray800}
+                                >
+                                    다시 시도하기
+                                </AppText>
+                            </Pressable>
+                        </View>
+                    ) : items.length === 0 ? (
+                        <View style={styles.emptyContainer}>
+                            <AppText
+                                variant="shopTitle"
+                                color={COLORS.gray800}
+                                style={styles.emptyText}
+                            >
+                                할 일을 끝내고 아이템을 모아보세요!
+                            </AppText>
+                        </View>
+                    ) : (
+                        visibleItems.map((item) => (
+                            <CharacterItemCell
+                                key={item.id}
+                                size={boxSize}
+                                name={item.name}
+                                image={item.image}
+                                owned={item.owned}
+                                equipped={item.equipped}
+                                onPress={() => handleEquipItem(item)}
+                            />
+                        ))
+                    )}
                 </ScrollView>
             </View>
         </View>
@@ -217,16 +499,24 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
 
-    character: {
+    characterStack: {
         width: 252,
         height: 210,
+        position: 'relative',
+    },
+
+    characterLayer: {
+        position: 'absolute',
+        top: -10,
+        left: 0,
+        width: 252,
+        height: 245,
     },
 
     sheet: {
         backgroundColor: COLORS.white,
         borderTopLeftRadius: 28,
         borderTopRightRadius: 28,
-        // 시트 윗부분 테두리 (좌·우·위 1px)
         borderTopWidth: 1,
         borderLeftWidth: 1,
         borderRightWidth: 1,
@@ -242,7 +532,6 @@ const styles = StyleSheet.create({
         color: COLORS.black,
     },
 
-    // ScrollView는 기본적으로 flexShrink가 1이라, 공간이 모자라면 탭 줄이 줄어들며 글자가 잘린다
     chipScroll: {
         flexGrow: 0,
         flexShrink: 0,
@@ -275,7 +564,6 @@ const styles = StyleSheet.create({
         lineHeight: 20,
     },
 
-    // 시트 높이 안에서만 차지하고 넘치는 아이템은 스크롤되도록
     gridScroll: {
         flex: 1,
     },
@@ -288,6 +576,18 @@ const styles = StyleSheet.create({
         marginTop: 25,
     },
 
+    emptyContainer: {
+        width: '100%',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 30,
+        gap: 12,
+    },
 
-
+    emptyText: {
+        fontSize: 14,
+        fontFamily: 'SUIT-Medium',
+        lineHeight: 22,
+        textAlign: 'center',
+    },
 });

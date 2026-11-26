@@ -105,10 +105,7 @@ export default function FindPasswordScreen({ navigation }: Props) {
             setResetToken(null);
             setAuthCode('');
             startSendCooldown(SEND_COOLDOWN_SECONDS);
-            setAuthMessage({
-                text: '인증번호를 보냈어요. 메일이 오지 않으면 60초 뒤에 다시 요청해 주세요.',
-                error: false,
-            });
+            
         } catch (error) {
             const message =
                 error instanceof PasswordResetError && error.status === 429

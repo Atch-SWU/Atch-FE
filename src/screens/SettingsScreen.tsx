@@ -567,7 +567,7 @@ export default function SettingsScreen({ navigation }: Props) {
                             color={COLORS.black}
                             style={styles.modalTitle}
                         >
-                            제한 대기 시간
+                            작업 전환 대기 시간
                         </AppText>
 
                         {/* - [ n분 ] + */}
