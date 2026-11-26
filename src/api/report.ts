@@ -1,16 +1,25 @@
 import { apiClient } from './apiClient';
 
 // 통계 상태
-// LIVE=오늘 실시간, FINALIZED=과거 확정, PENDING_FINALIZATION=확정 대기, UNAVAILABLE=자료 없음
+// LIVE=오늘 실시간, FINALIZED=과거 확정,
+// PENDING_FINALIZATION=확정 대기, UNAVAILABLE=자료 없음
 export type ReportState =
     | 'LIVE'
     | 'FINALIZED'
     | 'PENDING_FINALIZATION'
     | 'UNAVAILABLE';
 
-// 일간 리포트 API 응답 타입 (주간 리포트의 days 항목과 동일)
-// 배정 수·완료율은 미확정이거나 자료가 없으면 null이며, null을 0으로 표시하지 않는다.
-// completionRate 는 0~1 비율이다.
+// 2시간 단위 시간대별 집중 데이터
+export interface FocusBucket {
+    startHour: number;
+    closedDurationSeconds: number;
+    liveDurationSeconds: number;
+}
+
+// 일간 리포트 API 응답 타입
+// 주간 리포트의 days 항목과 동일
+// 배정 수·완료율은 미확정이거나 자료가 없으면 null
+// completionRate는 0~1 비율
 export interface DailyReportResponse {
     date: string;
     state: ReportState;
@@ -24,6 +33,25 @@ export interface DailyReportResponse {
     pauseCount: number;
     resumeCount: number;
     asOf: string;
+
+    // 시간대별 집중 데이터 (0~22시, 2시간 단위)
+    focusBuckets: FocusBucket[];
+}
+
+// AI 시간 예측 통계
+export interface AIPrediction {
+    // 집계 대상 작업 수
+    sampleCount: number;
+
+    // 시간 예측 근접도 (0~1)
+    // 표본이 없으면 null
+    closenessRate: number | null;
+
+    // 평균 절대 오차 (초)
+    meanAbsoluteErrorSeconds: number | null;
+
+    // 평균 부호 오차 (초)
+    meanSignedErrorSeconds: number | null;
 }
 
 // 주간 리포트 API 응답 타입
@@ -32,19 +60,32 @@ export interface WeeklyReportResponse {
     from: string;
     to: string;
 
+    // 날짜별 통계 및 시간대별 집중 데이터
     days: DailyReportResponse[];
 
     assignedCount: number | null;
     completedAssignedCount: number | null;
     completionRate: number | null;
     completedTodoCount: number;
+
     totalFocusDurationSeconds: number;
     elapsedDayCount: number;
     averageDailyFocusDurationSeconds: number;
+
+    // 가장 집중한 날짜 (집중 시간이 없으면 null)
+    peakFocusDate: string | null;
+
+    // 연속 집중 기록 일수
+    focusStreakDays: number;
+
+    // AI 시간 예측 통계
+    aiPrediction: AIPrediction;
+
     asOf: string;
 }
 
 // 주간 리포트 조회
+// date 생략 시 오늘이 포함된 주 조회
 export const getWeeklyReport = (date?: string) => {
     const query = date
         ? `?date=${encodeURIComponent(date)}`
@@ -56,8 +97,9 @@ export const getWeeklyReport = (date?: string) => {
 };
 
 // 소요 시간 비교 항목
-// 예상시간은 분, 실제시간·오차는 초 단위이며 오차는 (실제 - 예상)이다.
-// AI 제안이 없으면 AI 관련 필드는 null.
+// 예상시간은 분, 실제시간·오차는 초 단위
+// 오차는 (실제 - 예상)
+// AI 제안이 없으면 AI 관련 필드는 null
 export interface TimeComparisonItem {
     todoId: number;
     title: string;
@@ -152,12 +194,20 @@ export const getFocusPatterns = (
 // 일별 배정 이력 항목
 export interface DailyTodoSnapshotItem {
     todoId: number;
+
     // 조회 시점의 제목이며 과거 제목이 아님
     currentTitle: string;
-    statusAtDayEnd: 'PENDING' | 'IN_PROGRESS' | 'PAUSED' | 'COMPLETED';
+
+    statusAtDayEnd:
+        | 'PENDING'
+        | 'IN_PROGRESS'
+        | 'PAUSED'
+        | 'COMPLETED';
+
     startAtSnapshot: string | null;
     dueAtSnapshot: string | null;
     completedAtSnapshot: string | null;
+
     wasRolledOver: boolean;
     wasOverdue: boolean;
     snapshotAt: string;
