@@ -19,7 +19,14 @@ export default function MainScreen() {
         {tab === 'home' && <HomeScreen />}
         {tab === 'todo' && <ToDoListScreen />}
         {tab === 'stats' && <ReportScreen />}
-        {tab === 'profile' && <MyPage />}
+        {tab === 'profile' && (
+          <MyPage
+            onGoHome={() => {
+              console.log('MainScreen에서 홈 이동 콜백 실행!');
+              setTab('home');
+            }}
+          />
+        )}
       </View>
       <View style={[styles.navWrap, { bottom: insets.bottom + 16 }]}>
         <BottomNavBar active={tab} onChange={setTab} />
