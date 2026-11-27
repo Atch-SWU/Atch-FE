@@ -61,8 +61,14 @@ const styles = StyleSheet.create({
   overlay: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 21 },
   scrim: { ...StyleSheet.absoluteFill, backgroundColor: COLORS.scrim, opacity: 0.3 },
   card: {
-    alignSelf: 'stretch', borderRadius: 24, backgroundColor: COLORS.surface,
-    alignItems: 'center', paddingHorizontal: 34, paddingTop: 32, paddingBottom: 30,
+    width: '100%',
+    maxWidth: 388,
+    borderRadius: 24,
+    backgroundColor: COLORS.surface,
+    alignItems: 'center',
+    paddingHorizontal: 34,
+    paddingTop: 32,
+    paddingBottom: 30,
   },
   icon: {
     width: 57, height: 57, borderRadius: 28.5, marginBottom: 19,

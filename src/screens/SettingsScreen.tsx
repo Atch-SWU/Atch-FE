@@ -888,7 +888,7 @@ const styles = StyleSheet.create({
 
     modalContainer: {
         width: '100%',
-        maxWidth: 460,
+        maxWidth: 388,
         paddingHorizontal: 30,
         paddingTop: 30,
         paddingBottom: 30,

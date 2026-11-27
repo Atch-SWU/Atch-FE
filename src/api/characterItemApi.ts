@@ -1,5 +1,5 @@
 import { BASE_URL } from './config';
-import { getAccessToken } from './tokenStorage';
+import { fetchWithAuth, TokenRefreshError } from './tokenRefresh';
 
 // 카테고리
 export type CharacterItemCategory =
@@ -77,30 +77,40 @@ export class CharacterItemError extends Error {
     }
 }
 
-// 공통 GET 요청
-async function get(path: string): Promise<any> {
-    const accessToken = await getAccessToken();
-
-    if (!accessToken) {
-        throw new CharacterItemError(401, '로그인이 필요해요.');
-    }
-
-    let response: Response;
-
+// 인증 요청 및 오류 공통 처리
+async function authenticatedFetch(
+    url: string,
+    options: RequestInit = {},
+): Promise<Response> {
     try {
-        response = await fetch(`${BASE_URL}/api/v1/character/items${path}`, {
-            method: 'GET',
-            headers: {
-                Authorization: `Bearer ${accessToken}`,
-                Accept: 'application/json',
-            },
-        });
-    } catch {
+        return await fetchWithAuth(url, options);
+    } catch (error) {
+        if (error instanceof TokenRefreshError) {
+            throw new CharacterItemError(
+                error.status,
+                error.message,
+            );
+        }
+
         throw new CharacterItemError(
             0,
             '서버에 연결할 수 없어요. 네트워크를 확인해 주세요.',
         );
     }
+}
+
+// 공통 GET 요청
+// 공통 GET 요청
+async function get(path: string): Promise<any> {
+    const response = await authenticatedFetch(
+        `${BASE_URL}/api/v1/character/items${path}`,
+        {
+            method: 'GET',
+            headers: {
+                Accept: 'application/json',
+            },
+        },
+    );
 
     if (!response.ok) {
         const errorData = await response.json().catch(() => null);
@@ -142,28 +152,15 @@ export async function getCharacterItemDetail(
 
 // 현재 로그인 사용자의 캐릭터 조회
 export async function getCharacter(): Promise<CharacterResponse> {
-    const accessToken = await getAccessToken();
-
-    if (!accessToken) {
-        throw new CharacterItemError(401, '로그인이 필요해요.');
-    }
-
-    let response: Response;
-
-    try {
-        response = await fetch(`${BASE_URL}/api/v1/character`, {
+    const response = await authenticatedFetch(
+        `${BASE_URL}/api/v1/character`,
+        {
             method: 'GET',
             headers: {
-                Authorization: `Bearer ${accessToken}`,
                 Accept: 'application/json',
             },
-        });
-    } catch {
-        throw new CharacterItemError(
-            0,
-            '서버에 연결할 수 없어요. 네트워크를 확인해 주세요.',
-        );
-    }
+        },
+    );
 
     if (!response.ok) {
         const errorData = await response.json().catch(() => null);
@@ -188,35 +185,19 @@ export async function equipCharacterItem(
     category: CharacterItemCategory,
     characterItemId: number,
 ): Promise<void> {
-    const accessToken = await getAccessToken();
-
-    if (!accessToken) {
-        throw new CharacterItemError(401, '로그인이 필요해요.');
-    }
-
-    let response: Response;
-
-    try {
-        response = await fetch(
-            `${BASE_URL}/api/v1/character/equipment/${category}`,
-            {
-                method: 'PUT',
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                    Accept: 'application/json',
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    characterItemId,
-                }),
+    const response = await authenticatedFetch(
+        `${BASE_URL}/api/v1/character/equipment/${category}`,
+        {
+            method: 'PUT',
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
             },
-        );
-    } catch {
-        throw new CharacterItemError(
-            0,
-            '서버에 연결할 수 없어요. 네트워크를 확인해 주세요.',
-        );
-    }
+            body: JSON.stringify({
+                characterItemId,
+            }),
+        },
+    );
 
     if (!response.ok) {
         const errorData = await response.json().catch(() => null);
@@ -238,31 +219,15 @@ export async function equipCharacterItem(
 export async function unequipCharacterItem(
     category: CharacterItemCategory,
 ): Promise<void> {
-    const accessToken = await getAccessToken();
-
-    if (!accessToken) {
-        throw new CharacterItemError(401, '로그인이 필요해요.');
-    }
-
-    let response: Response;
-
-    try {
-        response = await fetch(
-            `${BASE_URL}/api/v1/character/equipment/${category}`,
-            {
-                method: 'DELETE',
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                    Accept: 'application/json',
-                },
+    const response = await authenticatedFetch(
+        `${BASE_URL}/api/v1/character/equipment/${category}`,
+        {
+            method: 'DELETE',
+            headers: {
+                Accept: 'application/json',
             },
-        );
-    } catch {
-        throw new CharacterItemError(
-            0,
-            '서버에 연결할 수 없어요. 네트워크를 확인해 주세요.',
-        );
-    }
+        },
+    );
 
     // 204는 응답 본문이 없는 정상 성공
     if (response.status === 204) {
