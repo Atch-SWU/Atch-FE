@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
 
     container: {
         width: '100%',
-        maxWidth: 460,
+        maxWidth: 388,
         padding: 30,
         borderRadius: 20,
         backgroundColor: COLORS.white,

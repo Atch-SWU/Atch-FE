@@ -46,6 +46,7 @@ export default function SettingsScreen({ navigation }: Props) {
 
     // 반복 일정 추천 켜기/끄기 확인 팝업 ('on'=켜기 확인, 'off'=끄기 확인)
     const [recurrenceModal, setRecurrenceModal] = useState<'on' | 'off' | null>(null);
+    const [modalType, setModalType] = useState<'on' | 'off'>('on');
     const [isUpdatingRecurrence, setIsUpdatingRecurrence] = useState(false);
     const [recurrenceError, setRecurrenceError] = useState<string | null>(null);
 
@@ -73,13 +74,13 @@ export default function SettingsScreen({ navigation }: Props) {
                         setRecurrenceEnabled(settings.repeatRecommendationEnabled);
                     }
                 })
-                .catch(() => {});
+                .catch(() => { });
 
             getRecurrenceRuleCount()
                 .then((count) => {
                     if (isActive) setRecurrenceRuleCount(count);
                 })
-                .catch(() => {});
+                .catch(() => { });
 
             getTimerSettings()
                 .then((settings) => {
@@ -91,7 +92,7 @@ export default function SettingsScreen({ navigation }: Props) {
                         setWaitMinutes(settings.taskSwitchWaitMinutes);
                     }
                 })
-                .catch(() => {});
+                .catch(() => { });
 
             return () => {
                 isActive = false;
@@ -171,7 +172,11 @@ export default function SettingsScreen({ navigation }: Props) {
     // 토글을 누르면 바로 바꾸지 않고, 켜기/끄기 확인 팝업을 먼저 띄움
     const openRecurrenceModal = () => {
         setRecurrenceError(null);
-        setRecurrenceModal(recurrenceEnabled ? 'off' : 'on');
+
+        const nextType = recurrenceEnabled ? 'off' : 'on';
+
+        setModalType(nextType);
+        setRecurrenceModal(nextType);
     };
 
     const closeRecurrenceModal = () => {
@@ -180,6 +185,7 @@ export default function SettingsScreen({ navigation }: Props) {
         setRecurrenceModal(null);
         setRecurrenceError(null);
     };
+
 
     // 팝업의 오른쪽 버튼(켜기 / 끄고 초기화)을 눌렀을 때만 설정 변경
     const confirmRecurrenceChange = async () => {
@@ -194,14 +200,15 @@ export default function SettingsScreen({ navigation }: Props) {
             await updateRecurrenceSettings(nextEnabled);
 
             setRecurrenceEnabled(nextEnabled);
-            setRecurrenceModal(null);
 
             // 켠 뒤에는 관리 박스에 표시할 반복 일정 개수를 다시 조회
             if (nextEnabled) {
                 getRecurrenceRuleCount()
                     .then(setRecurrenceRuleCount)
-                    .catch(() => {});
+                    .catch(() => { });
             }
+
+            setRecurrenceModal(null);
         } catch (error) {
             setRecurrenceError(
                 error instanceof Error
@@ -212,6 +219,7 @@ export default function SettingsScreen({ navigation }: Props) {
             setIsUpdatingRecurrence(false);
         }
     };
+
 
     // 로그아웃 API
     const handleLogout = async () => {
@@ -667,7 +675,7 @@ export default function SettingsScreen({ navigation }: Props) {
                             color={COLORS.black}
                             style={styles.modalTitle}
                         >
-                            {recurrenceModal === 'off'
+                            {modalType === 'off'
                                 ? '반복 일정 추천을 끌까요?'
                                 : '반복 일정 추천을 켤까요?'}
                         </AppText>
@@ -677,7 +685,7 @@ export default function SettingsScreen({ navigation }: Props) {
                             color={COLORS.gray500}
                             style={styles.modalDescription}
                         >
-                            {recurrenceModal === 'off'
+                            {modalType === 'off'
                                 ? '추천을 끌 경우 지금까지 쌓인\n반복 패턴이 모두 초기화돼요.'
                                 : '자주 하는 작업 패턴을 분석해서\n반복 일정으로 제안해 드려요.'}
                         </AppText>
@@ -722,7 +730,7 @@ export default function SettingsScreen({ navigation }: Props) {
                                     color={COLORS.white}
                                     style={styles.modalButtonText}
                                 >
-                                    {recurrenceModal === 'off' ? '끄고 초기화' : '켜기'}
+                                    {modalType === 'off' ? '끄고 초기화' : '켜기'}
                                 </AppText>
                             </Pressable>
                         </View>
