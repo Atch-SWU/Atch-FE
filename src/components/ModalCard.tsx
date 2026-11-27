@@ -25,5 +25,11 @@ export default function ModalCard({ visible, onRequestClose, radius = 18, childr
 const styles = StyleSheet.create({
   overlay: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 21 },
   scrim: { ...StyleSheet.absoluteFill, backgroundColor: COLORS.scrim, opacity: 0.3 },
-  card: { alignSelf: 'stretch', backgroundColor: COLORS.surface, alignItems: 'center' },
+  card: {
+    alignSelf: 'stretch',
+    width: '100%',
+    maxWidth: 388,
+    backgroundColor: COLORS.surface,
+    alignItems: 'center'
+  },
 });
