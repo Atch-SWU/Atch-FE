@@ -180,8 +180,10 @@ export default function App() {
 const styles = StyleSheet.create({
   webBackground: {
     flex: 1,
+    width: '100%',
     backgroundColor: '#000000',
     alignItems: 'center',
+    justifyContent: 'center',
   },
 
   mobileContainer: {
@@ -193,8 +195,8 @@ const styles = StyleSheet.create({
     // 웹 브라우저에서만 모바일 화면처럼 보이게 하기 위한 설정
     ...(Platform.OS === 'web'
       ? {
-          minHeight: '100%',
-        }
+        minHeight: '100%',
+      }
       : {}),
   },
 });
