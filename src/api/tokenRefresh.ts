@@ -1,5 +1,6 @@
 import { BASE_URL } from './config';
 import {
+    getAccessToken,
     getRefreshToken,
     saveTokens,
     clearTokens,
@@ -125,4 +126,50 @@ export function refreshAccessToken(): Promise<string> {
     }
 
     return refreshPromise;
+}
+
+
+export async function fetchWithAuth(
+    url: string,
+    options: RequestInit = {},
+): Promise<Response> {
+    let accessToken = await getAccessToken();
+
+    // Access Token이 없으면 Refresh Token으로 갱신 시도
+    if (!accessToken) {
+        accessToken = await refreshAccessToken();
+    }
+
+    const request = (token: string) => {
+        const headers = new Headers(options.headers);
+
+        headers.set('Authorization', `Bearer ${token}`);
+
+        return fetch(url, {
+            ...options,
+            headers,
+        });
+    };
+
+    let response = await request(accessToken);
+
+    // 인증 만료가 아니면 기존 응답 그대로 반환
+    if (response.status !== 401) {
+        return response;
+    }
+
+    // 다른 요청이 먼저 토큰을 갱신했는지 확인
+    const latestToken = await getAccessToken();
+
+    if (latestToken && latestToken !== accessToken) {
+        accessToken = latestToken;
+    } else {
+        // 아직 갱신되지 않았다면 갱신 실행
+        accessToken = await refreshAccessToken();
+    }
+
+    // 새로운 토큰으로 딱 한 번 재요청
+    response = await request(accessToken);
+
+    return response;
 }
